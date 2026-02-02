@@ -1,22 +1,60 @@
-.page {
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --accent: #e11d8b;
+  --accent-dark: #be185d;
+  --accent-soft: rgba(225, 29, 139, 0.12);
+  --border: #e2e8f0;
+  --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Manrope', 'Poppins', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page,
+.authPage,
+.dashPage,
+.reportsPage {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(
-  135deg,
-  #fce7f3,
-  #fbcfe8,
-  #f472b6
-);
+  background: var(--bg);
+}
 
-  color: white;
+.topBar,
+.reportsTopBar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 16px 28px;
 }
 
 .topBar {
-  background: #962a57;
-  display: flex;
   justify-content: flex-end;
-  padding: 16px 24px;
+}
+
+.dashPage .topBar,
+.reportsTopBar {
+  justify-content: space-between;
 }
 
 .centerArea {
@@ -24,96 +62,96 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 32px 20px 64px;
 }
 
 .heroText {
   text-align: center;
+  max-width: 720px;
 }
 
 .brandTitle {
-  font-size: 100px;
-  font-weight: 1000;
-  color: #f54ba3;
-  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  font-size: clamp(48px, 9vw, 86px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--text);
 }
 
 .brandSubtitle {
-  margin-top: 12px;
-  font-size: 22px;
-  font-weight: 400;
-  color: #f54ba3;
-  font-family: 'Poppins', sans-serif;
+  margin: 12px 0 0;
+  font-size: 18px;
+  color: var(--text-muted);
 }
 
 .heroButtons {
-  margin-top: 32px;
+  margin-top: 28px;
   display: flex;
   gap: 16px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .btn {
-  padding: 12px 28px;
+  padding: 12px 26px;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 999px;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .btnPrimary {
-  background: #ec4899; /* pink */
+  background: var(--accent);
   color: white;
+  box-shadow: 0 10px 24px rgba(225, 29, 139, 0.18);
 }
 
 .btnPrimary:hover {
-  background: #db2777;
+  background: var(--accent-dark);
   transform: translateY(-2px);
 }
 
 .btnSecondary {
-  background: white;
-  color: #ec4899;
-  border: 1px solid #ec4899;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .btnSecondary:hover {
-  background: #fce7f3;
+  border-color: var(--accent);
+  color: var(--accent);
   transform: translateY(-2px);
 }
 
 .authPage {
-  min-height: 100vh;
-  display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #fce7f3, #fbcfe8, #f472b6);
-  padding: 24px;
+  padding: 28px;
 }
 
 .authCard {
-  width: min(440px, 92vw);
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 24px;
-  padding: 36px 32px 32px;
-  box-shadow: 0 18px 40px rgba(150, 42, 87, 0.25);
+  width: min(460px, 92vw);
+  background: #ffe8f3;
+  border-radius: 20px;
+  padding: 36px 34px 32px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
   text-align: center;
 }
 
 .authTitle {
   margin: 0;
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 800;
-  color: #962a57;
-  font-family: 'Poppins', sans-serif;
+  color: var(--text);
 }
 
 .authSubtitle {
-  margin: 10px 0 24px;
-  font-size: 15px;
-  color: #b8326a;
-  font-family: 'Poppins', sans-serif;
+  margin: 8px 0 22px;
+  font-size: 14px;
+  color: var(--text-muted);
 }
 
 .authForm {
@@ -122,27 +160,39 @@
   justify-items: center;
 }
 
-.authForm input {
+.authForm input,
+.authForm select {
   width: min(360px, 100%);
   padding: 12px 16px;
   font-size: 15px;
   border-radius: 12px;
-  border: 1px solid #f1b7d0;
+  border: 1px solid var(--border);
   outline: none;
   font-family: 'Poppins', sans-serif;
-  color: #6b1f3f;
-  background: #fff;
+  color: var(--text);
+  background: var(--surface);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.authForm input:focus,
 .authForm select:focus {
-  border-color: #ec4899;
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.18);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-.authForm input:focus {
-  border-color: #ec4899;
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.18);
+.authForm select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%),
+    linear-gradient(to right, var(--border), var(--border));
+  background-position:
+    calc(100% - 22px) calc(50% - 3px),
+    calc(100% - 16px) calc(50% - 3px),
+    calc(100% - 40px) 50%;
+  background-size: 6px 6px, 6px 6px, 1px 60%;
+  background-repeat: no-repeat;
+  padding-right: 44px;
 }
 
 .authForm .btn {
@@ -150,51 +200,15 @@
   width: min(360px, 100%);
 }
 
-.dashPage {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #fce7f3, #fbcfe8, #f472b6);
-  color: #6b1f3f;
-}
-
-.dashPage .topBar {
-  justify-content: space-between;
-  align-items: center;
-}
-
-.dashTitle {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-  color: #ffe3f2;
-  font-family: 'Poppins', sans-serif;
-}
-
-.reportsPage {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #fce7f3, #fbcfe8, #f472b6);
-  color: #6b1f3f;
-}
-
-.reportsTopBar {
-  background: #962a57;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-}
-
+.dashTitle,
 .reportsTitle {
   margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-  color: #ffe3f2;
-  font-family: 'Poppins', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
 }
 
+.dashMain,
 .reportsMain {
   flex: 1;
   display: flex;
@@ -204,64 +218,48 @@
   padding: 32px 20px 60px;
 }
 
+.dashSubtitle,
 .repSubtitle {
   margin: 0;
+  font-size: 17px;
+  color: var(--text-muted);
   text-align: center;
-  font-size: 18px;
-  color: #b8326a;
-  font-family: 'Poppins', sans-serif;
-}
-
-.dashMain {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  padding: 40px 20px 60px;
-}
-
-.dashSubtitle {
-  margin: 0;
-  font-size: 16px;
-  color: #b8326a;
-  font-family: 'Poppins', sans-serif;
 }
 
 .card {
-  width: min(400px, 94vw);
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 24px;
+  width: min(520px, 94vw);
+  background: var(--surface);
+  border-radius: 20px;
   padding: 28px;
-  box-shadow: 0 18px 40px rgba(150, 42, 87, 0.25);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
   text-align: center;
 }
 
 .cardTitle {
   margin: 0 0 14px;
-  font-size: 22px;
-  font-weight: 800;
-  color: #962a57;
-  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .dashPage .card input {
-  width: min(370px, 100%);
+  width: min(420px, 100%);
   padding: 12px 16px;
   font-size: 15px;
   border-radius: 12px;
-  border: 1px solid #f1b7d0;
+  border: 1px solid var(--border);
   outline: none;
   font-family: 'Poppins', sans-serif;
-  color: #6b1f3f;
-  background: #fff;
+  color: var(--text);
+  background: var(--surface);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   margin-bottom: 12px;
 }
 
 .dashPage .card input:focus {
-  border-color: #ec4899;
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.18);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .dashPage .card button {
@@ -272,49 +270,34 @@
   border-radius: 999px;
   border: none;
   cursor: pointer;
-  background: #ec4899;
+  background: var(--accent);
   color: #fff;
-  transition: all 0.25s ease;
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .dashPage .card button:hover {
-  background: #db2777;
+  background: var(--accent-dark);
   transform: translateY(-2px);
 }
 
 .emptyState {
   width: min(520px, 94vw);
   padding: 18px 22px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.65);
+  border-radius: 16px;
+  background: var(--surface-muted);
   text-align: center;
+  border: 1px dashed var(--border);
 }
 
 .emptyTitle {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: #962a57;
-  font-family: 'Poppins', sans-serif;
+  color: var(--text);
 }
 
 .emptySubtitle {
   margin: 6px 0 0;
   font-size: 14px;
-  color: #b8326a;
-  font-family: 'Poppins', sans-serif;
-}
-
-.authForm select {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  font-family: 'Poppins', sans-serif;
-  font-size: 14px;
-  background: white;
-}
-
-.authForm select:focus {
-  outline: none;
-  border-color: #ec4899;
+  color: var(--text-muted);
 }
