@@ -75,10 +75,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name', ''),
             role=validated_data.get('role', 'staff'),
         )
+        return user
 
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ('id', 'title', 'is_completed', 'created_at', 'project')
-        return user
