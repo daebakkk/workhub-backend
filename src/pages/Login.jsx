@@ -15,8 +15,8 @@ export default function Login() {
 
     try {
       const res = await API.post('auth/login/', {
-        email: email,
-        password: password,
+        username: email.trim().toLowerCase(),
+        password,
       });
 
       if (!res.data.access || !res.data.user) {
