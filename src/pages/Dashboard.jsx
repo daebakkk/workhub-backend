@@ -1,10 +1,70 @@
 import Navbar from '../components/Navbar';
 import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import API from '../api/api';
 
 function Dashboard() {
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const displayName = user?.first_name || user?.username || 'there';
+  const [projects, setProjects] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      setError('');
+      try {
+        const [projectsRes, logsRes] = await Promise.all([
+          API.get('projects/my/'),
+          API.get('logs/my/'),
+        ]);
+        setProjects(projectsRes.data || []);
+        setLogs(logsRes.data || []);
+      } catch (err) {
+        setError('Could not load dashboard data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    const weekAgo = new Date(now);
+    weekAgo.setDate(now.getDate() - 7);
+
+    const hoursThisWeek = logs.reduce((sum, log) => {
+      const logDate = new Date(log.date);
+      if (logDate >= weekAgo && logDate <= now) {
+        const hours = typeof log.hours === 'number' ? log.hours : parseFloat(log.hours || '0');
+        return sum + (Number.isFinite(hours) ? hours : 0);
+      }
+      return sum;
+    }, 0);
+
+    const totalLogs = logs.length;
+    const approvedLogs = logs.filter((log) => log.status === 'approved').length;
+    const approvalRate = totalLogs ? Math.round((approvedLogs / totalLogs) * 100) : 0;
+
+    return {
+      hoursThisWeek: hoursThisWeek.toFixed(1),
+      activeProjects: projects.length,
+      approvalRate,
+    };
+  }, [logs, projects]);
+
+  function getStatus(percent, totalTasks) {
+    if (totalTasks === 0) return 'No tasks';
+    if (percent === 100) return 'Completed';
+    if (percent >= 75) return 'Review';
+    if (percent >= 30) return 'In progress';
+    return 'Blocked';
+  }
 
   return (
     <div className="dashPage">
@@ -26,9 +86,9 @@ function Dashboard() {
             <Link to="/work-logs" className="sidebarLink">
               Work Logs
             </Link>
-            <button type="button" className="sidebarLink" disabled>
+            <Link to="/projects" className="sidebarLink">
               Projects
-            </button>
+            </Link>
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>
@@ -50,17 +110,17 @@ function Dashboard() {
           <section className="statGrid">
             <div className="statCard">
               <p className="statLabel">Hours logged</p>
-              <p className="statValue">12.5</p>
+              <p className="statValue">{stats.hoursThisWeek}</p>
               <p className="statMeta">This week</p>
             </div>
             <div className="statCard">
               <p className="statLabel">Active projects</p>
-              <p className="statValue">3</p>
+              <p className="statValue">{stats.activeProjects}</p>
               <p className="statMeta">In progress</p>
             </div>
             <div className="statCard">
               <p className="statLabel">Approval rate</p>
-              <p className="statValue">96%</p>
+              <p className="statValue">{stats.approvalRate}%</p>
               <p className="statMeta">Last 30 days</p>
             </div>
           </section>
@@ -68,33 +128,43 @@ function Dashboard() {
           <section className="card projectCard">
             <div className="cardHeader">
               <h2 className="cardTitle">Recent Projects</h2>
-              <button type="button" className="btn btnSecondary">
+              <Link to="/projects" className="btn btnSecondary">
                 View all
-              </button>
+              </Link>
             </div>
-            <div className="projectList">
-              <div className="projectItem">
-                <div>
-                  <p className="projectTitle">Client Intake Portal</p>
-                  <p className="projectMeta">Updated onboarding flow</p>
-                </div>
-                <span className="projectStatus">On track</span>
+            {loading && <p className="inlineStatus">Loading projects…</p>}
+            {error && <p className="inlineError">{error}</p>}
+            {!loading && !error && projects.length === 0 && (
+              <div className="emptyState">
+                <p className="emptyTitle">No projects yet</p>
+                <p className="emptySubtitle">
+                  Projects assigned to you will appear here.
+                </p>
               </div>
-              <div className="projectItem">
-                <div>
-                  <p className="projectTitle">Ops Analytics</p>
-                  <p className="projectMeta">Q2 KPI dashboard</p>
-                </div>
-                <span className="projectStatus warn">Needs review</span>
+            )}
+            {!loading && !error && projects.length > 0 && (
+              <div className="projectList">
+                {projects.slice(0, 3).map((project) => {
+                  const percent = project.completion_percent || 0;
+                  const totalTasks = project.total_tasks || 0;
+                  const status = getStatus(percent, totalTasks);
+                  const badgeClass = status.toLowerCase().replace(' ', '-');
+                  return (
+                    <div className="projectItem" key={project.id}>
+                      <div>
+                        <p className="projectTitle">{project.name}</p>
+                        <p className="projectMeta">
+                          {project.description || 'No description yet'}
+                        </p>
+                      </div>
+                      <span className={`projectStatus ${badgeClass}`}>
+                        {status}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="projectItem">
-                <div>
-                  <p className="projectTitle">Mobile Timesheets</p>
-                  <p className="projectMeta">Release candidate build</p>
-                </div>
-                <span className="projectStatus success">Ready</span>
-              </div>
-            </div>
+            )}
           </section>
         </main>
       </div>

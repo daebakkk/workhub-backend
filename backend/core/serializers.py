@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project, WorkLog
+from .models import User, Project, WorkLog, Task
 from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,10 +10,28 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     staff = UserSerializer(many=True, read_only=True)
+    total_tasks = serializers.IntegerField(read_only=True)
+    completed_tasks = serializers.IntegerField(read_only=True)
+    completion_percent = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ('id', 'name', 'description', 'staff')
+        fields = (
+            'id',
+            'name',
+            'description',
+            'staff',
+            'total_tasks',
+            'completed_tasks',
+            'completion_percent',
+        )
+
+    def get_completion_percent(self, obj):
+        total = getattr(obj, 'total_tasks', 0) or 0
+        completed = getattr(obj, 'completed_tasks', 0) or 0
+        if total == 0:
+            return 0
+        return round((completed / total) * 100)
 
 
 class WorkLogSerializer(serializers.ModelSerializer):
@@ -57,4 +75,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name', ''),
             role=validated_data.get('role', 'staff'),
         )
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ('id', 'title', 'is_completed', 'created_at', 'project')
         return user

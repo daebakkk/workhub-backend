@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Project, WorkLog
+from .models import User, Project, WorkLog, Task
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
@@ -19,4 +19,11 @@ class WorkLogAdmin(admin.ModelAdmin):
     list_display = ('title', 'staff', 'project', 'status', 'date', 'hours')
     list_filter = ('status', 'project')
     search_fields = ('title', 'staff__username')
+
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('title', 'project', 'is_completed', 'created_at')
+    list_filter = ('is_completed', 'project')
+    search_fields = ('title', 'project__name')
 

@@ -10,6 +10,7 @@ from .serializers import RegisterSerializer, UserSerializer
 
 from .models import Project, WorkLog
 from .serializers import ProjectSerializer, WorkLogSerializer
+from django.db.models import Count, Q
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -110,6 +111,13 @@ from .serializers import ProjectSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def my_projects(request):
-    projects = Project.objects.filter(staff=request.user).order_by('name')
+    projects = (
+        Project.objects.filter(staff=request.user)
+        .annotate(
+            total_tasks=Count('tasks', distinct=True),
+            completed_tasks=Count('tasks', filter=Q(tasks__is_completed=True), distinct=True),
+        )
+        .order_by('name')
+    )
     serializer = ProjectSerializer(projects, many=True)
     return Response(serializer.data)

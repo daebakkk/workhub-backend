@@ -6,6 +6,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Reports from "./pages/Reports";
 import WorkLogs from './pages/WorkLogs';
+import Projects from './pages/Projects';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -22,6 +23,11 @@ function App() {
         <Route path="/work-logs" element={
           <ProtectedRoute>
             <WorkLogs />
+          </ProtectedRoute>
+        } />
+        <Route path="/projects" element={
+          <ProtectedRoute>
+            <Projects />
           </ProtectedRoute>
         } />
         <Route path="/reports" element={

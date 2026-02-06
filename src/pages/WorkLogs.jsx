@@ -41,9 +41,9 @@ function WorkLogs() {
             <Link to="/work-logs" className="sidebarLink isActive">
               Work Logs
             </Link>
-            <button type="button" className="sidebarLink" disabled>
+            <Link to="/projects" className="sidebarLink">
               Projects
-            </button>
+            </Link>
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>
