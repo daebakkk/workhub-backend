@@ -31,6 +31,10 @@ export default function Signup() {
         first_name: firstName,
         last_name: lastName,
         role: 'staff',
+      }, {
+        headers: {
+          Authorization: undefined,
+        },
       });
 
       navigate('/login');

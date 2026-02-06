@@ -17,6 +17,12 @@ API.interceptors.request.use((req) => {
     if (req.headers && req.headers.Authorization) {
       delete req.headers.Authorization;
     }
+    if (req.headers && req.headers.authorization) {
+      delete req.headers.authorization;
+    }
+    if (req.headers) {
+      req.headers.Authorization = undefined;
+    }
   } else if (token && token !== "null" && token !== "undefined") {
     req.headers.Authorization = `Bearer ${token}`;
   }
