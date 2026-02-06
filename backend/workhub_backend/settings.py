@@ -127,3 +127,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "https://workhub-frontendd.vercel.app",
 ]
+STATIC_ROOT = BASE_DIR / "staticfiles"
