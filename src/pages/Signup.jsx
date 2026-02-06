@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API, { authAPI } from '../api/api';
 
@@ -10,6 +10,12 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete API.defaults.headers.common.Authorization;
+  }, []);
 
   const allowedDomain = '@thefifthlab.com';
 

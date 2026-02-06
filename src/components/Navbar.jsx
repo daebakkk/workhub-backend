@@ -6,6 +6,8 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
   function handleLogout() {
     localStorage.removeItem('token');
@@ -20,6 +22,8 @@ export default function Navbar() {
         <Link to="/dashboard" className="navItem">Dashboard</Link>)}
       {currentPath !== "/reports" && (
         <Link to="/reports" className="navItem">Reports</Link>)}
+      {user?.role === 'admin' && currentPath !== "/admin/approvals" && (
+        <Link to="/admin/approvals" className="navItem">Approvals</Link>)}
       <button className="navBtn" type="button" onClick={handleLogout}>
         Logout
       </button>

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import API, { authAPI } from '../api/api';
 
 export default function Login() {
@@ -8,6 +8,12 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete API.defaults.headers.common.Authorization;
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -29,7 +35,7 @@ export default function Login() {
       API.defaults.headers.common.Authorization = `Bearer ${res.data.access}`;
 
       if (res.data.user.role === 'admin') {
-        navigate('/admin/projects');
+        navigate('/admin/approvals');
       } else {
         navigate('/dashboard');
       }

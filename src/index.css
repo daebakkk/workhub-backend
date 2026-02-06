@@ -703,6 +703,18 @@ a {
   color: #991b1b;
 }
 
+.logActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.logActions .btn {
+  width: auto;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
 .projectBoard {
   display: grid;
   gap: 16px;

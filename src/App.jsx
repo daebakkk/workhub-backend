@@ -8,6 +8,8 @@ import Reports from "./pages/Reports";
 import WorkLogs from './pages/WorkLogs';
 import Projects from './pages/Projects';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
+import AdminApprovals from './pages/AdminApprovals';
 
 function App() {
   return (
@@ -34,6 +36,11 @@ function App() {
           <ProtectedRoute>
             <Reports />
           </ProtectedRoute>
+        } />
+        <Route path="/admin/approvals" element={
+          <AdminRoute>
+            <AdminApprovals />
+          </AdminRoute>
         } />
       </Routes>
   );
