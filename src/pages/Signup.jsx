@@ -42,8 +42,9 @@ export default function Signup() {
       navigate('/login');
     } catch (err) {
       const data = err.response?.data;
+      const stringData = typeof data === 'string' ? data : null;
       const firstError =
-        (typeof data === 'string' ? data : null) ||
+        (stringData && stringData.length < 200 ? stringData : null) ||
         data?.email?.[0] ||
         data?.username?.[0] ||
         data?.password?.[0] ||
