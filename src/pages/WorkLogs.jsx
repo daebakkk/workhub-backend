@@ -88,9 +88,8 @@ function WorkLogs() {
             {showAddLogForm && (
               <WorkLogForm
                 onSubmitted={() => {
-                  if (showLogs) {
-                    fetchLogs();
-                  }
+                  setShowLogs(true);
+                  fetchLogs();
                 }}
               />
             )}

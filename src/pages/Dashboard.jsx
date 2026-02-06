@@ -2,10 +2,17 @@ import Navbar from '../components/Navbar';
 import { Link } from 'react-router-dom';
 
 function Dashboard() {
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const displayName = user?.first_name || user?.username || 'there';
+
   return (
     <div className="dashPage">
       <header className="topBar">
-        <h1 className="dashTitle">Dashboard</h1>
+        <div className="dashHeaderText">
+          <h1 className="dashTitle">Dashboard</h1>
+          <p className="dashWelcome">Welcome, {displayName}</p>
+        </div>
         <Navbar />
       </header>
       <div className="dashLayout">
