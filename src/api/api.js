@@ -3,11 +3,12 @@ import axios from "axios";
 const fallbackProdApi =
   "https://workhub-backend-1.onrender.com/api/";
 
-const API = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    (import.meta.env.PROD ? fallbackProdApi : "/api/"),
-});
+const baseURL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? fallbackProdApi : "/api/");
+
+const API = axios.create({ baseURL });
+const authAPI = axios.create({ baseURL });
 
 API.interceptors.request.use((req) => {
   const token = (localStorage.getItem("token") || "").trim();
@@ -49,3 +50,4 @@ API.interceptors.response.use(
 );
 
 export default API;
+export { authAPI };

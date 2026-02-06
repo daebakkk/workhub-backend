@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../api/api';
+import API, { authAPI } from '../api/api';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -24,17 +24,13 @@ export default function Signup() {
     }
 
     try {
-      await API.post('auth/register/', {
+      await authAPI.post('auth/register/', {
         username: email.trim().toLowerCase(),
         email: email.trim().toLowerCase(),
         password: password,
         first_name: firstName,
         last_name: lastName,
         role: 'staff',
-      }, {
-        headers: {
-          Authorization: undefined,
-        },
       });
 
       navigate('/login');

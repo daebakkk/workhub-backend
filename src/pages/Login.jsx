@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import API from '../api/api';
+import API, { authAPI } from '../api/api';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await API.post('auth/login/', {
+      const res = await authAPI.post('auth/login/', {
         username: email.trim().toLowerCase(),
         password,
       });
