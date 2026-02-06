@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import WorkLogForm from '../components/WorkLogForm';
@@ -22,6 +22,17 @@ function WorkLogs() {
     } finally {
       setLoadingLogs(false);
     }
+  }
+
+  useEffect(() => {
+    if (showLogs) {
+      fetchLogs();
+    }
+  }, [showLogs]);
+
+  function formatStatus(status) {
+    const value = status || 'pending';
+    return value.charAt(0).toUpperCase() + value.slice(1);
   }
 
   return (
@@ -78,11 +89,19 @@ function WorkLogs() {
                 className="btn dashViewLogsBtn"
                 onClick={() => {
                   setShowLogs(true);
-                  fetchLogs();
                 }}
                 type="button"
               >
                 View my logs
+              </button>
+            )}
+            {showLogs && (
+              <button
+                className="btn btnSecondary"
+                onClick={fetchLogs}
+                type="button"
+              >
+                Refresh logs
               </button>
             )}
             {showAddLogForm && (
@@ -116,8 +135,8 @@ function WorkLogs() {
                             {log.date} • {log.hours} hrs
                           </p>
                         </div>
-                        <span className={`logStatus ${log.status}`}>
-                          {log.status}
+                        <span className={`logStatus ${log.status || 'pending'}`}>
+                          {formatStatus(log.status)}
                         </span>
                       </div>
                     ))}

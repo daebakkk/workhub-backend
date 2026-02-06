@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, UserSerializer
 
 
-from .models import Project, WorkLog
+from .models import Project, WorkLog, User
 from .serializers import ProjectSerializer, WorkLogSerializer
 from django.db.models import Count, Q, Sum
 
@@ -152,3 +152,49 @@ def reports_summary(request):
         'by_project': list(by_project),
         'by_date': list(by_date),
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_projects(request):
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    projects = (
+        Project.objects.all()
+        .annotate(
+            total_tasks=Count('tasks', distinct=True),
+            completed_tasks=Count('tasks', filter=Q(tasks__is_completed=True), distinct=True),
+        )
+        .order_by('name')
+    )
+    serializer = ProjectSerializer(projects, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_users(request):
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    users = User.objects.filter(role='staff').order_by('first_name', 'last_name', 'username')
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def assign_project_staff(request, project_id):
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    user_ids = request.data.get('user_ids', [])
+    if not isinstance(user_ids, list):
+        return Response({'detail': 'user_ids must be a list'}, status=400)
+
+    project = Project.objects.get(id=project_id)
+    project.staff.set(User.objects.filter(id__in=user_ids))
+    project.save()
+
+    return Response({'message': 'Project assignments updated'})
