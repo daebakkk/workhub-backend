@@ -42,18 +42,8 @@ export default function Signup() {
       navigate('/login');
     } catch (err) {
       const data = err.response?.data;
-      const stringData = typeof data === 'string' ? data : null;
-      const firstError =
-        (stringData && stringData.length < 200 ? stringData : null) ||
-        data?.email?.[0] ||
-        data?.username?.[0] ||
-        data?.password?.[0] ||
-        data?.non_field_errors?.[0] ||
-        data?.detail ||
-        err.message ||
-        'Signup failed. Please try again.';
       console.error('Signup error:', err.response?.status, data || err);
-      setError(firstError);
+      setError('Signup failed. Please try again.');
     }
   }
 
