@@ -1,21 +1,69 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import API from '../api/api';
 
 export default function Login() {
   const navigate = useNavigate();
-  function handleSubmit(e) {
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    navigate('/dashboard');
+    setError('');
+
+    try {
+      const res = await API.post('auth/login/', {
+        username: email,
+        password: password,
+      });
+
+
+      localStorage.setItem('token', res.data.access);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+
+      if (res.data.user.role === 'admin') {
+        navigate('/admin/projects');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError('Invalid email or password');
+    }
   }
-  
+
   return (
     <div className="authPage">
       <div className="authCard">
         <h2 className="authTitle">Welcome Back</h2>
         <p className="authSubtitle">Log in to your WorkHub account</p>
 
+        {error && <p className="authError">{error}</p>}
+
         <form onSubmit={handleSubmit} className="authForm">
-          <input type="email" placeholder="Work Email" required />
-          <input type="password" placeholder="Password" required />
+          <input
+            type="email"
+            placeholder="Work Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <p className="authLinkRow">
+            Don't have an account?{' '}
+            <Link className="authLink" to="/signup">
+              Sign up
+            </Link>
+          </p>
 
           <button className="btn btnPrimary">Login</button>
         </form>

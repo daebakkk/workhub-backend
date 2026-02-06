@@ -1,10 +1,53 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-export default function Signup() {
-   const navigate = useNavigate();
+import API from '../api/api';
 
-  function handleSubmit(e) {
+export default function Signup() {
+  const navigate = useNavigate();
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const allowedDomain = '@thefifthlab.com';
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    navigate('/dashboard'); // fake signup for now
+    setError('');
+
+    //frontend email validation
+    if (!email.endsWith(allowedDomain)) {
+      setError(`Email must end with ${allowedDomain}`);
+      return;
+    }
+
+    try {
+      await API.post('auth/register/', {
+        username: email.trim().toLowerCase(),
+        email: email.trim().toLowerCase(),
+        password: password,
+        first_name: firstName,
+        last_name: lastName,
+        role: 'staff',
+      });
+
+      navigate('/login');
+    } catch (err) {
+      const data = err.response?.data;
+      const firstError =
+        (typeof data === 'string' ? data : null) ||
+        data?.email?.[0] ||
+        data?.username?.[0] ||
+        data?.password?.[0] ||
+        data?.non_field_errors?.[0] ||
+        data?.detail ||
+        err.message ||
+        'Signup failed. Please try again.';
+      console.error('Signup error:', err.response?.status, data || err);
+      setError(firstError);
+    }
   }
 
   return (
@@ -13,15 +56,41 @@ export default function Signup() {
         <h2 className="authTitle">Create Account</h2>
         <p className="authSubtitle">Join WorkHub and track your work</p>
 
+        {error && <p className="authError">{error}</p>}
+
         <form onSubmit={handleSubmit} className="authForm">
-          <input type="text" placeholder="Full Name" required />
-          <input type="email" placeholder="Work Email" required />
-          <input type="password" placeholder="Password" required />
-          <select required>
-            <option value="">Select role</option>
-            <option value="staff">Staff</option>
-            <option value="admin">Admin</option>
-          </select>
+          <input
+            type="text"
+            placeholder="First name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="Last name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+          />
+
+          <input
+            type="email"
+            placeholder="Work Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
           <button className="btn btnPrimary">Sign Up</button>
         </form>
       </div>

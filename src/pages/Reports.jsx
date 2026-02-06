@@ -14,6 +14,9 @@ export default function Reports() {
                         Reports will appear here once staff start logging their work.
                     </p>
                 </div>
+                <button className="btn btnPrimary reportsGenerateBtn" type="button">
+                    Generate Reports
+                </button>
             </main>
         </div>
     );
