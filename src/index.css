@@ -596,6 +596,75 @@ a {
   color: var(--text-muted);
 }
 
+.inlineStatus {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.inlineError {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: #be123c;
+  font-weight: 600;
+}
+
+.logList {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.logItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.logTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.logMeta {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.logStatus {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--text);
+}
+
+.logStatus.pending {
+  background: rgba(251, 146, 60, 0.18);
+  color: #9a3412;
+}
+
+.logStatus.approved {
+  background: rgba(34, 197, 94, 0.18);
+  color: #166534;
+}
+
+.logStatus.rejected {
+  background: rgba(239, 68, 68, 0.18);
+  color: #991b1b;
+}
+
 @media (max-width: 980px) {
   .dashLayout {
     grid-template-columns: 1fr;

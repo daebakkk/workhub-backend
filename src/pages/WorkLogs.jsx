@@ -2,10 +2,27 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import WorkLogForm from '../components/WorkLogForm';
+import API from '../api/api';
 
 function WorkLogs() {
   const [showAddLogForm, setShowAddLogForm] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [logsError, setLogsError] = useState('');
+
+  async function fetchLogs() {
+    setLoadingLogs(true);
+    setLogsError('');
+    try {
+      const res = await API.get('logs/my/');
+      setLogs(res.data || []);
+    } catch (err) {
+      setLogsError('Could not load logs. Please try again.');
+    } finally {
+      setLoadingLogs(false);
+    }
+  }
 
   return (
     <div className="dashPage">
@@ -59,20 +76,55 @@ function WorkLogs() {
             {!showLogs && (
               <button
                 className="btn dashViewLogsBtn"
-                onClick={() => setShowLogs(true)}
+                onClick={() => {
+                  setShowLogs(true);
+                  fetchLogs();
+                }}
                 type="button"
               >
                 View my logs
               </button>
             )}
-            {showAddLogForm && <WorkLogForm />}
+            {showAddLogForm && (
+              <WorkLogForm
+                onSubmitted={() => {
+                  if (showLogs) {
+                    fetchLogs();
+                  }
+                }}
+              />
+            )}
             {showLogs && (
-              <div className="emptyState">
-                <p className="emptyTitle">No work logs yet</p>
-                <p className="emptySubtitle">
-                  When you start adding logs, they will appear here.
-                </p>
-              </div>
+              <>
+                {loadingLogs && <p className="inlineStatus">Loading logs…</p>}
+                {logsError && <p className="inlineError">{logsError}</p>}
+                {!loadingLogs && !logsError && logs.length === 0 && (
+                  <div className="emptyState">
+                    <p className="emptyTitle">No work logs yet</p>
+                    <p className="emptySubtitle">
+                      When you start adding logs, they will appear here.
+                    </p>
+                  </div>
+                )}
+                {!loadingLogs && logs.length > 0 && (
+                  <div className="logList">
+                    {logs.map((log) => (
+                      <div className="logItem" key={log.id}>
+                        <div>
+                          <p className="logTitle">{log.title}</p>
+                          <p className="logMeta">
+                            {log.project?.name ? log.project.name : 'No project'} •{' '}
+                            {log.date} • {log.hours} hrs
+                          </p>
+                        </div>
+                        <span className={`logStatus ${log.status}`}>
+                          {log.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </section>
         </main>
