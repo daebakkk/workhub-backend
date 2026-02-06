@@ -19,4 +19,23 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+    const isTokenInvalid =
+      data?.code === "token_not_valid" ||
+      (typeof data?.detail === "string" &&
+        data.detail.toLowerCase().includes("token not valid"));
+
+    if (status === 401 && isTokenInvalid) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default API;
