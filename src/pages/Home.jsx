@@ -1,9 +1,7 @@
 import Navbar from '../components/Navbar';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 function Home() {
-  const navigate = useNavigate();
-
   return (
     <div className="page">
       
@@ -19,8 +17,8 @@ function Home() {
                 Keep track of all your work progress.
             </p>
             <div className="heroButtons">
-                <button className="btn btnPrimary" onClick={() => navigate('/login')}>Login</button>
-                <button className="btn btnSecondary" onClick={() => navigate('/signup')}>Sign Up</button>
+                <Link className="btn btnPrimary" to="/login">Login</Link>
+                <Link className="btn btnSecondary" to="/signup">Sign Up</Link>
           </div>
         </div>
       </main>
