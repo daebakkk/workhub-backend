@@ -26,6 +26,7 @@ export default function Login() {
 
       localStorage.setItem('token', res.data.access);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      API.defaults.headers.common.Authorization = `Bearer ${res.data.access}`;
 
       if (res.data.user.role === 'admin') {
         navigate('/admin/projects');
