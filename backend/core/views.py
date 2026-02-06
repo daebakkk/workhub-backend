@@ -10,7 +10,7 @@ from .serializers import RegisterSerializer, UserSerializer
 
 from .models import Project, WorkLog
 from .serializers import ProjectSerializer, WorkLogSerializer
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -121,3 +121,34 @@ def my_projects(request):
     )
     serializer = ProjectSerializer(projects, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def reports_summary(request):
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    logs = WorkLog.objects.select_related('project', 'staff').all()
+    total_logs = logs.count()
+    total_hours = logs.aggregate(total=Sum('hours'))['total'] or 0
+
+    status_counts = logs.values('status').annotate(count=Count('id'))
+    by_project = (
+        logs.values('project__name')
+        .annotate(hours=Sum('hours'), count=Count('id'))
+        .order_by('-hours')
+    )
+    by_date = (
+        logs.values('date')
+        .annotate(hours=Sum('hours'), count=Count('id'))
+        .order_by('-date')
+    )
+
+    return Response({
+        'total_logs': total_logs,
+        'total_hours': float(total_hours),
+        'status_counts': list(status_counts),
+        'by_project': list(by_project),
+        'by_date': list(by_date),
+    })
