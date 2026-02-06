@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const fallbackProdApi =
+  "https://workhub-backend-1.onrender.com/api/";
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/",
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD ? fallbackProdApi : "/api/"),
 });
 
 API.interceptors.request.use((req) => {
