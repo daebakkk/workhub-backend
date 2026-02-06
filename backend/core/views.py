@@ -198,3 +198,20 @@ def assign_project_staff(request, project_id):
     project.save()
 
     return Response({'message': 'Project assignments updated'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_project(request):
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    name = request.data.get('name', '').strip()
+    description = request.data.get('description', '').strip()
+
+    if not name:
+        return Response({'detail': 'Project name is required'}, status=400)
+
+    project = Project.objects.create(name=name, description=description)
+    serializer = ProjectSerializer(project)
+    return Response(serializer.data, status=201)

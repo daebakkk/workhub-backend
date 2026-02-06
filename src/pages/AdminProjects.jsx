@@ -7,9 +7,12 @@ function AdminProjects() {
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
   const [selected, setSelected] = useState({});
+  const [newName, setNewName] = useState('');
+  const [newDescription, setNewDescription] = useState('');
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -64,6 +67,31 @@ function AdminProjects() {
     }
   }
 
+  async function createProject(e) {
+    e.preventDefault();
+    if (!newName.trim()) {
+      setError('Project name is required.');
+      return;
+    }
+    setCreating(true);
+    setError('');
+    try {
+      const res = await API.post('admin/projects/create/', {
+        name: newName.trim(),
+        description: newDescription.trim(),
+      });
+      const created = res.data;
+      setProjects((prev) => [created, ...prev]);
+      setSelected((prev) => ({ ...prev, [created.id]: [] }));
+      setNewName('');
+      setNewDescription('');
+    } catch (err) {
+      setError('Failed to create project.');
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <div className="dashPage">
       <header className="topBar">
@@ -105,6 +133,27 @@ function AdminProjects() {
 
           {loading && <p className="inlineStatus">Loading…</p>}
           {error && <p className="inlineError">{error}</p>}
+
+          <form className="assignCreate" onSubmit={createProject}>
+            <div className="assignCreateFields">
+              <input
+                type="text"
+                placeholder="Project name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Short description"
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+              />
+            </div>
+            <button className="btn btnPrimary" type="submit" disabled={creating}>
+              {creating ? 'Creating…' : 'Create Project'}
+            </button>
+          </form>
 
           {!loading && !error && projects.length === 0 && (
             <div className="emptyState">
