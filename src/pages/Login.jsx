@@ -15,10 +15,15 @@ export default function Login() {
 
     try {
       const res = await API.post('auth/login/', {
-        username: email,
+        email: email,          // ✅ FIX: email instead of username
         password: password,
       });
 
+      // basic safety check
+      if (!res.data.access || !res.data.user) {
+        setError('Login failed');
+        return;
+      }
 
       localStorage.setItem('token', res.data.access);
       localStorage.setItem('user', JSON.stringify(res.data.user));
