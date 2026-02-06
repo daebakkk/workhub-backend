@@ -13,7 +13,11 @@ API.interceptors.request.use((req) => {
   const token = (localStorage.getItem("token") || "").trim();
   const url = req.url || "";
   const isAuthRoute = url.includes("auth/login") || url.includes("auth/register");
-  if (!isAuthRoute && token && token !== "null" && token !== "undefined") {
+  if (isAuthRoute) {
+    if (req.headers && req.headers.Authorization) {
+      delete req.headers.Authorization;
+    }
+  } else if (token && token !== "null" && token !== "undefined") {
     req.headers.Authorization = `Bearer ${token}`;
   }
   return req;

@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import API from '../api/api';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -9,6 +10,7 @@ export default function Navbar() {
   function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    delete API.defaults.headers.common.Authorization;
     navigate('/login');
   }
 
