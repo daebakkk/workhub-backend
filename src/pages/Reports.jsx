@@ -1,6 +1,6 @@
 import Navbar from '../components/Navbar';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import API from '../api/api';
 export default function Reports() {
     const storedUser = localStorage.getItem('user');
@@ -8,15 +8,35 @@ export default function Reports() {
     const isAdmin = user?.role === 'admin';
 
     const [report, setReport] = useState(null);
+    const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        async function fetchReports() {
+            try {
+                const res = await API.get('reports/');
+                const list = res.data || [];
+                setReports(list);
+                if (list.length > 0) {
+                    setReport(list[0]);
+                }
+            } catch (err) {
+                setError('Could not load reports.');
+            }
+        }
+
+        fetchReports();
+    }, []);
 
     async function generateReport() {
         setLoading(true);
         setError('');
         try {
-            const res = await API.get('reports/summary/');
-            setReport(res.data);
+            const res = await API.post('reports/create/');
+            const created = res.data;
+            setReports((prev) => [created, ...prev]);
+            setReport(created);
         } catch (err) {
             setError('Could not generate report.');
         } finally {
@@ -181,6 +201,24 @@ export default function Reports() {
                                     <p className="emptySubtitle">
                                         Click generate to build a report from current logs.
                                     </p>
+                                </div>
+                            )}
+
+                            {reports.length > 0 && (
+                                <div className="reportHistory">
+                                    <p className="reportTableTitle">Saved reports</p>
+                                    <div className="reportHistoryList">
+                                        {reports.map((item) => (
+                                            <button
+                                                key={item.id}
+                                                type="button"
+                                                className={`reportHistoryItem ${report?.id === item.id ? 'isActive' : ''}`}
+                                                onClick={() => setReport(item)}
+                                            >
+                                                {new Date(item.created_at).toLocaleString()}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
