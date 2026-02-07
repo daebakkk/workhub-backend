@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project, WorkLog, Task
+from .models import User, Project, WorkLog, Task, Report
 from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
@@ -82,3 +82,20 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ('id', 'title', 'is_completed', 'created_at', 'project')
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    created_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Report
+        fields = (
+            'id',
+            'created_at',
+            'created_by',
+            'total_logs',
+            'total_hours',
+            'status_counts',
+            'by_project',
+            'by_date',
+        )

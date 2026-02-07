@@ -8,8 +8,8 @@ from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, UserSerializer
 
 
-from .models import Project, WorkLog, User
-from .serializers import ProjectSerializer, WorkLogSerializer
+from .models import Project, WorkLog, User, Report
+from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer
 from django.db.models import Count, Q, Sum
 
 @api_view(['POST'])
@@ -152,6 +152,48 @@ def reports_summary(request):
         'by_project': list(by_project),
         'by_date': list(by_date),
     })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_report(request):
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    logs = WorkLog.objects.select_related('project', 'staff').all()
+    total_logs = logs.count()
+    total_hours = logs.aggregate(total=Sum('hours'))['total'] or 0
+
+    status_counts = list(logs.values('status').annotate(count=Count('id')))
+    by_project = list(
+        logs.values('project__name')
+        .annotate(hours=Sum('hours'), count=Count('id'))
+        .order_by('-hours')
+    )
+    by_date = list(
+        logs.values('date')
+        .annotate(hours=Sum('hours'), count=Count('id'))
+        .order_by('-date')
+    )
+
+    report = Report.objects.create(
+        created_by=request.user,
+        total_logs=total_logs,
+        total_hours=total_hours or 0,
+        status_counts=status_counts,
+        by_project=by_project,
+        by_date=by_date,
+    )
+    serializer = ReportSerializer(report)
+    return Response(serializer.data, status=201)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_reports(request):
+    reports = Report.objects.order_by('-created_at')
+    serializer = ReportSerializer(reports, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['GET'])

@@ -11,6 +11,8 @@ urlpatterns = [
     path('auth/login/', views.login),
     path('projects/my/', views.my_projects),
     path('reports/summary/', views.reports_summary),
+    path('reports/', views.list_reports),
+    path('reports/create/', views.create_report),
     path('admin/projects/', views.admin_projects),
     path('admin/users/', views.admin_users),
     path('admin/projects/<int:project_id>/assign/', views.assign_project_staff),
