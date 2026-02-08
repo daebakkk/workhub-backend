@@ -58,9 +58,9 @@ function WorkLogs() {
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>
-            <button type="button" className="sidebarLink" disabled>
+            <Link to="/settings" className="sidebarLink">
               Settings
-            </button>
+            </Link>
           </nav>
           <div className="sidebarNote">
             <p className="sidebarNoteTitle">Next review</p>

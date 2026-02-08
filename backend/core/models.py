@@ -12,6 +12,8 @@ class User(AbstractUser):
         choices=ROLE_CHOICES,
         default='staff'
     )
+    email_notifications = models.BooleanField(default=True)
+    dark_mode = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.username} ({self.role})"

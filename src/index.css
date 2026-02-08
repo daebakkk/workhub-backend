@@ -24,6 +24,19 @@ body {
   color: var(--text);
 }
 
+body.dark {
+  --bg: #0b1220;
+  --surface: #111827;
+  --surface-muted: #1f2937;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent: #f472b6;
+  --accent-dark: #db2777;
+  --accent-soft: rgba(244, 114, 182, 0.18);
+  --border: #1f2937;
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -1116,6 +1129,30 @@ a {
   .profileGrid {
     grid-template-columns: 1fr;
   }
+}
+
+.settingsCard {
+  max-width: 760px;
+  text-align: left;
+}
+
+.settingsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.settingsRow:last-of-type {
+  border-bottom: none;
+}
+
+.settingsForm {
+  display: grid;
+  gap: 12px;
 }
 
 @media (max-width: 980px) {

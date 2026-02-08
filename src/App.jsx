@@ -8,6 +8,7 @@ import Reports from "./pages/Reports";
 import WorkLogs from './pages/WorkLogs';
 import Projects from './pages/Projects';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import AdminApprovals from './pages/AdminApprovals';
@@ -41,6 +42,11 @@ function App() {
         <Route path="/profile" element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         } />
         <Route path="/admin/approvals" element={

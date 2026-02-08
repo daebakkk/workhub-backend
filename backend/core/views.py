@@ -112,6 +112,41 @@ def refresh_token(request):
         return Response({'detail': 'Invalid refresh token'}, status=401)
     return Response(serializer.validated_data, status=200)
 
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def user_settings(request):
+    if request.method == 'GET':
+        return Response(UserSerializer(request.user).data)
+
+    data = request.data or {}
+    email_notifications = data.get('email_notifications')
+    dark_mode = data.get('dark_mode')
+
+    if isinstance(email_notifications, bool):
+        request.user.email_notifications = email_notifications
+    if isinstance(dark_mode, bool):
+        request.user.dark_mode = dark_mode
+
+    request.user.save()
+    return Response(UserSerializer(request.user).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    current_password = request.data.get('current_password', '')
+    new_password = request.data.get('new_password', '')
+
+    if not request.user.check_password(current_password):
+        return Response({'detail': 'Current password is incorrect'}, status=400)
+    if len(new_password) < 6:
+        return Response({'detail': 'New password is too short'}, status=400)
+
+    request.user.set_password(new_password)
+    request.user.save()
+    return Response({'message': 'Password updated'})
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
