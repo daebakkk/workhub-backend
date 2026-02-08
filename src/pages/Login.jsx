@@ -12,6 +12,7 @@ export default function Login() {
   useEffect(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('refresh');
     delete API.defaults.headers.common.Authorization;
   }, []);
 
@@ -31,6 +32,9 @@ export default function Login() {
       }
 
       localStorage.setItem('token', res.data.access);
+      if (res.data.refresh) {
+        localStorage.setItem('refresh', res.data.refresh);
+      }
       localStorage.setItem('user', JSON.stringify(res.data.user));
       API.defaults.headers.common.Authorization = `Bearer ${res.data.access}`;
 

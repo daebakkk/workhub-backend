@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework.exceptions import ValidationError
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, UserSerializer
 
@@ -97,8 +99,18 @@ def login(request):
 
     return Response({
         'access': str(refresh.access_token),
+        'refresh': str(refresh),
         'user': UserSerializer(user).data
     })
+
+@api_view(['POST'])
+def refresh_token(request):
+    serializer = TokenRefreshSerializer(data=request.data)
+    try:
+        serializer.is_valid(raise_exception=True)
+    except ValidationError:
+        return Response({'detail': 'Invalid refresh token'}, status=401)
+    return Response(serializer.validated_data, status=200)
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated

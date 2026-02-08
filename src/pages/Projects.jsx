@@ -149,7 +149,7 @@ function Projects() {
     if (percent === 100) return 'Completed';
     if (percent >= 75) return 'Review';
     if (percent >= 30) return 'In progress';
-    return 'Blocked';
+    return 'Not started';
   }
 
   return (

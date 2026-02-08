@@ -14,6 +14,7 @@ export default function Signup() {
   useEffect(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('refresh');
     delete API.defaults.headers.common.Authorization;
   }, []);
 

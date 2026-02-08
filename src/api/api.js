@@ -32,7 +32,7 @@ API.interceptors.request.use((req) => {
 
 API.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const status = error?.response?.status;
     const data = error?.response?.data;
     const isTokenInvalid =
@@ -40,8 +40,29 @@ API.interceptors.response.use(
       (typeof data?.detail === "string" &&
         data.detail.toLowerCase().includes("token not valid"));
 
-    if (status === 401 && isTokenInvalid) {
+    if (status === 401 && isTokenInvalid && !error.config?._retry) {
+      const refresh = localStorage.getItem("refresh");
+      if (refresh) {
+        try {
+          error.config._retry = true;
+          const res = await authAPI.post("auth/refresh/", { refresh });
+          const newAccess = res.data?.access;
+          if (newAccess) {
+            localStorage.setItem("token", newAccess);
+            API.defaults.headers.common.Authorization = `Bearer ${newAccess}`;
+            error.config.headers.Authorization = `Bearer ${newAccess}`;
+            return API.request(error.config);
+          }
+        } catch (refreshError) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("refresh");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+          return Promise.reject(refreshError);
+        }
+      }
       localStorage.removeItem("token");
+      localStorage.removeItem("refresh");
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
