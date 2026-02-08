@@ -6,12 +6,8 @@ import API from '../api/api';
 function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [passwordSaving, setPasswordSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -58,31 +54,6 @@ function Settings() {
     }
   }
 
-  async function updatePassword(e) {
-    e.preventDefault();
-    setPasswordSaving(true);
-    setError('');
-    setMessage('');
-    if (newPassword !== confirmPassword) {
-      setPasswordSaving(false);
-      setError('Passwords do not match.');
-      return;
-    }
-    try {
-      await API.post('settings/password/', {
-        current_password: currentPassword,
-        new_password: newPassword,
-      });
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setMessage('Password updated.');
-    } catch (err) {
-      setError('Could not update password.');
-    } finally {
-      setPasswordSaving(false);
-    }
-  }
 
   return (
     <div className="dashPage">
@@ -152,35 +123,6 @@ function Settings() {
                 </button>
               </section>
 
-              <section className="card settingsCard">
-                <h2 className="cardTitle">Change password</h2>
-                <form className="settingsForm" onSubmit={updatePassword}>
-                  <input
-                    type="password"
-                    placeholder="Current password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                  />
-                  <input
-                    type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <button className="btn btnSecondary" type="submit" disabled={passwordSaving}>
-                    {passwordSaving ? 'Updating...' : 'Update Password'}
-                  </button>
-                </form>
-              </section>
             </>
           )}
         </main>

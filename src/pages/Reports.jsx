@@ -44,33 +44,6 @@ export default function Reports() {
         }
     }
 
-    function downloadCsv() {
-        if (!report) return;
-        const rows = [];
-        rows.push(['Report Summary']);
-        rows.push(['Total Logs', report.total_logs]);
-        rows.push(['Total Hours', report.total_hours]);
-        rows.push([]);
-        rows.push(['Status', 'Count']);
-        report.status_counts.forEach((row) => rows.push([row.status, row.count]));
-        rows.push([]);
-        rows.push(['Project', 'Hours', 'Logs']);
-        report.by_project.forEach((row) =>
-            rows.push([row.project__name || 'No project', row.hours || 0, row.count])
-        );
-        rows.push([]);
-        rows.push(['Date', 'Hours', 'Logs']);
-        report.by_date.forEach((row) => rows.push([row.date, row.hours || 0, row.count]));
-
-        const csv = rows.map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'workhub-report.csv';
-        link.click();
-        URL.revokeObjectURL(url);
-    }
 
     function downloadPdf() {
         if (!report) return;
@@ -264,15 +237,6 @@ export default function Reports() {
                                 disabled={loading}
                             >
                                 Generate Reports
-                            </button>
-                        )}
-                        {report && (
-                            <button
-                                className="btn btnSecondary"
-                                type="button"
-                                onClick={downloadCsv}
-                            >
-                                Download CSV
                             </button>
                         )}
                         {report && (

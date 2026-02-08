@@ -25,14 +25,14 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(15, 23, 42, 0.08);
-  color: #0f172a;
+  background: var(--surface-muted);
+  color: var(--text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 1px solid var(--border);
   transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
@@ -47,8 +47,8 @@
   right: 0;
   top: 44px;
   min-width: 160px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
   padding: 6px;
@@ -65,13 +65,13 @@
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   cursor: pointer;
 }
 
 .profileDropdownItem:hover {
-  background: rgba(225, 29, 139, 0.08);
-  color: #e11d8b;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .navItem {
@@ -81,20 +81,20 @@
   font-size: 14px;
   font-weight: 600;
   font-family: 'Poppins', sans-serif;
-  color: #0f172a;
+  color: var(--text);
   border-radius: 999px;
   border: 1px solid transparent;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .navItem:hover {
-  background: rgba(225, 29, 139, 0.08);
-  color: #e11d8b;
+  background: var(--accent-soft);
+  color: var(--accent);
   border-color: rgba(225, 29, 139, 0.3);
 }
 
 .navBtn {
-  background: #e11d8b;
+  background: var(--accent);
   color: white;
   border-radius: 999px;
   padding: 9px 16px;
@@ -108,5 +108,5 @@
 
 .navBtn:hover {
   transform: translateY(-1px);
-  background: #be185d;
+  background: var(--accent-dark);
 }
