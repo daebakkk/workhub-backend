@@ -24,6 +24,8 @@ export default function Navbar() {
         <Link to="/reports" className="navItem">Reports</Link>)}
       {currentPath !== "/projects" && (
         <Link to="/projects" className="navItem">Projects</Link>)}
+      {currentPath !== "/profile" && (
+        <Link to="/profile" className="navItem">Profile</Link>)}
       {user?.role === 'admin' && currentPath !== "/admin/approvals" && (
         <Link to="/admin/approvals" className="navItem">Approvals</Link>)}
       <button className="navBtn" type="button" onClick={handleLogout}>

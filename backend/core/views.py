@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -8,8 +8,8 @@ from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, UserSerializer
 
 
-from .models import Project, WorkLog, User, Report
-from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer
+from .models import Project, WorkLog, User, Report, Task
+from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer, TaskSerializer
 from django.db.models import Count, Q, Sum
 
 @api_view(['POST'])
@@ -180,6 +180,7 @@ def create_report(request):
     )
     for row in by_date:
         row['hours'] = float(row['hours'] or 0)
+        row['date'] = row['date'].isoformat() if row['date'] else None
 
     report = Report.objects.create(
         created_by=request.user,
@@ -262,3 +263,43 @@ def create_project(request):
     project = Project.objects.create(name=name, description=description)
     serializer = ProjectSerializer(project)
     return Response(serializer.data, status=201)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def project_tasks(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
+    if request.user.role != 'admin' and request.user not in project.staff.all():
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    if request.method == 'GET':
+        tasks = Task.objects.filter(project=project).order_by('-created_at')
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    title = request.data.get('title', '').strip()
+    if not title:
+        return Response({'detail': 'Task title is required'}, status=400)
+
+    task = Task.objects.create(project=project, title=title)
+    serializer = TaskSerializer(task)
+    return Response(serializer.data, status=201)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_task(request, task_id):
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    task = get_object_or_404(Task, id=task_id)
+    is_completed = request.data.get('is_completed')
+    if isinstance(is_completed, bool):
+        task.is_completed = is_completed
+        task.save()
+    serializer = TaskSerializer(task)
+    return Response(serializer.data)

@@ -13,6 +13,9 @@ function Projects() {
   const [selected, setSelected] = useState({});
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [tasksByProject, setTasksByProject] = useState({});
+  const [taskTitleByProject, setTaskTitleByProject] = useState({});
+  const [tasksLoading, setTasksLoading] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState(null);
@@ -97,6 +100,47 @@ function Projects() {
       setError('Failed to create project.');
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function fetchTasks(projectId) {
+    setTasksLoading((prev) => ({ ...prev, [projectId]: true }));
+    try {
+      const res = await API.get(`projects/${projectId}/tasks/`);
+      setTasksByProject((prev) => ({ ...prev, [projectId]: res.data || [] }));
+    } catch (err) {
+      setError('Failed to load tasks.');
+    } finally {
+      setTasksLoading((prev) => ({ ...prev, [projectId]: false }));
+    }
+  }
+
+  async function createTask(projectId) {
+    const title = (taskTitleByProject[projectId] || '').trim();
+    if (!title) return;
+    try {
+      const res = await API.post(`projects/${projectId}/tasks/`, { title });
+      setTasksByProject((prev) => ({
+        ...prev,
+        [projectId]: [res.data, ...(prev[projectId] || [])],
+      }));
+      setTaskTitleByProject((prev) => ({ ...prev, [projectId]: '' }));
+    } catch (err) {
+      setError('Failed to create task.');
+    }
+  }
+
+  async function toggleTask(taskId, projectId, isCompleted) {
+    try {
+      const res = await API.patch(`tasks/${taskId}/`, { is_completed: isCompleted });
+      setTasksByProject((prev) => ({
+        ...prev,
+        [projectId]: (prev[projectId] || []).map((task) =>
+          task.id === taskId ? res.data : task
+        ),
+      }));
+    } catch (err) {
+      setError('Failed to update task.');
     }
   }
 
@@ -187,6 +231,7 @@ function Projects() {
               const totalTasks = project.total_tasks || 0;
               const status = getStatus(percent, totalTasks);
               const badgeClass = status.toLowerCase().replace(' ', '-');
+              const tasks = tasksByProject[project.id] || [];
               return (
                 <div className="projectTile" key={project.id}>
                   <div className="projectTileHeader">
@@ -229,6 +274,63 @@ function Projects() {
                       {savingId === project.id ? 'Saving...' : 'Save Assignments'}
                     </button>
                   )}
+                  <div className="taskSection">
+                    <div className="taskHeader">
+                      <p className="taskTitle">Tasks</p>
+                      <button
+                        className="btn btnSecondary"
+                        type="button"
+                        onClick={() => fetchTasks(project.id)}
+                        disabled={tasksLoading[project.id]}
+                      >
+                        {tasksLoading[project.id] ? 'Loading...' : 'Refresh tasks'}
+                      </button>
+                    </div>
+                    {isAdmin && (
+                      <div className="taskCreate">
+                        <input
+                          type="text"
+                          placeholder="New task"
+                          value={taskTitleByProject[project.id] || ''}
+                          onChange={(e) =>
+                            setTaskTitleByProject((prev) => ({
+                              ...prev,
+                              [project.id]: e.target.value,
+                            }))
+                          }
+                        />
+                        <button
+                          className="btn btnPrimary"
+                          type="button"
+                          onClick={() => createTask(project.id)}
+                        >
+                          Add Task
+                        </button>
+                      </div>
+                    )}
+                    {tasks.length === 0 && (
+                      <p className="taskEmpty">No tasks yet.</p>
+                    )}
+                    {tasks.length > 0 && (
+                      <div className="taskList">
+                        {tasks.map((task) => (
+                          <label className="taskItem" key={task.id}>
+                            <input
+                              type="checkbox"
+                              checked={task.is_completed}
+                              disabled={!isAdmin}
+                              onChange={(e) =>
+                                toggleTask(task.id, project.id, e.target.checked)
+                              }
+                            />
+                            <span className={task.is_completed ? 'taskDone' : ''}>
+                              {task.title}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <div className="projectProgress">
                     <div
                       className="projectProgressFill"
