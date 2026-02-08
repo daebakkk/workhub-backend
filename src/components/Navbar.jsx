@@ -43,6 +43,8 @@ export default function Navbar() {
     <nav className={`navbar ${isHome ? 'navbarHome' : ''}`}>
       {currentPath !== "/dashboard" && (
         <Link to="/dashboard" className="navItem">Dashboard</Link>)}
+      {currentPath !== "/" && (
+        <Link to="/" className="navItem">Home</Link>)}
       {currentPath !== "/reports" && (
         <Link to="/reports" className="navItem">Reports</Link>)}
       {currentPath !== "/projects" && (
