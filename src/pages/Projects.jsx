@@ -238,7 +238,7 @@ function Projects() {
                     <div>
                       <p className="projectTileName">{project.name}</p>
                       <p className="projectTileMeta">
-                        {project.description || 'No description yet'}
+                        ({project.description || 'No description yet'})
                       </p>
                     </div>
                     <span className={`projectBadge ${badgeClass}`}>
