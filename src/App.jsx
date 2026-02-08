@@ -10,7 +10,6 @@ import Projects from './pages/Projects';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import AdminApprovals from './pages/AdminApprovals';
-import AdminProjects from './pages/AdminProjects';
 
 function App() {
   return (
@@ -41,11 +40,6 @@ function App() {
         <Route path="/admin/approvals" element={
           <AdminRoute>
             <AdminApprovals />
-          </AdminRoute>
-        } />
-        <Route path="/admin/projects" element={
-          <AdminRoute>
-            <AdminProjects />
           </AdminRoute>
         } />
       </Routes>
