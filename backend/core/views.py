@@ -170,16 +170,21 @@ def create_report(request):
         .annotate(hours=Sum('hours'), count=Count('id'))
         .order_by('-hours')
     )
+    for row in by_project:
+        row['hours'] = float(row['hours'] or 0)
+
     by_date = list(
         logs.values('date')
         .annotate(hours=Sum('hours'), count=Count('id'))
         .order_by('-date')
     )
+    for row in by_date:
+        row['hours'] = float(row['hours'] or 0)
 
     report = Report.objects.create(
         created_by=request.user,
         total_logs=total_logs,
-        total_hours=total_hours or 0,
+        total_hours=float(total_hours or 0),
         status_counts=status_counts,
         by_project=by_project,
         by_date=by_date,
