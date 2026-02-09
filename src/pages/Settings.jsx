@@ -51,6 +51,7 @@ function Settings() {
         specialization,
       });
       localStorage.setItem('user', JSON.stringify(res.data));
+      window.dispatchEvent(new Event('user:updated'));
       applyTheme(!!res.data.dark_mode);
       setMessage('Settings saved.');
     } catch (err) {
@@ -133,8 +134,7 @@ function Settings() {
                     <option value="frontend">Frontend Developer</option>
                     <option value="backend">Backend Developer</option>
                     <option value="full_stack">Full Stack Developer</option>
-                    <option value="data_science">Data Science</option>
-                    <option value="analyst">Analyst</option>
+                    <option value="data_analyst">Data Analyst</option>
                   </select>
                 </label>
                 <button

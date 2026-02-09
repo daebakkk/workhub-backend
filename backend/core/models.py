@@ -10,8 +10,7 @@ class User(AbstractUser):
         ('frontend', 'Frontend'),
         ('backend', 'Backend'),
         ('full_stack', 'Full Stack'),
-        ('data_science', 'Data Science'),
-        ('analyst', 'Analyst'),
+        ('data_analyst', 'Data Analyst'),
     )
 
     role = models.CharField(

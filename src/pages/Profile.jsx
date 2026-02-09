@@ -1,10 +1,32 @@
 import Navbar from '../components/Navbar';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import API from '../api/api';
 
 function Profile() {
   const storedUser = localStorage.getItem('user');
-  const user = storedUser ? JSON.parse(storedUser) : null;
+  const initialUser = storedUser ? JSON.parse(storedUser) : null;
+  const [user, setUser] = useState(initialUser);
   const isAdmin = user?.role === 'admin';
+
+  useEffect(() => {
+    async function refreshUser() {
+      try {
+        const res = await API.get('settings/');
+        setUser(res.data);
+        localStorage.setItem('user', JSON.stringify(res.data));
+      } catch (err) {
+        // keep last known user
+      }
+    }
+
+    refreshUser();
+    function handleUserUpdated() {
+      refreshUser();
+    }
+    window.addEventListener('user:updated', handleUserUpdated);
+    return () => window.removeEventListener('user:updated', handleUserUpdated);
+  }, []);
 
   return (
     <div className="dashPage">

@@ -122,11 +122,14 @@ def user_settings(request):
     data = request.data or {}
     email_notifications = data.get('email_notifications')
     dark_mode = data.get('dark_mode')
+    specialization = data.get('specialization')
 
     if isinstance(email_notifications, bool):
         request.user.email_notifications = email_notifications
     if isinstance(dark_mode, bool):
         request.user.dark_mode = dark_mode
+    if isinstance(specialization, str) and specialization:
+        request.user.specialization = specialization
 
     request.user.save()
     return Response(UserSerializer(request.user).data)

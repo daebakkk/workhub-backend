@@ -188,8 +188,7 @@ function Projects() {
     { key: 'frontend', label: 'Frontend' },
     { key: 'backend', label: 'Backend' },
     { key: 'full_stack', label: 'Full Stack' },
-    { key: 'data_science', label: 'Data Science' },
-    { key: 'analyst', label: 'Analyst' },
+    { key: 'data_analyst', label: 'Data Analyst' },
   ];
 
   return (
