@@ -110,3 +110,51 @@
   transform: translateY(-1px);
   background: var(--accent-dark);
 }
+
+.navHamburger {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.navHamburger span {
+  display: block;
+  width: 16px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .navHamburger {
+    display: inline-flex;
+  }
+
+  .navItem {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .navBtn {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .profileDropdown {
+    right: 0;
+  }
+}

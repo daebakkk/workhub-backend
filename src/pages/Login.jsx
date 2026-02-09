@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
 
   useEffect(() => {
     localStorage.removeItem('token');
@@ -19,6 +20,7 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setLoggingIn(true);
 
     try {
       const res = await authAPI.post('auth/login/', {
@@ -45,6 +47,8 @@ export default function Login() {
       }
     } catch (err) {
       setError('Invalid email or password');
+    } finally {
+      setLoggingIn(false);
     }
   }
 
@@ -80,7 +84,9 @@ export default function Login() {
             </Link>
           </p>
 
-          <button className="btn btnPrimary">Login</button>
+          <button className="btn btnPrimary" disabled={loggingIn}>
+            {loggingIn ? 'Signing in...' : 'Login'}
+          </button>
         </form>
       </div>
     </div>

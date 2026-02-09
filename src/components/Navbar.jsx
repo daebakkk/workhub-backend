@@ -27,6 +27,20 @@ export default function Navbar() {
     navigate('/login');
   }
 
+  function toggleSidebar() {
+    document.body.classList.toggle('sidebar-open');
+  }
+
+  useEffect(() => {
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        document.body.classList.remove('sidebar-open');
+      }
+    }
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -41,6 +55,18 @@ export default function Navbar() {
 
   return (
     <nav className={`navbar ${isHome ? 'navbarHome' : ''}`}>
+      {!isHome && (
+        <button
+          type="button"
+          className="navHamburger"
+          aria-label="Toggle sidebar"
+          onClick={toggleSidebar}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      )}
       {currentPath !== "/dashboard" && (
         <Link to="/dashboard" className="navItem">Dashboard</Link>)}
       {currentPath !== "/" && (
