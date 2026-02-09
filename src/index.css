@@ -664,6 +664,9 @@ a {
 .workLogCard .emptyState,
 .workLogCard .logList {
   width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .workLogCard .logItem {
@@ -985,8 +988,8 @@ a {
 .assignList {
   margin: 16px 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
 }
 .assignGroup {
   display: grid;
@@ -1001,6 +1004,20 @@ a {
   font-weight: 600;
   color: var(--text);
   font-size: 0.9rem;
+}
+.assignItem {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.assignItem input {
+  margin: 0;
+}
+.projectCreateBar {
+  margin: 12px 0 18px;
+  display: flex;
+  gap: 12px;
 }
 
 .assignItem {

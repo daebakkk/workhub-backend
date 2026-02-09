@@ -23,6 +23,7 @@ function Projects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
 
   useEffect(() => {
     async function fetchProjects() {
@@ -226,104 +227,123 @@ function Projects() {
               {isAdmin ? 'Create projects and manage assignments' : 'Create projects and track tasks'}
             </p>
             {error && <p className="inlineError">{error}</p>}
-            <form className="assignCreate" onSubmit={(e) => createProject(e)}>
-              <div className="assignCreateFields">
-                <input
-                  type="text"
-                  placeholder="Project name"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Short description"
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                />
-              </div>
-              <div className="taskCreate">
-                <input
-                  type="text"
-                  placeholder="Add task"
-                  value={createTaskInput}
-                  onChange={(e) => setCreateTaskInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addCreateTask();
-                    }
-                  }}
-                />
-                <button className="btn btnSecondary" type="button" onClick={addCreateTask}>
-                  Add task
-                </button>
-              </div>
-              {createTasks.length > 0 && (
-                <div className="taskList">
-                  {createTasks.map((task) => (
-                    <div className="taskItem" key={task}>
-                      <span>{task}</span>
+            <div className="projectCreateBar">
+              <button
+                className="btn btnPrimary"
+                type="button"
+                onClick={() => setShowCreate((prev) => !prev)}
+              >
+                {showCreate ? 'Hide create form' : 'Create a project'}
+              </button>
+            </div>
+            {showCreate && (
+              <form className="assignCreate" onSubmit={(e) => createProject(e)}>
+                <div className="assignCreateFields">
+                  <input
+                    type="text"
+                    placeholder="Project name"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Short description"
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                  />
+                </div>
+                <div className="taskCreate">
+                  <input
+                    type="text"
+                    placeholder="Add task (optional)"
+                    value={createTaskInput}
+                    onChange={(e) => setCreateTaskInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addCreateTask();
+                      }
+                    }}
+                  />
+                  <button className="btn btnSecondary" type="button" onClick={addCreateTask}>
+                    Add task
+                  </button>
+                </div>
+                {createTasks.length > 0 && (
+                  <div className="taskList">
+                    {createTasks.map((task) => (
+                      <div className="taskItem" key={task}>
+                        <span>{task}</span>
+                        <button
+                          className="btn btnSecondary"
+                          type="button"
+                          onClick={() => removeCreateTask(task)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {isAdmin && (
+                  <div className="assignList">
+                    {specializationGroups.map((group) => {
+                      const members = staffUsers.filter(
+                        (staff) => staff.specialization === group.key
+                      );
+                      if (members.length === 0) return null;
+                      return (
+                        <div className="assignGroup" key={group.key}>
+                          <p className="assignGroupTitle">{group.label}</p>
+                          {members.map((staff) => {
+                            const checked = createAssignees.includes(staff.id);
+                            return (
+                              <label className="assignItem" key={`create-${staff.id}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleCreateAssignee(staff.id)}
+                                />
+                                <span>
+                                  {staff.first_name || staff.username} {staff.last_name || ''}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="settingsRow">
+                  <span>Create project</span>
+                  <div className="reportActions">
+                    <button className="btn btnPrimary" type="submit" disabled={creating}>
+                      {creating ? 'Creating...' : 'Create'}
+                    </button>
+                    {isAdmin && (
                       <button
                         className="btn btnSecondary"
                         type="button"
-                        onClick={() => removeCreateTask(task)}
+                        disabled={creating}
+                        onClick={(e) => createProject(e, true)}
                       >
-                        Remove
+                        Create for myself
                       </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {isAdmin && (
-                <div className="assignList">
-                  {specializationGroups.map((group) => {
-                    const members = staffUsers.filter(
-                      (staff) => staff.specialization === group.key
-                    );
-                    if (members.length === 0) return null;
-                    return (
-                      <div className="assignGroup" key={group.key}>
-                        <p className="assignGroupTitle">{group.label}</p>
-                        {members.map((staff) => {
-                          const checked = createAssignees.includes(staff.id);
-                          return (
-                            <label className="assignItem" key={`create-${staff.id}`}>
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleCreateAssignee(staff.id)}
-                              />
-                              <span>
-                                {staff.first_name || staff.username} {staff.last_name || ''}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              <div className="settingsRow">
-                <span>Create project</span>
-                <div className="reportActions">
-                  <button className="btn btnPrimary" type="submit" disabled={creating}>
-                    {creating ? 'Creating...' : 'Create'}
-                  </button>
-                  {isAdmin && (
+                    )}
                     <button
                       className="btn btnSecondary"
                       type="button"
+                      onClick={() => setShowCreate(false)}
                       disabled={creating}
-                      onClick={(e) => createProject(e, true)}
                     >
-                      Create for myself
+                      Cancel
                     </button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </form>
+              </form>
+            )}
           </>
           <section className="projectBoard">
             {loading && <p className="inlineStatus">Loading projects...</p>}
@@ -390,7 +410,7 @@ function Projects() {
                       </button>
                     </div>
                   )}
-                    {tasks.length === 0 && (
+                    {tasks.length === 0 && totalTasks === 0 && (
                       <p className="taskEmpty">No tasks yet.</p>
                     )}
                     {tasks.length > 0 && (
