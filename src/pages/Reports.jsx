@@ -130,9 +130,9 @@ export default function Reports() {
                     <p className="sidebarTitle">Workspace</p>
                     <p className="sidebarSubtitle">WorkHub</p>
                     <nav className="sidebarNav">
-                        <Link to="/dashboard" className="sidebarLink">
-                            Overview
-                        </Link>
+                      <Link to="/dashboard" className="sidebarLink">
+                        Overview
+                      </Link>
                         <Link to="/work-logs" className="sidebarLink">
                             Work Logs
                         </Link>
@@ -147,14 +147,10 @@ export default function Reports() {
                 Approvals
               </Link>
             )}
-            <Link to="/settings" className="sidebarLink">
-              Settings
-            </Link>
+                      <Link to="/settings" className="sidebarLink">
+                        Settings
+                      </Link>
                     </nav>
-                    <div className="sidebarNote">
-                        <p className="sidebarNoteTitle">Next review</p>
-                        <p className="sidebarNoteValue">Fri, 10:00 AM</p>
-                    </div>
                 </aside>
 
                 <main className="dashMain dashContent">

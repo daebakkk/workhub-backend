@@ -1003,10 +1003,13 @@ a {
   font-size: 0.9rem;
 }
 .assignItem {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.12);
+  width: fit-content;
 }
 .assignItem input {
   margin: 0;

@@ -37,6 +37,9 @@ function Profile() {
             <Link to="/profile" className="sidebarLink isActive">
               Profile
             </Link>
+            <Link to="/settings" className="sidebarLink">
+              Settings
+            </Link>
           </nav>
           <div className="sidebarNote">
             <p className="sidebarNoteTitle">Role</p>

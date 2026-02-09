@@ -102,10 +102,6 @@ function Dashboard() {
               Settings
             </Link>
           </nav>
-          <div className="sidebarNote">
-            <p className="sidebarNoteTitle">Next review</p>
-            <p className="sidebarNoteValue">Fri, 10:00 AM</p>
-          </div>
         </aside>
 
         <main className="dashMain dashContent">
