@@ -10,6 +10,7 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [signingUp, setSigningUp] = useState(false);
 
   useEffect(() => {
     localStorage.removeItem('token');
@@ -23,10 +24,12 @@ export default function Signup() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setSigningUp(true);
 
     //frontend email validation
     if (!email.endsWith(allowedDomain)) {
       setError(`Email must end with ${allowedDomain}`);
+      setSigningUp(false);
       return;
     }
 
@@ -45,6 +48,8 @@ export default function Signup() {
       const data = err.response?.data;
       console.error('Signup error:', err.response?.status, data || err);
       setError('Signup failed. Please try again.');
+    } finally {
+      setSigningUp(false);
     }
   }
 
@@ -89,7 +94,9 @@ export default function Signup() {
             required
           />
 
-          <button className="btn btnPrimary">Sign Up</button>
+          <button className="btn btnPrimary" disabled={signingUp}>
+            {signingUp ? 'Creating account...' : 'Sign Up'}
+          </button>
         </form>
       </div>
     </div>

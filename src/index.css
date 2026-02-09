@@ -642,6 +642,11 @@ a {
   text-align: center;
 }
 
+.workLogCard {
+  width: min(420px, 92vw);
+  margin: 0 auto;
+}
+
 .cardTitle {
   margin: 0 0 14px;
   font-size: 20px;

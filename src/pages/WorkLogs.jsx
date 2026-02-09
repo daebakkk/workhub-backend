@@ -73,7 +73,7 @@ function WorkLogs() {
             Add new work logs and review recent activity
           </p>
 
-          <section className="card">
+          <section className="card workLogCard">
             <h2 className="cardTitle">Work Logs</h2>
             {!showAddLogForm && (
               <button
