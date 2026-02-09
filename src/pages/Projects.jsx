@@ -189,32 +189,32 @@ function Projects() {
         </aside>
 
         <main className="dashMain dashContent">
-          {isAdmin && (
-            <>
-              <p className="dashSubtitle">Create and assign projects</p>
-              {error && <p className="inlineError">{error}</p>}
-              <form className="assignCreate" onSubmit={createProject}>
-                <div className="assignCreateFields">
-                  <input
-                    type="text"
-                    placeholder="Project name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Short description"
-                    value={newDescription}
-                    onChange={(e) => setNewDescription(e.target.value)}
-                  />
-                </div>
-                <button className="btn btnPrimary" type="submit" disabled={creating}>
-                  {creating ? 'Creating...' : 'Create Project'}
-                </button>
-              </form>
-            </>
-          )}
+          <>
+            <p className="dashSubtitle">
+              {isAdmin ? 'Create and assign projects' : 'Create projects and track tasks'}
+            </p>
+            {error && <p className="inlineError">{error}</p>}
+            <form className="assignCreate" onSubmit={createProject}>
+              <div className="assignCreateFields">
+                <input
+                  type="text"
+                  placeholder="Project name"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Short description"
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                />
+              </div>
+              <button className="btn btnPrimary" type="submit" disabled={creating}>
+                {creating ? 'Creating...' : 'Create Project'}
+              </button>
+            </form>
+          </>
           <section className="projectBoard">
             {loading && <p className="inlineStatus">Loading projects...</p>}
             {error && <p className="inlineError">{error}</p>}
@@ -286,28 +286,28 @@ function Projects() {
                         {tasksLoading[project.id] ? 'Loading...' : 'Refresh tasks'}
                       </button>
                     </div>
-                    {isAdmin && (
-                      <div className="taskCreate">
-                        <input
-                          type="text"
-                          placeholder="New task"
-                          value={taskTitleByProject[project.id] || ''}
-                          onChange={(e) =>
-                            setTaskTitleByProject((prev) => ({
-                              ...prev,
-                              [project.id]: e.target.value,
-                            }))
-                          }
-                        />
-                        <button
-                          className="btn btnPrimary"
-                          type="button"
-                          onClick={() => createTask(project.id)}
-                        >
-                          Add Task
-                        </button>
-                      </div>
-                    )}
+                  {!isAdmin && (
+                    <div className="taskCreate">
+                      <input
+                        type="text"
+                        placeholder="New task"
+                        value={taskTitleByProject[project.id] || ''}
+                        onChange={(e) =>
+                          setTaskTitleByProject((prev) => ({
+                            ...prev,
+                            [project.id]: e.target.value,
+                          }))
+                        }
+                      />
+                      <button
+                        className="btn btnPrimary"
+                        type="button"
+                        onClick={() => createTask(project.id)}
+                      >
+                        Add Task
+                      </button>
+                    </div>
+                  )}
                     {tasks.length === 0 && (
                       <p className="taskEmpty">No tasks yet.</p>
                     )}
@@ -318,7 +318,7 @@ function Projects() {
                             <input
                               type="checkbox"
                               checked={task.is_completed}
-                              disabled={!isAdmin}
+                              disabled={isAdmin}
                               onChange={(e) =>
                                 toggleTask(task.id, project.id, e.target.checked)
                               }

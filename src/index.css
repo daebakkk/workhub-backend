@@ -643,7 +643,7 @@ a {
 }
 
 .workLogCard {
-  width: min(520px, 94vw);
+  width: min(420px, 92vw);
 }
 
 .workLogCard .cardTitle {
@@ -657,9 +657,13 @@ a {
   margin-right: auto;
 }
 
-.workLogCard .emptyState {
-  margin-left: auto;
-  margin-right: auto;
+.workLogCard .emptyState,
+.workLogCard .logList {
+  width: 100%;
+}
+
+.workLogCard .logItem {
+  width: 100%;
 }
 
 .cardTitle {

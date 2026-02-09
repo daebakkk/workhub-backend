@@ -298,9 +298,6 @@ def assign_project_staff(request, project_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_project(request):
-    if request.user.role != 'admin':
-        return Response({'detail': 'Not allowed'}, status=403)
-
     name = request.data.get('name', '').strip()
     description = request.data.get('description', '').strip()
 
@@ -308,6 +305,8 @@ def create_project(request):
         return Response({'detail': 'Project name is required'}, status=400)
 
     project = Project.objects.create(name=name, description=description)
+    if request.user.role != 'admin':
+        project.staff.add(request.user)
     serializer = ProjectSerializer(project)
     return Response(serializer.data, status=201)
 
@@ -325,7 +324,7 @@ def project_tasks(request, project_id):
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
 
-    if request.user.role != 'admin':
+    if request.user.role == 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
     title = request.data.get('title', '').strip()
@@ -340,10 +339,11 @@ def project_tasks(request, project_id):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_task(request, task_id):
-    if request.user.role != 'admin':
-        return Response({'detail': 'Not allowed'}, status=403)
-
     task = get_object_or_404(Task, id=task_id)
+    if request.user.role == 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+    if request.user not in task.project.staff.all():
+        return Response({'detail': 'Not allowed'}, status=403)
     is_completed = request.data.get('is_completed')
     if isinstance(is_completed, bool):
         task.is_completed = is_completed
