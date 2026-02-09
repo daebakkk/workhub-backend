@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'role',
+            'specialization',
             'email_notifications',
             'dark_mode',
         )
@@ -66,7 +67,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'first_name', 'last_name', 'role')
+        fields = (
+            'username',
+            'email',
+            'password',
+            'first_name',
+            'last_name',
+            'role',
+            'specialization',
+        )
 
     def validate_email(self, value):
         allowed_domain = "@thefifthlab.com"
@@ -83,6 +92,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
             role=validated_data.get('role', 'staff'),
+            specialization=validated_data.get('specialization', 'frontend'),
         )
         return user
 

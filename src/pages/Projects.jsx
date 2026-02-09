@@ -14,12 +14,14 @@ function Projects() {
   const [selected, setSelected] = useState({});
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [createAssignees, setCreateAssignees] = useState([]);
+  const [createTaskInput, setCreateTaskInput] = useState('');
+  const [createTasks, setCreateTasks] = useState([]);
   const [tasksByProject, setTasksByProject] = useState({});
   const [taskTitleByProject, setTaskTitleByProject] = useState({});
   const [tasksLoading, setTasksLoading] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [savingId, setSavingId] = useState(null);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -53,30 +55,28 @@ function Projects() {
     fetchProjects();
   }, [isAdmin]);
 
-  function toggleUser(projectId, userId) {
-    setSelected((prev) => {
-      const current = new Set(prev[projectId] || []);
-      if (current.has(userId)) {
-        current.delete(userId);
-      } else {
-        current.add(userId);
+  function toggleCreateAssignee(id) {
+    setCreateAssignees((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((item) => item !== id);
       }
-      return { ...prev, [projectId]: Array.from(current) };
+      return [...prev, id];
     });
   }
 
-  async function saveAssignments(projectId) {
-    setSavingId(projectId);
-    setError('');
-    try {
-      await API.post(`admin/projects/${projectId}/assign/`, {
-        user_ids: selected[projectId] || [],
-      });
-    } catch (err) {
-      setError('Failed to save assignments.');
-    } finally {
-      setSavingId(null);
+  function addCreateTask() {
+    const trimmed = createTaskInput.trim();
+    if (!trimmed) return;
+    if (createTasks.includes(trimmed)) {
+      setCreateTaskInput('');
+      return;
     }
+    setCreateTasks((prev) => [...prev, trimmed]);
+    setCreateTaskInput('');
+  }
+
+  function removeCreateTask(task) {
+    setCreateTasks((prev) => prev.filter((item) => item !== task));
   }
 
   async function createProject(e, assignSelfOverride = null) {
@@ -93,13 +93,27 @@ function Projects() {
         name: newName.trim(),
         description: newDescription.trim(),
         assign_self: isAdmin ? shouldAssignSelf : true,
+        user_ids: isAdmin ? createAssignees : [],
+        tasks: createTasks,
       });
       const created = res.data;
       setProjects((prev) => [created, ...prev]);
-      const initialIds = isAdmin && shouldAssignSelf && userId ? [userId] : [];
-      setSelected((prev) => ({ ...prev, [created.id]: initialIds }));
+      const staffIds = (created.staff || []).map((staff) => staff.id);
+      const fallbackIds = isAdmin
+        ? Array.from(new Set([
+            ...(shouldAssignSelf && userId ? [userId] : []),
+            ...createAssignees,
+          ]))
+        : [];
+      setSelected((prev) => ({
+        ...prev,
+        [created.id]: staffIds.length ? staffIds : fallbackIds,
+      }));
       setNewName('');
       setNewDescription('');
+      setCreateAssignees([]);
+      setCreateTasks([]);
+      setCreateTaskInput('');
     } catch (err) {
       setError('Failed to create project.');
     } finally {
@@ -156,6 +170,15 @@ function Projects() {
     return 'Not started';
   }
 
+  const staffUsers = users.filter((item) => item.role === 'staff');
+  const specializationGroups = [
+    { key: 'frontend', label: 'Frontend' },
+    { key: 'backend', label: 'Backend' },
+    { key: 'full_stack', label: 'Full Stack' },
+    { key: 'data_science', label: 'Data Science' },
+    { key: 'analyst', label: 'Analyst' },
+  ];
+
   return (
     <div className="dashPage">
       <header className="topBar">
@@ -182,6 +205,11 @@ function Projects() {
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>
+            {isAdmin && (
+              <Link to="/admin/approvals" className="sidebarLink">
+                Approvals
+              </Link>
+            )}
             <Link to="/settings" className="sidebarLink">
               Settings
             </Link>
@@ -214,6 +242,69 @@ function Projects() {
                   onChange={(e) => setNewDescription(e.target.value)}
                 />
               </div>
+              <div className="taskCreate">
+                <input
+                  type="text"
+                  placeholder="Add task"
+                  value={createTaskInput}
+                  onChange={(e) => setCreateTaskInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addCreateTask();
+                    }
+                  }}
+                />
+                <button className="btn btnSecondary" type="button" onClick={addCreateTask}>
+                  Add task
+                </button>
+              </div>
+              {createTasks.length > 0 && (
+                <div className="taskList">
+                  {createTasks.map((task) => (
+                    <div className="taskItem" key={task}>
+                      <span>{task}</span>
+                      <button
+                        className="btn btnSecondary"
+                        type="button"
+                        onClick={() => removeCreateTask(task)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {isAdmin && (
+                <div className="assignList">
+                  {specializationGroups.map((group) => {
+                    const members = staffUsers.filter(
+                      (staff) => staff.specialization === group.key
+                    );
+                    if (members.length === 0) return null;
+                    return (
+                      <div className="assignGroup" key={group.key}>
+                        <p className="assignGroupTitle">{group.label}</p>
+                        {members.map((staff) => {
+                          const checked = createAssignees.includes(staff.id);
+                          return (
+                            <label className="assignItem" key={`create-${staff.id}`}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleCreateAssignee(staff.id)}
+                              />
+                              <span>
+                                {staff.first_name || staff.username} {staff.last_name || ''}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div className="settingsRow">
                 <span>Create project</span>
                 <div className="reportActions">
@@ -265,35 +356,6 @@ function Projects() {
                       {status}
                     </span>
                   </div>
-                  {isAdmin && (
-                    <div className="assignList">
-                      {users.map((staff) => {
-                        const checked = (selected[project.id] || []).includes(staff.id);
-                        return (
-                          <label className="assignItem" key={`${project.id}-${staff.id}`}>
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggleUser(project.id, staff.id)}
-                            />
-                            <span>
-                              {staff.first_name || staff.username} {staff.last_name || ''}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {isAdmin && (
-                    <button
-                      className="btn btnPrimary"
-                      type="button"
-                      onClick={() => saveAssignments(project.id)}
-                      disabled={savingId === project.id}
-                    >
-                      {savingId === project.id ? 'Saving...' : 'Save Assignments'}
-                    </button>
-                  )}
                   <div className="taskSection">
                     <div className="taskHeader">
                       <p className="taskTitle">Tasks</p>
@@ -306,8 +368,7 @@ function Projects() {
                         {tasksLoading[project.id] ? 'Loading...' : 'Refresh tasks'}
                       </button>
                     </div>
-                  {!isAdmin && (
-                  {canEditTasks && (
+                  {!isAdmin && canEditTasks && (
                     <div className="taskCreate">
                       <input
                         type="text"
@@ -328,7 +389,6 @@ function Projects() {
                         Add Task
                       </button>
                     </div>
-                  )}
                   )}
                     {tasks.length === 0 && (
                       <p className="taskEmpty">No tasks yet.</p>

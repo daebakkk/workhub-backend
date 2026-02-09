@@ -4,8 +4,12 @@ import Navbar from '../components/Navbar';
 import API from '../api/api';
 
 function Settings() {
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const isAdmin = user?.role === 'admin';
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [specialization, setSpecialization] = useState('frontend');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -19,6 +23,7 @@ function Settings() {
         const res = await API.get('settings/');
         setEmailNotifications(!!res.data.email_notifications);
         setDarkMode(!!res.data.dark_mode);
+        setSpecialization(res.data.specialization || 'frontend');
         applyTheme(!!res.data.dark_mode);
       } catch (err) {
         setError('Could not load settings.');
@@ -43,6 +48,7 @@ function Settings() {
       const res = await API.patch('settings/', {
         email_notifications: emailNotifications,
         dark_mode: darkMode,
+        specialization,
       });
       localStorage.setItem('user', JSON.stringify(res.data));
       applyTheme(!!res.data.dark_mode);
@@ -78,6 +84,11 @@ function Settings() {
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>
+            {isAdmin && (
+              <Link to="/admin/approvals" className="sidebarLink">
+                Approvals
+              </Link>
+            )}
             <Link to="/settings" className="sidebarLink isActive">
               Settings
             </Link>
@@ -112,6 +123,19 @@ function Settings() {
                     checked={darkMode}
                     onChange={(e) => setDarkMode(e.target.checked)}
                   />
+                </label>
+                <label className="settingsRow">
+                  <span>Specialization</span>
+                  <select
+                    value={specialization}
+                    onChange={(e) => setSpecialization(e.target.value)}
+                  >
+                    <option value="frontend">Frontend Developer</option>
+                    <option value="backend">Backend Developer</option>
+                    <option value="full_stack">Full Stack Developer</option>
+                    <option value="data_science">Data Science</option>
+                    <option value="analyst">Analyst</option>
+                  </select>
                 </label>
                 <button
                   className="btn btnPrimary"

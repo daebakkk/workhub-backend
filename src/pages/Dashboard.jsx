@@ -6,6 +6,7 @@ import API from '../api/api';
 function Dashboard() {
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
+  const isAdmin = user?.role === 'admin';
   const displayName = user?.first_name || user?.username || 'there';
   const [projects, setProjects] = useState([]);
   const [logs, setLogs] = useState([]);
@@ -63,7 +64,7 @@ function Dashboard() {
     if (percent === 100) return 'Completed';
     if (percent >= 75) return 'Review';
     if (percent >= 30) return 'In progress';
-    return 'Blocked';
+    return 'Not started';
   }
 
   return (
@@ -92,6 +93,11 @@ function Dashboard() {
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>
+            {isAdmin && (
+              <Link to="/admin/approvals" className="sidebarLink">
+                Approvals
+              </Link>
+            )}
             <Link to="/settings" className="sidebarLink">
               Settings
             </Link>

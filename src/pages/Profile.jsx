@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 function Profile() {
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="dashPage">
@@ -28,6 +29,11 @@ function Profile() {
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>
+            {isAdmin && (
+              <Link to="/admin/approvals" className="sidebarLink">
+                Approvals
+              </Link>
+            )}
             <Link to="/profile" className="sidebarLink isActive">
               Profile
             </Link>
@@ -59,6 +65,10 @@ function Profile() {
               <div>
                 <p className="profileLabel">Role</p>
                 <p className="profileValue">{user?.role || 'staff'}</p>
+              </div>
+              <div>
+                <p className="profileLabel">Specialization</p>
+                <p className="profileValue">{user?.specialization || '—'}</p>
               </div>
             </div>
           </div>

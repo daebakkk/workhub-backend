@@ -69,8 +69,6 @@ export default function Navbar() {
       )}
       {currentPath !== "/dashboard" && (
         <Link to="/dashboard" className="navItem">Dashboard</Link>)}
-      {currentPath !== "/" && (
-        <Link to="/" className="navItem">Home</Link>)}
       {currentPath !== "/reports" && (
         <Link to="/reports" className="navItem">Reports</Link>)}
       {currentPath !== "/projects" && (

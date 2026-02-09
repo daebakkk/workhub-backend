@@ -6,11 +6,23 @@ class User(AbstractUser):
         ('admin', 'Admin'),
         ('staff', 'Staff'),
     )
+    SPECIALIZATION_CHOICES = (
+        ('frontend', 'Frontend'),
+        ('backend', 'Backend'),
+        ('full_stack', 'Full Stack'),
+        ('data_science', 'Data Science'),
+        ('analyst', 'Analyst'),
+    )
 
     role = models.CharField(
         max_length=10,
         choices=ROLE_CHOICES,
         default='staff'
+    )
+    specialization = models.CharField(
+        max_length=20,
+        choices=SPECIALIZATION_CHOICES,
+        default='frontend'
     )
     email_notifications = models.BooleanField(default=True)
     dark_mode = models.BooleanField(default=False)

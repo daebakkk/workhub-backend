@@ -77,6 +77,9 @@ function AdminApprovals() {
             <Link to="/admin/approvals" className="sidebarLink isActive">
               Approvals
             </Link>
+            <Link to="/settings" className="sidebarLink">
+              Settings
+            </Link>
           </nav>
           <div className="sidebarNote">
             <p className="sidebarNoteTitle">Pending logs</p>

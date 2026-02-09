@@ -494,6 +494,10 @@ a {
   background: rgba(239, 68, 68, 0.18);
   color: #991b1b;
 }
+.projectStatus.not-started {
+  background: rgba(148, 163, 184, 0.18);
+  color: #475569;
+}
 
 .projectStatus.no-tasks {
   background: rgba(148, 163, 184, 0.18);
@@ -983,6 +987,20 @@ a {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
+}
+.assignGroup {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+.assignGroupTitle {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.9rem;
 }
 
 .assignItem {

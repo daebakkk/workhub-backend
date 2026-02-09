@@ -5,6 +5,9 @@ import WorkLogForm from '../components/WorkLogForm';
 import API from '../api/api';
 
 function WorkLogs() {
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const isAdmin = user?.role === 'admin';
   const [showAddLogForm, setShowAddLogForm] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState([]);
@@ -58,6 +61,11 @@ function WorkLogs() {
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>
+            {isAdmin && (
+              <Link to="/admin/approvals" className="sidebarLink">
+                Approvals
+              </Link>
+            )}
             <Link to="/settings" className="sidebarLink">
               Settings
             </Link>

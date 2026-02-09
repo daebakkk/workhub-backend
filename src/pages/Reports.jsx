@@ -139,12 +139,17 @@ export default function Reports() {
                         <Link to="/projects" className="sidebarLink">
                             Projects
                         </Link>
-                        <Link to="/reports" className="sidebarLink isActive">
-                            Reports
-                        </Link>
-                        <Link to="/settings" className="sidebarLink">
-                            Settings
-                        </Link>
+            <Link to="/reports" className="sidebarLink isActive">
+              Reports
+            </Link>
+            {isAdmin && (
+              <Link to="/admin/approvals" className="sidebarLink">
+                Approvals
+              </Link>
+            )}
+            <Link to="/settings" className="sidebarLink">
+              Settings
+            </Link>
                     </nav>
                     <div className="sidebarNote">
                         <p className="sidebarNoteTitle">Next review</p>

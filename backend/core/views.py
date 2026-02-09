@@ -301,6 +301,8 @@ def create_project(request):
     name = request.data.get('name', '').strip()
     description = request.data.get('description', '').strip()
     assign_self = request.data.get('assign_self', False)
+    user_ids = request.data.get('user_ids', []) or []
+    tasks = request.data.get('tasks', []) or []
 
     if not name:
         return Response({'detail': 'Project name is required'}, status=400)
@@ -308,6 +310,22 @@ def create_project(request):
     project = Project.objects.create(name=name, description=description)
     if request.user.role != 'admin' or assign_self is True:
         project.staff.add(request.user)
+    if request.user.role == 'admin' and isinstance(user_ids, list) and user_ids:
+        staff_users = User.objects.filter(id__in=user_ids, role='staff')
+        project.staff.add(*staff_users)
+    if isinstance(tasks, list) and tasks:
+        seen = set()
+        task_items = []
+        for item in tasks:
+            if not isinstance(item, str):
+                continue
+            title = item.strip()
+            if not title or title in seen:
+                continue
+            seen.add(title)
+            task_items.append(Task(project=project, title=title))
+        if task_items:
+            Task.objects.bulk_create(task_items)
     serializer = ProjectSerializer(project)
     return Response(serializer.data, status=201)
 

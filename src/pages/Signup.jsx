@@ -9,6 +9,7 @@ export default function Signup() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [specialization, setSpecialization] = useState('frontend');
   const [error, setError] = useState('');
   const [signingUp, setSigningUp] = useState(false);
 
@@ -26,7 +27,6 @@ export default function Signup() {
     setError('');
     setSigningUp(true);
 
-    //frontend email validation
     if (!email.endsWith(allowedDomain)) {
       setError(`Email must end with ${allowedDomain}`);
       setSigningUp(false);
@@ -41,6 +41,7 @@ export default function Signup() {
         first_name: firstName,
         last_name: lastName,
         role: 'staff',
+        specialization,
       });
 
       navigate('/login');
@@ -93,6 +94,17 @@ export default function Signup() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          <select
+            value={specialization}
+            onChange={(e) => setSpecialization(e.target.value)}
+            required
+          >
+            <option value="frontend">Frontend Developer</option>
+            <option value="backend">Backend Developer</option>
+            <option value="full_stack">Full Stack Developer</option>
+            <option value="data_science">Data Science</option>
+            <option value="analyst">Analyst</option>
+          </select>
 
           <button className="btn btnPrimary" disabled={signingUp}>
             {signingUp ? 'Creating account...' : 'Sign Up'}
