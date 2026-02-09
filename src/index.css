@@ -146,7 +146,7 @@ a {
 
 .authCard {
   width: min(460px, 92vw);
-  background: #ffe8f3;
+  background: var(--surface);
   border-radius: 20px;
   padding: 36px 34px 32px;
   box-shadow: var(--shadow);
@@ -1175,6 +1175,22 @@ a {
 }
 
 @media (max-width: 640px) {
+  .topBar,
+  .reportsTopBar {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .heroButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .authCard {
+    padding: 28px 22px 24px;
+  }
+
   .statGrid {
     grid-template-columns: 1fr;
   }
