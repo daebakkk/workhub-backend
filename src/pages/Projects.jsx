@@ -7,6 +7,7 @@ function Projects() {
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const isAdmin = user?.role === 'admin';
+  const userId = user?.id;
 
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
@@ -78,7 +79,7 @@ function Projects() {
     }
   }
 
-  async function createProject(e) {
+  async function createProject(e, assignSelfOverride = null) {
     e.preventDefault();
     if (!newName.trim()) {
       setError('Project name is required.');
@@ -87,13 +88,16 @@ function Projects() {
     setCreating(true);
     setError('');
     try {
+      const shouldAssignSelf = assignSelfOverride === true;
       const res = await API.post('admin/projects/create/', {
         name: newName.trim(),
         description: newDescription.trim(),
+        assign_self: isAdmin ? shouldAssignSelf : true,
       });
       const created = res.data;
       setProjects((prev) => [created, ...prev]);
-      setSelected((prev) => ({ ...prev, [created.id]: [] }));
+      const initialIds = isAdmin && shouldAssignSelf && userId ? [userId] : [];
+      setSelected((prev) => ({ ...prev, [created.id]: initialIds }));
       setNewName('');
       setNewDescription('');
     } catch (err) {
@@ -191,10 +195,10 @@ function Projects() {
         <main className="dashMain dashContent">
           <>
             <p className="dashSubtitle">
-              {isAdmin ? 'Create and assign projects' : 'Create projects and track tasks'}
+              {isAdmin ? 'Create projects and manage assignments' : 'Create projects and track tasks'}
             </p>
             {error && <p className="inlineError">{error}</p>}
-            <form className="assignCreate" onSubmit={createProject}>
+            <form className="assignCreate" onSubmit={(e) => createProject(e)}>
               <div className="assignCreateFields">
                 <input
                   type="text"
@@ -210,9 +214,24 @@ function Projects() {
                   onChange={(e) => setNewDescription(e.target.value)}
                 />
               </div>
-              <button className="btn btnPrimary" type="submit" disabled={creating}>
-                {creating ? 'Creating...' : 'Create Project'}
-              </button>
+              <div className="settingsRow">
+                <span>Create project</span>
+                <div className="reportActions">
+                  <button className="btn btnPrimary" type="submit" disabled={creating}>
+                    {creating ? 'Creating...' : 'Create'}
+                  </button>
+                  {isAdmin && (
+                    <button
+                      className="btn btnSecondary"
+                      type="button"
+                      disabled={creating}
+                      onClick={(e) => createProject(e, true)}
+                    >
+                      Create for myself
+                    </button>
+                  )}
+                </div>
+              </div>
             </form>
           </>
           <section className="projectBoard">
@@ -232,6 +251,7 @@ function Projects() {
               const status = getStatus(percent, totalTasks);
               const badgeClass = status.toLowerCase().replace(' ', '-');
               const tasks = tasksByProject[project.id] || [];
+              const canEditTasks = !isAdmin || (selected[project.id] || []).includes(userId);
               return (
                 <div className="projectTile" key={project.id}>
                   <div className="projectTileHeader">
@@ -287,6 +307,7 @@ function Projects() {
                       </button>
                     </div>
                   {!isAdmin && (
+                  {canEditTasks && (
                     <div className="taskCreate">
                       <input
                         type="text"
@@ -308,6 +329,7 @@ function Projects() {
                       </button>
                     </div>
                   )}
+                  )}
                     {tasks.length === 0 && (
                       <p className="taskEmpty">No tasks yet.</p>
                     )}
@@ -318,7 +340,7 @@ function Projects() {
                             <input
                               type="checkbox"
                               checked={task.is_completed}
-                              disabled={isAdmin}
+                              disabled={!canEditTasks}
                               onChange={(e) =>
                                 toggleTask(task.id, project.id, e.target.checked)
                               }

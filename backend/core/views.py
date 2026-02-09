@@ -300,12 +300,13 @@ def assign_project_staff(request, project_id):
 def create_project(request):
     name = request.data.get('name', '').strip()
     description = request.data.get('description', '').strip()
+    assign_self = request.data.get('assign_self', False)
 
     if not name:
         return Response({'detail': 'Project name is required'}, status=400)
 
     project = Project.objects.create(name=name, description=description)
-    if request.user.role != 'admin':
+    if request.user.role != 'admin' or assign_self is True:
         project.staff.add(request.user)
     serializer = ProjectSerializer(project)
     return Response(serializer.data, status=201)
@@ -324,7 +325,7 @@ def project_tasks(request, project_id):
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
 
-    if request.user.role == 'admin':
+    if request.user not in project.staff.all():
         return Response({'detail': 'Not allowed'}, status=403)
 
     title = request.data.get('title', '').strip()
@@ -340,8 +341,6 @@ def project_tasks(request, project_id):
 @permission_classes([IsAuthenticated])
 def update_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    if request.user.role == 'admin':
-        return Response({'detail': 'Not allowed'}, status=403)
     if request.user not in task.project.staff.all():
         return Response({'detail': 'Not allowed'}, status=403)
     is_completed = request.data.get('is_completed')
