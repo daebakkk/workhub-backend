@@ -227,15 +227,15 @@ function Projects() {
               {isAdmin ? 'Create projects and manage assignments' : 'Create projects and track tasks'}
             </p>
             {error && <p className="inlineError">{error}</p>}
-            <div className="projectCreateBar">
-              <button
-                className="btn btnPrimary"
-                type="button"
-                onClick={() => setShowCreate((prev) => !prev)}
-              >
-                {showCreate ? 'Hide create form' : 'Create a project'}
-              </button>
-            </div>
+                <div className="projectCreateBar">
+                  <button
+                    className="btn btnPrimary"
+                    type="button"
+                    onClick={() => setShowCreate((prev) => !prev)}
+                  >
+                {showCreate ? 'Close' : 'Create a project'}
+                  </button>
+                </div>
             {showCreate && (
               <form className="assignCreate" onSubmit={(e) => createProject(e)}>
                 <div className="assignCreateFields">
@@ -300,14 +300,14 @@ function Projects() {
                             const checked = createAssignees.includes(staff.id);
                             return (
                               <label className="assignItem" key={`create-${staff.id}`}>
+                                <span>
+                                  {staff.first_name || staff.username} {staff.last_name || ''}
+                                </span>
                                 <input
                                   type="checkbox"
                                   checked={checked}
                                   onChange={() => toggleCreateAssignee(staff.id)}
                                 />
-                                <span>
-                                  {staff.first_name || staff.username} {staff.last_name || ''}
-                                </span>
                               </label>
                             );
                           })}

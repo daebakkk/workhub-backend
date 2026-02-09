@@ -85,7 +85,7 @@ function WorkLogs() {
             <h2 className="cardTitle">Work Logs</h2>
             {!showAddLogForm && (
               <button
-                className="btn btnPrimary dashAddLogBtn"
+                className="btn btnPrimary dashAddLogBtn workLogActionBtn"
                 onClick={() => setShowAddLogForm(true)}
                 type="button"
               >
@@ -94,7 +94,7 @@ function WorkLogs() {
             )}
             {!showLogs && (
               <button
-                className="btn dashViewLogsBtn"
+                className="btn dashViewLogsBtn workLogActionBtn"
                 onClick={() => {
                   setShowLogs(true);
                 }}
@@ -105,7 +105,7 @@ function WorkLogs() {
             )}
             {showLogs && (
               <button
-                className="btn btnSecondary"
+                className="btn btnSecondary workLogActionBtn"
                 onClick={fetchLogs}
                 type="button"
               >

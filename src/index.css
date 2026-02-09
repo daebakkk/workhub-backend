@@ -664,9 +664,12 @@ a {
 .workLogCard .emptyState,
 .workLogCard .logList {
   width: 100%;
-  max-width: 320px;
+  max-width: var(--worklog-action-width, 260px);
   margin-left: auto;
   margin-right: auto;
+}
+.workLogCard .workLogActionBtn {
+  width: var(--worklog-action-width, 260px);
 }
 
 .workLogCard .logItem {
@@ -1006,10 +1009,10 @@ a {
   font-size: 0.9rem;
 }
 .assignItem {
-  display: grid;
-  grid-template-columns: 18px 1fr;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 12px;
 }
 .assignItem input {
   margin: 0;
