@@ -23,6 +23,7 @@ function Projects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
+  const [creatingMode, setCreatingMode] = useState('default');
   const [showCreate, setShowCreate] = useState(false);
 
   useEffect(() => {
@@ -56,6 +57,15 @@ function Projects() {
     fetchProjects();
   }, [isAdmin]);
 
+  useEffect(() => {
+    if (!projects.length) return;
+    projects.forEach((project) => {
+      if (!tasksByProject[project.id] && !tasksLoading[project.id]) {
+        fetchTasks(project.id);
+      }
+    });
+  }, [projects]);
+
   function toggleCreateAssignee(id) {
     setCreateAssignees((prev) => {
       if (prev.includes(id)) {
@@ -87,6 +97,7 @@ function Projects() {
       return;
     }
     setCreating(true);
+    setCreatingMode(assignSelfOverride === true ? 'self' : 'default');
     setError('');
     try {
       const shouldAssignSelf = assignSelfOverride === true;
@@ -119,6 +130,7 @@ function Projects() {
       setError('Failed to create project.');
     } finally {
       setCreating(false);
+      setCreatingMode('default');
     }
   }
 
@@ -320,7 +332,7 @@ function Projects() {
                   <span>Create project</span>
                   <div className="reportActions">
                     <button className="btn btnPrimary" type="submit" disabled={creating}>
-                      {creating ? 'Creating...' : 'Create'}
+                      {creating && creatingMode === 'default' ? 'Creating...' : 'Create'}
                     </button>
                     {isAdmin && (
                       <button
@@ -329,7 +341,7 @@ function Projects() {
                         disabled={creating}
                         onClick={(e) => createProject(e, true)}
                       >
-                        Create for myself
+                        {creating && creatingMode === 'self' ? 'Creating...' : 'Create for myself'}
                       </button>
                     )}
                     <button
