@@ -234,6 +234,19 @@
   color: var(--muted);
   font-size: 0.9rem;
 }
+@media (max-width: 640px) {
+  .notifDropdown {
+    width: min(92vw, 320px);
+    right: -6px;
+    padding: 10px;
+  }
+  .notifHeader p {
+    font-size: 0.95rem;
+  }
+  .notifItem {
+    padding: 8px;
+  }
+}
 
 @media (max-width: 640px) {
   .navbar {
