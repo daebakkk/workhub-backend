@@ -164,6 +164,11 @@
   width: 18px;
   height: 18px;
 }
+.notifButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(225, 29, 139, 0.4);
+  color: #e11d8b;
+}
 .notifDot {
   position: absolute;
   top: 7px;
