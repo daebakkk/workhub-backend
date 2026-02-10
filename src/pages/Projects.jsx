@@ -25,6 +25,7 @@ function Projects() {
   const [creating, setCreating] = useState(false);
   const [creatingMode, setCreatingMode] = useState('default');
   const [showCreate, setShowCreate] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     async function fetchProjects() {
@@ -251,15 +252,23 @@ function Projects() {
               {isAdmin ? 'Create projects and manage assignments' : 'Create projects and track tasks'}
             </p>
             {error && <p className="inlineError">{error}</p>}
-                <div className="projectCreateBar">
-                  <button
-                    className="btn btnPrimary"
-                    type="button"
-                    onClick={() => setShowCreate((prev) => !prev)}
-                  >
+            <div className="projectCreateBar">
+              <button
+                className="btn btnPrimary"
+                type="button"
+                onClick={() => setShowCreate((prev) => !prev)}
+              >
                 {showCreate ? 'Close' : 'Create a project'}
-                  </button>
-                </div>
+              </button>
+            </div>
+            <div className="projectSearch">
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
             {showCreate && (
               <form className="assignCreate" onSubmit={(e) => createProject(e)}>
                 <div className="assignCreateFields">
@@ -342,24 +351,32 @@ function Projects() {
                 )}
                 {!isAdmin && staffOptions.length > 0 && (
                   <div className="assignList">
-                    <div className="assignGroup">
-                      <p className="assignGroupTitle">With (optional)</p>
-                      {staffOptions.map((staff) => {
-                        const checked = createAssignees.includes(staff.id);
-                        return (
-                          <label className="assignItem" key={`create-${staff.id}`}>
-                            <span>
-                              {staff.first_name || staff.username} {staff.last_name || ''}
-                            </span>
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggleCreateAssignee(staff.id)}
-                            />
-                          </label>
-                        );
-                      })}
-                    </div>
+                    {specializationGroups.map((group) => {
+                      const members = staffOptions.filter(
+                        (staff) => staff.specialization === group.key
+                      );
+                      if (members.length === 0) return null;
+                      return (
+                        <div className="assignGroup" key={`staff-${group.key}`}>
+                          <p className="assignGroupTitle">{group.label} (with)</p>
+                          {members.map((staff) => {
+                            const checked = createAssignees.includes(staff.id);
+                            return (
+                              <label className="assignItem" key={`create-${staff.id}`}>
+                                <span>
+                                  {staff.first_name || staff.username} {staff.last_name || ''}
+                                </span>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleCreateAssignee(staff.id)}
+                                />
+                              </label>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
                 <div className="settingsRow">
@@ -402,7 +419,15 @@ function Projects() {
                 </p>
               </div>
             )}
-            {!loading && !error && projects.map((project) => {
+            {!loading && !error && projects
+              .filter((project) => {
+                const term = searchTerm.trim().toLowerCase();
+                if (!term) return true;
+                const name = project.name?.toLowerCase() || '';
+                const desc = project.description?.toLowerCase() || '';
+                return name.includes(term) || desc.includes(term);
+              })
+              .map((project) => {
               const tasks = tasksByProject[project.id] || [];
               const hasTasksLoaded = Object.prototype.hasOwnProperty.call(tasksByProject, project.id);
               const totalTasks = project.total_tasks || 0;

@@ -105,7 +105,7 @@ export default function Signup() {
             <option value="data_analyst">Data Analyst</option>
           </select>
 
-          <button className="btn btnPrimary" disabled={signingUp}>
+          <button className="btn btnPrimary" type="submit" disabled={signingUp}>
             {signingUp ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>

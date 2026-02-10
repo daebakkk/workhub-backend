@@ -84,7 +84,7 @@ export default function Login() {
             </Link>
           </p>
 
-          <button className="btn btnPrimary" disabled={loggingIn}>
+          <button className="btn btnPrimary" type="submit" disabled={loggingIn}>
             {loggingIn ? 'Signing in...' : 'Login'}
           </button>
         </form>
