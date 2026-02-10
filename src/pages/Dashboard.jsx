@@ -12,6 +12,8 @@ function Dashboard() {
   const [logs, setLogs] = useState([]);
   const [pendingLogs, setPendingLogs] = useState(0);
   const [weeklyGoal, setWeeklyGoal] = useState(0);
+  const [goalDraft, setGoalDraft] = useState('');
+  const [editingGoal, setEditingGoal] = useState(true);
   const [savingGoal, setSavingGoal] = useState(false);
   const [goalMessage, setGoalMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,10 @@ function Dashboard() {
         setProjects(projectsRes.data || []);
         setLogs(logsRes.data || []);
         setPendingLogs((pendingRes.data || []).length);
-        setWeeklyGoal(Number(settingsRes.data?.weekly_goal_hours || 0));
+        const goalValue = Number(settingsRes.data?.weekly_goal_hours || 0);
+        setWeeklyGoal(goalValue);
+        setGoalDraft(goalValue ? String(goalValue) : '');
+        setEditingGoal(goalValue === 0);
       } catch (err) {
         setError('Could not load dashboard data. Please try again.');
       } finally {
@@ -81,10 +86,14 @@ function Dashboard() {
     setGoalMessage('');
     try {
       const res = await API.patch('settings/', {
-        weekly_goal_hours: weeklyGoal,
+        weekly_goal_hours: goalDraft,
       });
       localStorage.setItem('user', JSON.stringify(res.data));
       window.dispatchEvent(new Event('user:updated'));
+      const savedGoal = Number(res.data.weekly_goal_hours || 0);
+      setWeeklyGoal(savedGoal);
+      setGoalDraft(savedGoal ? String(savedGoal) : '');
+      setEditingGoal(false);
       setGoalMessage('Goal saved.');
     } catch (err) {
       setGoalMessage('Could not save goal.');
@@ -172,16 +181,21 @@ function Dashboard() {
               <h2 className="cardTitle">Weekly goal</h2>
               <p className="cardSubtitle">{stats.hoursThisWeek} hrs logged</p>
             </div>
-            <div className="settingsRow">
-              <span>Target hours</span>
-              <input
-                type="number"
-                min="0"
-                step="0.5"
-                value={weeklyGoal}
-                onChange={(e) => setWeeklyGoal(e.target.value)}
-              />
-            </div>
+            {!editingGoal && weeklyGoal > 0 && (
+              <p className="goalValue">{weeklyGoal} hours</p>
+            )}
+            {editingGoal && (
+              <div className="settingsRow">
+                <span>Target hours</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={goalDraft}
+                  onChange={(e) => setGoalDraft(e.target.value)}
+                />
+              </div>
+            )}
             <div className="progressBar">
               <div
                 className="progressFill"
@@ -190,14 +204,24 @@ function Dashboard() {
             </div>
             <div className="settingsRow">
               <span>{goalProgress}% of goal</span>
-              <button
-                className="btn btnPrimary"
-                type="button"
-                onClick={saveWeeklyGoal}
-                disabled={savingGoal}
-              >
-                {savingGoal ? 'Saving...' : 'Save goal'}
-              </button>
+              {editingGoal ? (
+                <button
+                  className="btn btnPrimary"
+                  type="button"
+                  onClick={saveWeeklyGoal}
+                  disabled={savingGoal}
+                >
+                  {savingGoal ? 'Saving...' : 'Save goal'}
+                </button>
+              ) : (
+                <button
+                  className="btn btnSecondary"
+                  type="button"
+                  onClick={() => setEditingGoal(true)}
+                >
+                  Change goal
+                </button>
+              )}
             </div>
             {goalMessage && <p className="inlineStatus">{goalMessage}</p>}
           </section>

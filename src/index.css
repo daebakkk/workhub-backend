@@ -339,7 +339,7 @@ a {
 }
 
 .sidebarNote {
-  margin-top: auto;
+  margin-top: 12px;
   padding: 14px 16px;
   border-radius: 16px;
   background: var(--surface-muted);
@@ -680,6 +680,12 @@ a {
   margin: 0;
   font-size: 0.9rem;
   color: var(--muted);
+}
+.goalValue {
+  margin: 6px 0 12px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
 }
 .progressBar {
   height: 10px;
