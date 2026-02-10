@@ -7,12 +7,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth import authenticate
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserSerializer, NotificationSerializer
 
 
-from .models import Project, WorkLog, User, Report, Task
+from .models import Project, WorkLog, User, Report, Task, Notification
 from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer, TaskSerializer
 from django.db.models import Count, Q, Sum
+from django.utils import timezone
+from datetime import timedelta
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -27,6 +29,39 @@ def submit_log(request):
         hours=data.get('hours'),
         status='approved' if request.user.role == 'admin' else 'pending',
     )
+
+    # Weekly goal notification (once per week)
+    goal = float(request.user.weekly_goal_hours or 0)
+    if goal > 0:
+        today = timezone.now().date()
+        # Only notify on Saturday (weekday 5)
+        if today.weekday() == 5:
+            week_start = today - timedelta(days=today.weekday())
+            week_end = week_start + timedelta(days=6)
+            total_hours = (
+                WorkLog.objects.filter(
+                    staff=request.user,
+                    date__gte=week_start,
+                    date__lte=week_end,
+                )
+                .aggregate(total=Sum('hours'))['total']
+                or 0
+            )
+            if float(total_hours) >= goal:
+                week_key = week_start.isoformat()
+                already_notified = Notification.objects.filter(
+                    user=request.user,
+                    notification_type='weekly_goal_reached',
+                    data__contains={'week_start': week_key},
+                ).exists()
+                if not already_notified:
+                    Notification.objects.create(
+                        user=request.user,
+                        title='Weekly goal reached',
+                        message='You hit your weekly hours goal. Great work!',
+                        notification_type='weekly_goal_reached',
+                        data={'week_start': week_key, 'hours': float(total_hours)},
+                    )
 
     serializer = WorkLogSerializer(log)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -45,7 +80,7 @@ def pending_logs(request):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    logs = WorkLog.objects.filter(status='pending')
+    logs = WorkLog.objects.filter(status='pending').exclude(staff=request.user)
     serializer = WorkLogSerializer(logs, many=True)
     return Response(serializer.data)
 
@@ -59,6 +94,13 @@ def approve_log(request, log_id):
     log.status = 'approved'
     log.rejection_reason = ''
     log.save()
+    Notification.objects.create(
+        user=log.staff,
+        title='Log approved',
+        message=f'"{log.title}" was approved.',
+        notification_type='log_approved',
+        data={'log_id': log.id},
+    )
 
     return Response({'message': 'Log approved'})
 
@@ -73,6 +115,13 @@ def reject_log(request, log_id):
     log.status = 'rejected'
     log.rejection_reason = request.data.get('reason', '')
     log.save()
+    Notification.objects.create(
+        user=log.staff,
+        title='Log rejected',
+        message=f'"{log.title}" was rejected.',
+        notification_type='log_rejected',
+        data={'log_id': log.id},
+    )
 
     return Response({'message': 'Log rejected'})
 
@@ -124,6 +173,7 @@ def user_settings(request):
     email_notifications = data.get('email_notifications')
     dark_mode = data.get('dark_mode')
     specialization = data.get('specialization')
+    weekly_goal_hours = data.get('weekly_goal_hours')
 
     if isinstance(email_notifications, bool):
         request.user.email_notifications = email_notifications
@@ -131,6 +181,11 @@ def user_settings(request):
         request.user.dark_mode = dark_mode
     if isinstance(specialization, str) and specialization:
         request.user.specialization = specialization
+    if weekly_goal_hours is not None:
+        try:
+            request.user.weekly_goal_hours = float(weekly_goal_hours)
+        except (TypeError, ValueError):
+            pass
 
     request.user.save()
     return Response(UserSerializer(request.user).data)
@@ -242,7 +297,31 @@ def create_report(request):
         by_date=by_date,
     )
     serializer = ReportSerializer(report)
+    staff_users = User.objects.filter(role='staff')
+    for staff in staff_users:
+        Notification.objects.create(
+            user=staff,
+            title='New report available',
+            message='A new report has been generated.',
+            notification_type='report_ready',
+            data={'report_id': report.id},
+        )
     return Response(serializer.data, status=201)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def notifications_list(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+    serializer = NotificationSerializer(notifications, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def notifications_mark_all_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return Response({'message': 'Notifications cleared'})
 
 
 @api_view(['GET'])
@@ -317,6 +396,14 @@ def create_project(request):
     if request.user.role == 'admin' and isinstance(user_ids, list) and user_ids:
         staff_users = User.objects.filter(id__in=user_ids, role='staff')
         project.staff.add(*staff_users)
+        for staff in staff_users:
+            Notification.objects.create(
+                user=staff,
+                title='Assigned to project',
+                message=f'You were added to \"{project.name}\".',
+                notification_type='project_assigned',
+                data={'project_id': project.id},
+            )
     if isinstance(tasks, list) and tasks:
         seen = set()
         task_items = []

@@ -131,9 +131,11 @@ function WorkLogs() {
                             {log.date} • {log.hours} hrs
                           </p>
                         </div>
-                        <span className={`logStatus ${log.status || 'pending'}`}>
-                          {formatStatus(log.status)}
-                        </span>
+                        {user?.role !== 'admin' && (
+                          <span className={`logStatus ${log.status || 'pending'}`}>
+                            {formatStatus(log.status)}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>

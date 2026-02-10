@@ -16,6 +16,8 @@ urlpatterns = [
     path('reports/summary/', views.reports_summary),
     path('reports/', views.list_reports),
     path('reports/create/', views.create_report),
+    path('notifications/', views.notifications_list),
+    path('notifications/mark-all-read/', views.notifications_mark_all_read),
     path('admin/projects/', views.admin_projects),
     path('admin/users/', views.admin_users),
     path('admin/projects/<int:project_id>/assign/', views.assign_project_staff),

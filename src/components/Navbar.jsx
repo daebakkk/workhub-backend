@@ -9,7 +9,11 @@ export default function Navbar() {
   const currentPath = location.pathname;
   const isHome = currentPath === '/';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const menuRef = useRef(null);
+  const notifRef = useRef(null);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
 
@@ -43,15 +47,50 @@ export default function Navbar() {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      const clickedMenu = menuRef.current && menuRef.current.contains(event.target);
+      const clickedNotif = notifRef.current && notifRef.current.contains(event.target);
+      if (!clickedMenu && !clickedNotif) {
         setMenuOpen(false);
+        setNotifOpen(false);
       }
     }
-    if (menuOpen) {
+    if (menuOpen || notifOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [menuOpen]);
+  }, [menuOpen, notifOpen]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchNotifications() {
+      try {
+        const res = await API.get('notifications/');
+        if (!isMounted) return;
+        const list = res.data || [];
+        setNotifications(list);
+        setUnreadCount(list.filter((item) => !item.is_read).length);
+      } catch (err) {
+        // ignore
+      }
+    }
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  async function markAllRead() {
+    try {
+      await API.post('notifications/mark-all-read/');
+      setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      // ignore
+    }
+  }
 
   return (
     <nav className={`navbar ${isHome ? 'navbarHome' : ''}`}>
@@ -73,10 +112,54 @@ export default function Navbar() {
           </svg>
         </button>
       )}
-      <div
-        className="profileMenu profileMenuRight"
-        ref={menuRef}
-      >
+      <div className="navActions">
+        <div className="notifMenu" ref={notifRef}>
+          <button
+            type="button"
+            className="notifButton"
+            aria-label="Notifications"
+            onClick={() => {
+              setNotifOpen((prev) => {
+                const next = !prev;
+                if (!prev && next) {
+                  markAllRead();
+                }
+                return next;
+              });
+            }}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M15 17H9a2 2 0 0 1-2-2v-3a5 5 0 1 1 10 0v3a2 2 0 0 1-2 2Zm-6 0h6v1a3 3 0 1 1-6 0v-1Z"
+                fill="currentColor"
+              />
+            </svg>
+            {unreadCount > 0 && <span className="notifDot" />}
+          </button>
+          {notifOpen && (
+            <div className="notifDropdown">
+              <div className="notifHeader">
+                <p>Notifications</p>
+              </div>
+              {notifications.length === 0 && (
+                <p className="notifEmpty">No notifications yet.</p>
+              )}
+              {notifications.map((item) => (
+                <div
+                  className={`notifItem ${item.is_read ? '' : 'isUnread'}`}
+                  key={item.id}
+                >
+                  <p className="notifTitle">{item.title}</p>
+                  <p className="notifMessage">{item.message}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div
+          className="profileMenu profileMenuRight"
+          ref={menuRef}
+        >
         <button
           type="button"
           className="profileIcon"
@@ -103,6 +186,7 @@ export default function Navbar() {
             </button>
           </div>
         )}
+      </div>
       </div>
     </nav>
   );

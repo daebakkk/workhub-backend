@@ -25,9 +25,23 @@ class User(AbstractUser):
     )
     email_notifications = models.BooleanField(default=True)
     dark_mode = models.BooleanField(default=False)
+    weekly_goal_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
 
     def __str__(self):
         return f"{self.username} ({self.role})"
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=200)
+    message = models.TextField(blank=True)
+    notification_type = models.CharField(max_length=50, default='general')
+    is_read = models.BooleanField(default=False)
+    data = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.user.username})"
     
 class Project(models.Model):
     name = models.CharField(max_length=200)

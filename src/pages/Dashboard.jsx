@@ -11,6 +11,9 @@ function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [logs, setLogs] = useState([]);
   const [pendingLogs, setPendingLogs] = useState(0);
+  const [weeklyGoal, setWeeklyGoal] = useState(0);
+  const [savingGoal, setSavingGoal] = useState(false);
+  const [goalMessage, setGoalMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -19,14 +22,16 @@ function Dashboard() {
       setLoading(true);
       setError('');
       try {
-        const [projectsRes, logsRes, pendingRes] = await Promise.all([
+        const [projectsRes, logsRes, pendingRes, settingsRes] = await Promise.all([
           API.get('projects/my/'),
           API.get('logs/my/'),
           isAdmin ? API.get('logs/pending/') : Promise.resolve({ data: [] }),
+          API.get('settings/'),
         ]);
         setProjects(projectsRes.data || []);
         setLogs(logsRes.data || []);
         setPendingLogs((pendingRes.data || []).length);
+        setWeeklyGoal(Number(settingsRes.data?.weekly_goal_hours || 0));
       } catch (err) {
         setError('Could not load dashboard data. Please try again.');
       } finally {
@@ -63,6 +68,30 @@ function Dashboard() {
       approvalRate,
     };
   }, [logs, projects]);
+
+  const goalProgress = useMemo(() => {
+    const goal = Number(weeklyGoal || 0);
+    const hours = Number(stats.hoursThisWeek || 0);
+    if (!goal) return 0;
+    return Math.min(100, Math.round((hours / goal) * 100));
+  }, [weeklyGoal, stats.hoursThisWeek]);
+
+  async function saveWeeklyGoal() {
+    setSavingGoal(true);
+    setGoalMessage('');
+    try {
+      const res = await API.patch('settings/', {
+        weekly_goal_hours: weeklyGoal,
+      });
+      localStorage.setItem('user', JSON.stringify(res.data));
+      window.dispatchEvent(new Event('user:updated'));
+      setGoalMessage('Goal saved.');
+    } catch (err) {
+      setGoalMessage('Could not save goal.');
+    } finally {
+      setSavingGoal(false);
+    }
+  }
 
   function getStatus(percent, totalTasks) {
     if (totalTasks === 0) return 'No tasks';
@@ -136,6 +165,41 @@ function Dashboard() {
               <p className="statValue">{stats.approvalRate}%</p>
               <p className="statMeta">Last 30 days</p>
             </div>
+          </section>
+
+          <section className="card">
+            <div className="cardHeader">
+              <h2 className="cardTitle">Weekly goal</h2>
+              <p className="cardSubtitle">{stats.hoursThisWeek} hrs logged</p>
+            </div>
+            <div className="settingsRow">
+              <span>Target hours</span>
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                value={weeklyGoal}
+                onChange={(e) => setWeeklyGoal(e.target.value)}
+              />
+            </div>
+            <div className="progressBar">
+              <div
+                className="progressFill"
+                style={{ width: `${goalProgress}%` }}
+              />
+            </div>
+            <div className="settingsRow">
+              <span>{goalProgress}% of goal</span>
+              <button
+                className="btn btnPrimary"
+                type="button"
+                onClick={saveWeeklyGoal}
+                disabled={savingGoal}
+              >
+                {savingGoal ? 'Saving...' : 'Save goal'}
+              </button>
+            </div>
+            {goalMessage && <p className="inlineStatus">{goalMessage}</p>}
           </section>
 
           <section className="card projectCard">

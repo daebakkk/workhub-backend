@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project, WorkLog, Task, Report
+from .models import User, Project, WorkLog, Task, Report, Notification
 from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
@@ -15,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
             'specialization',
             'email_notifications',
             'dark_mode',
+            'weekly_goal_hours',
         )
 
 
@@ -75,6 +76,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'last_name',
             'role',
             'specialization',
+            'weekly_goal_hours',
         )
 
     def validate_email(self, value):
@@ -93,8 +95,23 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name', ''),
             role=validated_data.get('role', 'staff'),
             specialization=validated_data.get('specialization', 'frontend'),
+            weekly_goal_hours=validated_data.get('weekly_goal_hours', 0),
         )
         return user
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = (
+            'id',
+            'title',
+            'message',
+            'notification_type',
+            'is_read',
+            'data',
+            'created_at',
+        )
 
 
 class TaskSerializer(serializers.ModelSerializer):

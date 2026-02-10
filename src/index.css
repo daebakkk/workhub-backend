@@ -676,6 +676,23 @@ a {
   font-weight: 700;
   color: var(--text);
 }
+.cardSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.progressBar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  overflow: hidden;
+  margin: 10px 0 14px;
+}
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff8ad6, #ff4fb2);
+  width: 0%;
+}
 
 .dashPage .card input {
   width: min(420px, 100%);
