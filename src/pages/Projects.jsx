@@ -402,14 +402,6 @@ function Projects() {
                   <div className="taskSection">
                     <div className="taskHeader">
                       <p className="taskTitle">Tasks</p>
-                      <button
-                        className="btn btnSecondary"
-                        type="button"
-                        onClick={() => fetchTasks(project.id)}
-                        disabled={tasksLoading[project.id]}
-                      >
-                        {tasksLoading[project.id] ? 'Loading...' : 'Refresh tasks'}
-                      </button>
                     </div>
                   {canEditTasks && (
                     <div className="taskCreate">

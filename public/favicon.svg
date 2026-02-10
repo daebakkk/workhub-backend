@@ -9,8 +9,8 @@
     </filter>
   </defs>
   <circle cx="64" cy="64" r="54" fill="#ffffff" filter="url(#softShadow)"/>
-  <g fill="url(#pinkGlow)">
-    <path d="M30 44h10l8 26 8-26h9l8 26 8-26h10l-12 40h-10l-8-24-8 24h-10z"/>
-    <path d="M78 44h10v15h14V44h10v40h-10V68H88v16H78z"/>
+  <g fill="url(#pinkGlow)" stroke="#ff4fb2" stroke-width="2" stroke-linejoin="round">
+    <path d="M28 42h14l7 24 8-24h11l8 24 7-24h14l-14 44h-13l-7-22-7 22H41z"/>
+    <path d="M76 42h14v16h12V42h14v44h-14V72H90v14H76z"/>
   </g>
 </svg>
