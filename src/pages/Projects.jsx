@@ -136,6 +136,7 @@ function Projects() {
       setCreateAssignees([]);
       setCreateTasks([]);
       setCreateTaskInput('');
+      setShowCreate(false);
     } catch (err) {
       setError('Failed to create project.');
     } finally {
