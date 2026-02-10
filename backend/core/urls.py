@@ -20,6 +20,7 @@ urlpatterns = [
     path('notifications/mark-all-read/', views.notifications_mark_all_read),
     path('admin/projects/', views.admin_projects),
     path('admin/users/', views.admin_users),
+    path('users/staff/', views.staff_users),
     path('admin/projects/<int:project_id>/assign/', views.assign_project_staff),
     path('admin/projects/create/', views.create_project),
     path('projects/<int:project_id>/tasks/', views.project_tasks),

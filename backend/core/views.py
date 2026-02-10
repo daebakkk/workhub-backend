@@ -361,6 +361,14 @@ def admin_users(request):
     return Response(serializer.data)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def staff_users(request):
+    users = User.objects.filter(role='staff').order_by('first_name', 'last_name', 'username')
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def assign_project_staff(request, project_id):
@@ -395,6 +403,17 @@ def create_project(request):
         project.staff.add(request.user)
     if request.user.role == 'admin' and isinstance(user_ids, list) and user_ids:
         staff_users = User.objects.filter(id__in=user_ids, role='staff')
+        project.staff.add(*staff_users)
+        for staff in staff_users:
+            Notification.objects.create(
+                user=staff,
+                title='Assigned to project',
+                message=f'You were added to \"{project.name}\".',
+                notification_type='project_assigned',
+                data={'project_id': project.id},
+            )
+    if request.user.role != 'admin' and isinstance(user_ids, list) and user_ids:
+        staff_users = User.objects.filter(id__in=user_ids, role='staff').exclude(id=request.user.id)
         project.staff.add(*staff_users)
         for staff in staff_users:
             Notification.objects.create(

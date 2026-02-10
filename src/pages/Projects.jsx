@@ -44,8 +44,12 @@ function Projects() {
           });
           setSelected(initial);
         } else {
-          const res = await API.get('projects/my/');
-          setProjects(res.data || []);
+          const [projectsRes, usersRes] = await Promise.all([
+            API.get('projects/my/'),
+            API.get('users/staff/'),
+          ]);
+          setProjects(projectsRes.data || []);
+          setUsers(usersRes.data || []);
         }
       } catch (err) {
         setError('Could not load projects. Please try again.');
@@ -110,7 +114,7 @@ function Projects() {
         name: newName.trim(),
         description: newDescription.trim(),
         assign_self: isAdmin ? shouldAssignSelf : true,
-        user_ids: isAdmin ? createAssignees : [],
+        user_ids: createAssignees,
         tasks: createTasks,
       });
       const created = res.data;
@@ -196,6 +200,7 @@ function Projects() {
   }
 
   const staffUsers = users.filter((item) => item.role === 'staff');
+  const staffOptions = staffUsers.filter((item) => item.id !== userId);
   const specializationGroups = [
     { key: 'frontend', label: 'Frontend' },
     { key: 'backend', label: 'Backend' },
@@ -335,6 +340,28 @@ function Projects() {
                     })}
                   </div>
                 )}
+                {!isAdmin && staffOptions.length > 0 && (
+                  <div className="assignList">
+                    <div className="assignGroup">
+                      <p className="assignGroupTitle">With (optional)</p>
+                      {staffOptions.map((staff) => {
+                        const checked = createAssignees.includes(staff.id);
+                        return (
+                          <label className="assignItem" key={`create-${staff.id}`}>
+                            <span>
+                              {staff.first_name || staff.username} {staff.last_name || ''}
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleCreateAssignee(staff.id)}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 <div className="settingsRow">
                   <span />
                   <div className="reportActions">
@@ -376,11 +403,17 @@ function Projects() {
               </div>
             )}
             {!loading && !error && projects.map((project) => {
-              const percent = project.completion_percent || 0;
-              const totalTasks = project.total_tasks || 0;
-              const status = getStatus(percent, totalTasks);
-              const badgeClass = status.toLowerCase().replace(' ', '-');
               const tasks = tasksByProject[project.id] || [];
+              const hasTasksLoaded = Object.prototype.hasOwnProperty.call(tasksByProject, project.id);
+              const totalTasks = project.total_tasks || 0;
+              const completedTasks = project.completed_tasks || 0;
+              const derivedTotal = tasks.length;
+              const derivedCompleted = tasks.filter((task) => task.is_completed).length;
+              const displayTotal = hasTasksLoaded ? derivedTotal : totalTasks;
+              const displayCompleted = hasTasksLoaded ? derivedCompleted : completedTasks;
+              const percent = displayTotal > 0 ? Math.round((displayCompleted / displayTotal) * 100) : (project.completion_percent || 0);
+              const status = getStatus(percent, displayTotal);
+              const badgeClass = status.toLowerCase().replace(' ', '-');
               const canEditTasks = !isAdmin || (selected[project.id] || []).includes(userId);
               return (
                 <div className="projectTile" key={project.id}>
@@ -390,15 +423,22 @@ function Projects() {
                       <p className="projectTileMeta">
                         ({project.description || 'No description yet'})
                       </p>
-                      {isAdmin && project.staff && project.staff.length > 0 && (
+                      {project.staff && project.staff.length > 0 && (
                         <p className="projectTileMeta">
-                          {formatNames(
-                            project.staff.map((member) =>
-                              member.id === userId
-                                ? 'me'
-                                : member.first_name || member.username || 'Staff'
-                            )
-                          )}
+                          {isAdmin
+                            ? formatNames(
+                                project.staff.map((member) =>
+                                  member.id === userId
+                                    ? 'me'
+                                    : member.first_name || member.username || 'Staff'
+                                )
+                              )
+                            : (() => {
+                                const others = project.staff
+                                  .filter((member) => member.id !== userId)
+                                  .map((member) => member.first_name || member.username || 'Staff');
+                                return others.length > 0 ? `with ${formatNames(others)}` : '';
+                              })()}
                         </p>
                       )}
                     </div>
@@ -462,7 +502,7 @@ function Projects() {
                     />
                   </div>
                   <p className="projectProgressText">
-                    {percent}% complete - {project.completed_tasks || 0}/{totalTasks} tasks
+                    {percent}% complete - {displayCompleted}/{displayTotal} tasks
                   </p>
                 </div>
               );
