@@ -10,6 +10,7 @@ function Dashboard() {
   const displayName = user?.first_name || user?.username || 'there';
   const [projects, setProjects] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [pendingLogs, setPendingLogs] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -18,12 +19,14 @@ function Dashboard() {
       setLoading(true);
       setError('');
       try {
-        const [projectsRes, logsRes] = await Promise.all([
+        const [projectsRes, logsRes, pendingRes] = await Promise.all([
           API.get('projects/my/'),
           API.get('logs/my/'),
+          isAdmin ? API.get('logs/pending/') : Promise.resolve({ data: [] }),
         ]);
         setProjects(projectsRes.data || []);
         setLogs(logsRes.data || []);
+        setPendingLogs((pendingRes.data || []).length);
       } catch (err) {
         setError('Could not load dashboard data. Please try again.');
       } finally {
@@ -32,7 +35,9 @@ function Dashboard() {
     }
 
     fetchData();
-  }, []);
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [isAdmin]);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -102,6 +107,12 @@ function Dashboard() {
               Settings
             </Link>
           </nav>
+          {isAdmin && (
+            <div className="sidebarNote">
+              <p className="sidebarNoteTitle">Pending logs</p>
+              <p className="sidebarNoteValue">{pendingLogs}</p>
+            </div>
+          )}
         </aside>
 
         <main className="dashMain dashContent">

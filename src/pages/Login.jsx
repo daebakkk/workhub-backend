@@ -41,7 +41,7 @@ export default function Login() {
       API.defaults.headers.common.Authorization = `Bearer ${res.data.access}`;
 
       if (res.data.user.role === 'admin') {
-        navigate('/admin/approvals');
+        navigate('/dashboard');
       } else {
         navigate('/dashboard');
       }

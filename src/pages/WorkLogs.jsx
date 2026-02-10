@@ -28,9 +28,10 @@ function WorkLogs() {
   }
 
   useEffect(() => {
-    if (showLogs) {
-      fetchLogs();
-    }
+    if (!showLogs) return undefined;
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 30000);
+    return () => clearInterval(interval);
   }, [showLogs]);
 
   function formatStatus(status) {
@@ -97,15 +98,6 @@ function WorkLogs() {
                 type="button"
               >
                 View my logs
-              </button>
-            )}
-            {showLogs && (
-              <button
-                className="btn btnSecondary"
-                onClick={fetchLogs}
-                type="button"
-              >
-                Refresh logs
               </button>
             )}
             {showAddLogForm && (

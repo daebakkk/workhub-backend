@@ -74,7 +74,7 @@ export default function Navbar() {
         </button>
       )}
       <div
-        className={`profileMenu ${isHome ? 'profileMenuLeft' : 'profileMenuRight'}`}
+        className="profileMenu profileMenuRight"
         ref={menuRef}
       >
         <button

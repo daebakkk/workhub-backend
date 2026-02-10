@@ -58,12 +58,17 @@ function Projects() {
   }, [isAdmin]);
 
   useEffect(() => {
-    if (!projects.length) return;
-    projects.forEach((project) => {
-      if (!tasksByProject[project.id] && !tasksLoading[project.id]) {
-        fetchTasks(project.id);
-      }
-    });
+    if (!projects.length) return undefined;
+    function refreshAllTasks() {
+      projects.forEach((project) => {
+        if (!tasksLoading[project.id]) {
+          fetchTasks(project.id);
+        }
+      });
+    }
+    refreshAllTasks();
+    const interval = setInterval(refreshAllTasks, 30000);
+    return () => clearInterval(interval);
   }, [projects]);
 
   function toggleCreateAssignee(id) {
@@ -331,7 +336,7 @@ function Projects() {
                   </div>
                 )}
                 <div className="settingsRow">
-                  <span>Create project</span>
+                  <span />
                   <div className="reportActions">
                     <button className="btn btnPrimary" type="submit" disabled={creating}>
                       {creating && creatingMode === 'default' ? 'Creating...' : 'Create'}
@@ -388,8 +393,10 @@ function Projects() {
                       {isAdmin && project.staff && project.staff.length > 0 && (
                         <p className="projectTileMeta">
                           {formatNames(
-                            project.staff.map(
-                              (member) => member.first_name || member.username || 'Staff'
+                            project.staff.map((member) =>
+                              member.id === userId
+                                ? 'me'
+                                : member.first_name || member.username || 'Staff'
                             )
                           )}
                         </p>

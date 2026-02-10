@@ -25,6 +25,7 @@ def submit_log(request):
         title=data.get('title'),
         date=data.get('date'),
         hours=data.get('hours'),
+        status='approved' if request.user.role == 'admin' else 'pending',
     )
 
     serializer = WorkLogSerializer(log)

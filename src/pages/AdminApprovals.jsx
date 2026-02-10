@@ -24,6 +24,8 @@ function AdminApprovals() {
 
   useEffect(() => {
     fetchPending();
+    const interval = setInterval(fetchPending, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   async function approveLog(id) {

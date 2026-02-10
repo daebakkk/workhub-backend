@@ -27,6 +27,8 @@ export default function Reports() {
         }
 
         fetchReports();
+        const interval = setInterval(fetchReports, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     async function generateReport() {
