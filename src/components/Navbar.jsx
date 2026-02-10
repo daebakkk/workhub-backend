@@ -130,7 +130,7 @@ export default function Navbar() {
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
-                d="M15 17H9a2 2 0 0 1-2-2v-3a5 5 0 1 1 10 0v3a2 2 0 0 1-2 2Zm-6 0h6v1a3 3 0 1 1-6 0v-1Z"
+                d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z"
                 fill="currentColor"
               />
             </svg>
