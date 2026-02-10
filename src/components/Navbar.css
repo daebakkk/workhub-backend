@@ -132,6 +132,11 @@
   background: var(--text);
   border-radius: 999px;
 }
+.navHamburger svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
 
 @media (max-width: 640px) {
   .navbar {

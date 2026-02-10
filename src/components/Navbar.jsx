@@ -62,19 +62,17 @@ export default function Navbar() {
           aria-label="Toggle sidebar"
           onClick={toggleSidebar}
         >
-          <span />
-          <span />
-          <span />
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M3 6h18M3 12h18M3 18h18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
       )}
-      {currentPath !== "/dashboard" && (
-        <Link to="/dashboard" className="navItem">Dashboard</Link>)}
-      {currentPath !== "/reports" && (
-        <Link to="/reports" className="navItem">Reports</Link>)}
-      {currentPath !== "/projects" && (
-        <Link to="/projects" className="navItem">Projects</Link>)}
-      {user?.role === 'admin' && currentPath !== "/admin/approvals" && (
-        <Link to="/admin/approvals" className="navItem">Approvals</Link>)}
       <div
         className={`profileMenu ${isHome ? 'profileMenuLeft' : 'profileMenuRight'}`}
         ref={menuRef}

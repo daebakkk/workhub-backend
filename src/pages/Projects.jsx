@@ -183,6 +183,13 @@ function Projects() {
     return 'Not started';
   }
 
+  function formatNames(list) {
+    if (!list.length) return '';
+    if (list.length === 1) return list[0];
+    if (list.length === 2) return `${list[0]} and ${list[1]}`;
+    return `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`;
+  }
+
   const staffUsers = users.filter((item) => item.role === 'staff');
   const specializationGroups = [
     { key: 'frontend', label: 'Frontend' },
@@ -378,6 +385,15 @@ function Projects() {
                       <p className="projectTileMeta">
                         ({project.description || 'No description yet'})
                       </p>
+                      {isAdmin && project.staff && project.staff.length > 0 && (
+                        <p className="projectTileMeta">
+                          {formatNames(
+                            project.staff.map(
+                              (member) => member.first_name || member.username || 'Staff'
+                            )
+                          )}
+                        </p>
+                      )}
                     </div>
                     <span className={`projectBadge ${badgeClass}`}>
                       {status}
@@ -395,7 +411,7 @@ function Projects() {
                         {tasksLoading[project.id] ? 'Loading...' : 'Refresh tasks'}
                       </button>
                     </div>
-                  {!isAdmin && canEditTasks && (
+                  {canEditTasks && (
                     <div className="taskCreate">
                       <input
                         type="text"
