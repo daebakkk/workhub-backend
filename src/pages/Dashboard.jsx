@@ -169,11 +169,19 @@ function Dashboard() {
               <p className="statValue">{stats.activeProjects}</p>
               <p className="statMeta">In progress</p>
             </div>
-            <div className="statCard">
-              <p className="statLabel">Pending logs</p>
-              <p className="statValue">{pendingLogs}</p>
-              <p className="statMeta">Awaiting review</p>
-            </div>
+            {isAdmin ? (
+              <div className="statCard">
+                <p className="statLabel">Pending logs</p>
+                <p className="statValue">{pendingLogs}</p>
+                <p className="statMeta">Awaiting review</p>
+              </div>
+            ) : (
+              <div className="statCard">
+                <p className="statLabel">Approval rate</p>
+                <p className="statValue">{stats.approvalRate}%</p>
+                <p className="statMeta">Last 30 days</p>
+              </div>
+            )}
           </section>
 
           <section className="card">
