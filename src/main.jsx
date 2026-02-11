@@ -8,7 +8,13 @@ const storedDark = localStorage.getItem('dark_mode') === 'true'
 document.body.classList.toggle('dark', storedDark)
 document.addEventListener('click', (event) => {
   if (document.body.classList.contains('sidebar-open')) {
-    if (event.target === document.body) {
+    const clickedSidebarLink = event.target.closest('.sidebarLink');
+    if (clickedSidebarLink) {
+      document.body.classList.remove('sidebar-open')
+      return
+    }
+    const clickedSidebar = event.target.closest('.dashSidebar');
+    if (!clickedSidebar) {
       document.body.classList.remove('sidebar-open')
     }
   }

@@ -282,14 +282,6 @@ function Projects() {
                 {showCreate ? 'Close' : 'Create a project'}
               </button>
             </div>
-            <div className="projectSearch">
-              <input
-                type="text"
-                placeholder="Search projects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
             {showCreate && (
               <form className="assignCreate" onSubmit={(e) => createProject(e)}>
                 <div className="assignCreateFields">
@@ -428,6 +420,14 @@ function Projects() {
                 </div>
               </form>
             )}
+            <div className="projectSearch">
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </>
           <section className="projectBoard">
             {loading && <p className="inlineStatus">Loading projects...</p>}

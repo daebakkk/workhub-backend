@@ -236,9 +236,12 @@
 }
 @media (max-width: 640px) {
   .notifDropdown {
-    width: min(92vw, 320px);
-    right: -6px;
-    padding: 10px;
+    position: fixed;
+    top: 72px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    padding: 12px;
   }
   .notifHeader p {
     font-size: 0.95rem;

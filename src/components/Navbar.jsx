@@ -119,6 +119,7 @@ export default function Navbar() {
             className="notifButton"
             aria-label="Notifications"
             onClick={() => {
+              setMenuOpen(false);
               setNotifOpen((prev) => {
                 const next = !prev;
                 if (!prev && next) {
@@ -165,7 +166,10 @@ export default function Navbar() {
           className="profileIcon"
           aria-label="Profile"
           title="Profile"
-          onClick={() => setMenuOpen((prev) => !prev)}
+          onClick={() => {
+            setNotifOpen(false);
+            setMenuOpen((prev) => !prev);
+          }}
         >
           {getInitial()}
         </button>
