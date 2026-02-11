@@ -498,7 +498,7 @@ function Projects() {
                       type="button"
                       onClick={() => deleteProject(project.id)}
                     >
-                      delete
+                      Delete project
                     </button>
                   </div>
                   <div className="taskSection">

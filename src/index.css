@@ -678,9 +678,9 @@ a {
   gap: 10px;
 }
 .projectActions {
-  display: flex;
-  justify-content: flex-end;
-  margin: 10px 0 6px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }
 .projectDelete {
   background: none;
@@ -939,6 +939,7 @@ a {
   border-radius: 20px;
   padding: 20px 22px;
   box-shadow: var(--shadow);
+  position: relative;
 }
 
 .projectTileHeader {
