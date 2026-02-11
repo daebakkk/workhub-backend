@@ -105,7 +105,7 @@ function WorkLogForm({ onSubmitted }) {
 
       <br />
 
-      <button disabled={loading || loadingProjects}>
+      <button type="submit" disabled={loading || loadingProjects}>
         {loading ? "Submitting..." : "Add Log"}
       </button>
 

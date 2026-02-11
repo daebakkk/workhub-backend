@@ -193,6 +193,12 @@ function Dashboard() {
                   step="0.5"
                   value={goalDraft}
                   onChange={(e) => setGoalDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      saveWeeklyGoal();
+                    }
+                  }}
                 />
               </div>
             )}
