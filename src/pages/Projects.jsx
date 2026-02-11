@@ -36,7 +36,13 @@ function Projects() {
             API.get('admin/users/'),
           ]);
           const list = projectsRes.data || [];
-          setProjects(list);
+          const sorted = [...list].sort((a, b) => {
+            const aHasMe = (a.staff || []).some((member) => member.id === userId);
+            const bHasMe = (b.staff || []).some((member) => member.id === userId);
+            if (aHasMe === bHasMe) return 0;
+            return aHasMe ? -1 : 1;
+          });
+          setProjects(sorted);
           setUsers(usersRes.data || []);
 
           const initial = {};
