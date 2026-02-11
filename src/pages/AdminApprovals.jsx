@@ -8,6 +8,7 @@ function AdminApprovals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const [approvingAll, setApprovingAll] = useState(false);
 
   async function fetchPending() {
     setLoading(true);
@@ -53,6 +54,19 @@ function AdminApprovals() {
     }
   }
 
+  async function approveAll() {
+    setApprovingAll(true);
+    setError('');
+    try {
+      await API.post('logs/approve-all/');
+      setLogs([]);
+    } catch (err) {
+      setError('Failed to approve all logs.');
+    } finally {
+      setApprovingAll(false);
+    }
+  }
+
   return (
     <div className="dashPage">
       <header className="topBar">
@@ -91,6 +105,18 @@ function AdminApprovals() {
 
         <main className="dashMain dashContent">
           <p className="dashSubtitle">Review and approve staff work logs</p>
+          {logs.length > 0 && (
+            <div className="approvalsActions">
+              <button
+                className="btn btnPrimary"
+                type="button"
+                disabled={approvingAll}
+                onClick={approveAll}
+              >
+                {approvingAll ? 'Approving...' : 'Approve all'}
+              </button>
+            </div>
+          )}
 
           {loading && <p className="inlineStatus">Loading pending logs…</p>}
           {error && <p className="inlineError">{error}</p>}

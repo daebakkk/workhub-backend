@@ -116,6 +116,30 @@ def approve_log(request, log_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def approve_all_logs(request):
+    if request.user.role != 'admin':
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    logs = WorkLog.objects.filter(status='pending').exclude(staff=request.user)
+    updated = []
+    for log in logs:
+        log.status = 'approved'
+        log.rejection_reason = ''
+        log.save()
+        updated.append(log)
+        if log.staff.email_notifications:
+            Notification.objects.create(
+                user=log.staff,
+                title='Log approved',
+                message=f'"{log.title}" was approved.',
+                notification_type='log_approved',
+                data={'log_id': log.id},
+            )
+    return Response({'message': f'Approved {len(updated)} logs'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def reject_log(request, log_id):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)

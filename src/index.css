@@ -682,6 +682,11 @@ a {
   bottom: 12px;
   right: 12px;
 }
+.approvalsActions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 16px;
+}
 .projectDelete {
   background: none;
   border: none;

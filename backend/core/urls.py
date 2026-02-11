@@ -7,6 +7,7 @@ urlpatterns = [
     path('logs/<int:log_id>/delete/', views.delete_log),
     path('logs/pending/', views.pending_logs),
     path('logs/<int:log_id>/approve/', views.approve_log),
+    path('logs/approve-all/', views.approve_all_logs),
     path('logs/<int:log_id>/reject/', views.reject_log),
     path('auth/register/', views.register),
     path('auth/login/', views.login),
