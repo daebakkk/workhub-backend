@@ -32,7 +32,7 @@ def submit_log(request):
 
     # Weekly goal notification (once per week)
     goal = float(request.user.weekly_goal_hours or 0)
-    if goal > 0:
+    if goal > 0 and request.user.email_notifications:
         today = timezone.now().date()
         # Only notify on Saturday (weekday 5)
         if today.weekday() == 5:
@@ -94,13 +94,14 @@ def approve_log(request, log_id):
     log.status = 'approved'
     log.rejection_reason = ''
     log.save()
-    Notification.objects.create(
-        user=log.staff,
-        title='Log approved',
-        message=f'"{log.title}" was approved.',
-        notification_type='log_approved',
-        data={'log_id': log.id},
-    )
+    if log.staff.email_notifications:
+        Notification.objects.create(
+            user=log.staff,
+            title='Log approved',
+            message=f'"{log.title}" was approved.',
+            notification_type='log_approved',
+            data={'log_id': log.id},
+        )
 
     return Response({'message': 'Log approved'})
 
@@ -115,13 +116,14 @@ def reject_log(request, log_id):
     log.status = 'rejected'
     log.rejection_reason = request.data.get('reason', '')
     log.save()
-    Notification.objects.create(
-        user=log.staff,
-        title='Log rejected',
-        message=f'"{log.title}" was rejected.',
-        notification_type='log_rejected',
-        data={'log_id': log.id},
-    )
+    if log.staff.email_notifications:
+        Notification.objects.create(
+            user=log.staff,
+            title='Log rejected',
+            message=f'"{log.title}" was rejected.',
+            notification_type='log_rejected',
+            data={'log_id': log.id},
+        )
 
     return Response({'message': 'Log rejected'})
 
@@ -297,7 +299,7 @@ def create_report(request):
         by_date=by_date,
     )
     serializer = ReportSerializer(report)
-    staff_users = User.objects.filter(role='staff')
+    staff_users = User.objects.filter(role='staff', email_notifications=True)
     for staff in staff_users:
         Notification.objects.create(
             user=staff,
@@ -312,6 +314,8 @@ def create_report(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def notifications_list(request):
+    if not request.user.email_notifications:
+        return Response([])
     notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
     serializer = NotificationSerializer(notifications, many=True)
     return Response(serializer.data)
@@ -405,24 +409,26 @@ def create_project(request):
         staff_users = User.objects.filter(id__in=user_ids, role='staff')
         project.staff.add(*staff_users)
         for staff in staff_users:
-            Notification.objects.create(
-                user=staff,
-                title='Assigned to project',
-                message=f'You were added to \"{project.name}\".',
-                notification_type='project_assigned',
-                data={'project_id': project.id},
-            )
+            if staff.email_notifications:
+                Notification.objects.create(
+                    user=staff,
+                    title='Assigned to project',
+                    message=f'You were added to \"{project.name}\".',
+                    notification_type='project_assigned',
+                    data={'project_id': project.id},
+                )
     if request.user.role != 'admin' and isinstance(user_ids, list) and user_ids:
         staff_users = User.objects.filter(id__in=user_ids, role='staff').exclude(id=request.user.id)
         project.staff.add(*staff_users)
         for staff in staff_users:
-            Notification.objects.create(
-                user=staff,
-                title='Assigned to project',
-                message=f'You were added to \"{project.name}\".',
-                notification_type='project_assigned',
-                data={'project_id': project.id},
-            )
+            if staff.email_notifications:
+                Notification.objects.create(
+                    user=staff,
+                    title='Assigned to project',
+                    message=f'You were added to \"{project.name}\".',
+                    notification_type='project_assigned',
+                    data={'project_id': project.id},
+                )
     if isinstance(tasks, list) and tasks:
         seen = set()
         task_items = []

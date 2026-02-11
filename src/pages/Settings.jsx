@@ -110,7 +110,7 @@ function Settings() {
               <section className="card settingsCard">
                 <h2 className="cardTitle">Preferences</h2>
                 <label className="settingsRow">
-                  <span>Email notifications</span>
+                  <span>In-app notifications</span>
                   <input
                     type="checkbox"
                     checked={emailNotifications}
