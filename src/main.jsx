@@ -13,6 +13,10 @@ document.addEventListener('click', (event) => {
       document.body.classList.remove('sidebar-open')
       return
     }
+    const clickedHamburger = event.target.closest('.navHamburger');
+    if (clickedHamburger) {
+      return
+    }
     const clickedSidebar = event.target.closest('.dashSidebar');
     if (!clickedSidebar) {
       document.body.classList.remove('sidebar-open')
