@@ -279,7 +279,13 @@ def reports_summary(request):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    logs = WorkLog.objects.select_related('project', 'staff').all()
+    today = timezone.now().date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    logs = WorkLog.objects.select_related('project', 'staff').filter(
+        date__gte=week_start,
+        date__lte=week_end,
+    )
     total_logs = logs.count()
     total_hours = logs.aggregate(total=Sum('hours'))['total'] or 0
 
@@ -310,7 +316,13 @@ def create_report(request):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    logs = WorkLog.objects.select_related('project', 'staff').all()
+    today = timezone.now().date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    logs = WorkLog.objects.select_related('project', 'staff').filter(
+        date__gte=week_start,
+        date__lte=week_end,
+    )
     total_logs = logs.count()
     total_hours = logs.aggregate(total=Sum('hours'))['total'] or 0
 
