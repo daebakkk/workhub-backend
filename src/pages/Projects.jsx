@@ -192,6 +192,20 @@ function Projects() {
     }
   }
 
+  async function deleteProject(projectId) {
+    try {
+      await API.delete(`projects/${projectId}/delete/`);
+      setProjects((prev) => prev.filter((project) => project.id !== projectId));
+      setTasksByProject((prev) => {
+        const next = { ...prev };
+        delete next[projectId];
+        return next;
+      });
+    } catch (err) {
+      setError('Failed to delete project.');
+    }
+  }
+
   function getStatus(percent, totalTasks) {
     if (totalTasks === 0) return 'No tasks';
     if (percent === 100) return 'Completed';
@@ -478,27 +492,42 @@ function Projects() {
                       {status}
                     </span>
                   </div>
+                  <div className="projectActions">
+                    <button
+                      className="btn btnSecondary"
+                      type="button"
+                      onClick={() => deleteProject(project.id)}
+                    >
+                      Delete project
+                    </button>
+                  </div>
                   <div className="taskSection">
                     <div className="taskHeader">
                       <p className="taskTitle">Tasks</p>
                     </div>
                   {canEditTasks && (
-                    <div className="taskCreate">
-                      <input
-                        type="text"
-                        placeholder="New task"
-                        value={taskTitleByProject[project.id] || ''}
-                        onChange={(e) =>
-                          setTaskTitleByProject((prev) => ({
-                            ...prev,
-                            [project.id]: e.target.value,
-                          }))
+                  <div className="taskCreate">
+                    <input
+                      type="text"
+                      placeholder="New task"
+                      value={taskTitleByProject[project.id] || ''}
+                      onChange={(e) =>
+                        setTaskTitleByProject((prev) => ({
+                          ...prev,
+                          [project.id]: e.target.value,
+                        }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          createTask(project.id);
                         }
-                      />
-                      <button
-                        className="btn btnPrimary"
-                        type="button"
-                        onClick={() => createTask(project.id)}
+                      }}
+                    />
+                    <button
+                      className="btn btnPrimary"
+                      type="button"
+                      onClick={() => createTask(project.id)}
                       >
                         Add Task
                       </button>

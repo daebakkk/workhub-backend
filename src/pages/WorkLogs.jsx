@@ -27,6 +27,15 @@ function WorkLogs() {
     }
   }
 
+  async function deleteLog(id) {
+    try {
+      await API.delete(`logs/${id}/delete/`);
+      setLogs((prev) => prev.filter((log) => log.id !== id));
+    } catch (err) {
+      setLogsError('Could not delete log. Please try again.');
+    }
+  }
+
   useEffect(() => {
     if (!showLogs) return undefined;
     fetchLogs();
@@ -131,11 +140,20 @@ function WorkLogs() {
                             {log.date} • {log.hours} hrs
                           </p>
                         </div>
-                        {user?.role !== 'admin' && (
-                          <span className={`logStatus ${log.status || 'pending'}`}>
-                            {formatStatus(log.status)}
-                          </span>
-                        )}
+                        <div className="logActions">
+                          {user?.role !== 'admin' && (
+                            <span className={`logStatus ${log.status || 'pending'}`}>
+                              {formatStatus(log.status)}
+                            </span>
+                          )}
+                          <button
+                            className="btn btnSecondary"
+                            type="button"
+                            onClick={() => deleteLog(log.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

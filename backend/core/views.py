@@ -74,6 +74,14 @@ def my_logs(request):
     return Response(serializer.data)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_log(request, log_id):
+    log = get_object_or_404(WorkLog, id=log_id, staff=request.user)
+    log.delete()
+    return Response({'message': 'Log deleted'})
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def pending_logs(request):
@@ -229,6 +237,16 @@ def my_projects(request):
     )
     serializer = ProjectSerializer(projects, many=True)
     return Response(serializer.data)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    if request.user not in project.staff.all():
+        return Response({'detail': 'Not allowed'}, status=403)
+    project.delete()
+    return Response({'message': 'Project deleted'})
 
 
 @api_view(['GET'])

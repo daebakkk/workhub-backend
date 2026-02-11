@@ -666,6 +666,23 @@ a {
   width: 100%;
 }
 
+.logItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.logActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.projectActions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 6px;
+}
+
 .workLogCard .logItem {
   width: 100%;
 }

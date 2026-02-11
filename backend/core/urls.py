@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('logs/submit/', views.submit_log),
     path('logs/my/', views.my_logs),
+    path('logs/<int:log_id>/delete/', views.delete_log),
     path('logs/pending/', views.pending_logs),
     path('logs/<int:log_id>/approve/', views.approve_log),
     path('logs/<int:log_id>/reject/', views.reject_log),
@@ -13,6 +14,7 @@ urlpatterns = [
     path('settings/', views.user_settings),
     path('settings/password/', views.change_password),
     path('projects/my/', views.my_projects),
+    path('projects/<int:project_id>/delete/', views.delete_project),
     path('reports/summary/', views.reports_summary),
     path('reports/', views.list_reports),
     path('reports/create/', views.create_report),
