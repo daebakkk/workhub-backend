@@ -177,6 +177,17 @@ export default function StaffReport() {
           <div className="reportTopControls">
             <select
               className="reportSelect"
+              value={selectedRange}
+              onChange={(e) => setSelectedRange(e.target.value)}
+            >
+              {TIME_RANGES.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            <select
+              className="reportSelect"
               value={staffId || ''}
               onChange={(e) => {
                 const next = e.target.value;
@@ -194,17 +205,6 @@ export default function StaffReport() {
               {sortedStaff.map((person) => (
                 <option key={person.id} value={person.id}>
                   {formatStaffName(person)}
-                </option>
-              ))}
-            </select>
-            <select
-              className="reportSelect"
-              value={selectedRange}
-              onChange={(e) => setSelectedRange(e.target.value)}
-            >
-              {TIME_RANGES.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
                 </option>
               ))}
             </select>

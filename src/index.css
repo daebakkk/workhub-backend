@@ -727,6 +727,22 @@ a {
   padding-right: 6px;
 }
 
+.workLogCard .logFilters {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.workLogCard .logFilters select {
+  min-height: 38px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
 .logItem {
   display: flex;
   align-items: center;

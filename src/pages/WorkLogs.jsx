@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import WorkLogForm from '../components/WorkLogForm';
@@ -11,6 +11,7 @@ function WorkLogs() {
   const [showAddLogForm, setShowAddLogForm] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [logsRange, setLogsRange] = useState('this_week');
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [logsError, setLogsError] = useState('');
 
@@ -47,6 +48,52 @@ function WorkLogs() {
     const value = status || 'pending';
     return value.charAt(0).toUpperCase() + value.slice(1);
   }
+
+  function getRangeBounds(range) {
+    const today = new Date();
+    const end = new Date(today);
+    end.setHours(23, 59, 59, 999);
+    const start = new Date(today);
+    start.setHours(0, 0, 0, 0);
+
+    if (range === 'all') return { start: null, end: null };
+    if (range === 'last_week') {
+      const weekday = today.getDay();
+      const mondayOffset = weekday === 0 ? 6 : weekday - 1;
+      end.setDate(today.getDate() - mondayOffset - 1);
+      end.setHours(23, 59, 59, 999);
+      start.setTime(end.getTime());
+      start.setDate(end.getDate() - 6);
+      start.setHours(0, 0, 0, 0);
+      return { start, end };
+    }
+    if (range === 'last_30_days') {
+      start.setDate(today.getDate() - 30);
+      return { start, end };
+    }
+    if (range === 'last_6_months') {
+      start.setDate(today.getDate() - 182);
+      return { start, end };
+    }
+    if (range === 'last_year') {
+      start.setDate(today.getDate() - 365);
+      return { start, end };
+    }
+    const weekday = today.getDay();
+    const mondayOffset = weekday === 0 ? 6 : weekday - 1;
+    start.setDate(today.getDate() - mondayOffset);
+    return { start, end };
+  }
+
+  const filteredLogs = useMemo(() => {
+    const { start, end } = getRangeBounds(logsRange);
+    if (!start || !end) return logs;
+    return logs.filter((log) => {
+      if (!log?.date) return false;
+      const logDate = new Date(`${log.date}T12:00:00`);
+      return logDate >= start && logDate <= end;
+    });
+  }, [logs, logsRange]);
 
   return (
     <div className="dashPage">
@@ -119,9 +166,22 @@ function WorkLogs() {
             )}
             {showLogs && (
               <>
+                <div className="logFilters">
+                  <select
+                    value={logsRange}
+                    onChange={(e) => setLogsRange(e.target.value)}
+                  >
+                    <option value="this_week">This week</option>
+                    <option value="last_week">Last week</option>
+                    <option value="last_30_days">Last 30 days</option>
+                    <option value="last_6_months">Last 6 months</option>
+                    <option value="last_year">Last year</option>
+                    <option value="all">All time</option>
+                  </select>
+                </div>
                 {loadingLogs && <p className="inlineStatus">Loading logs…</p>}
                 {logsError && <p className="inlineError">{logsError}</p>}
-                {!loadingLogs && !logsError && logs.length === 0 && (
+                {!loadingLogs && !logsError && filteredLogs.length === 0 && (
                   <div className="emptyState">
                     <p className="emptyTitle">No work logs yet</p>
                     <p className="emptySubtitle">
@@ -129,9 +189,9 @@ function WorkLogs() {
                     </p>
                   </div>
                 )}
-                {!loadingLogs && logs.length > 0 && (
+                {!loadingLogs && filteredLogs.length > 0 && (
                   <div className="logList">
-                    {logs.map((log) => (
+                    {filteredLogs.map((log) => (
                       <div className="logItem" key={log.id}>
                         <div>
                           <p className="logTitle">{log.title}</p>
