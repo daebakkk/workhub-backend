@@ -497,6 +497,70 @@ def list_reports(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def staff_report_summary(request, staff_id):
+    if request.user.role != 'admin' and request.user.id != staff_id:
+        return Response({'detail': 'Not allowed'}, status=403)
+
+    staff = get_object_or_404(User, id=staff_id, role='staff')
+    range_filter = request.query_params.get('range', 'this_week')
+    today = timezone.now().date()
+    start = None
+    end = None
+
+    if range_filter == 'last_week':
+        end = today - timedelta(days=today.weekday() + 1)
+        start = end - timedelta(days=6)
+    elif range_filter == 'last_30_days':
+        start = today - timedelta(days=30)
+        end = today
+    elif range_filter == 'last_6_months':
+        start = today - timedelta(days=182)
+        end = today
+    elif range_filter == 'last_year':
+        start = today - timedelta(days=365)
+        end = today
+    elif range_filter == 'all':
+        start = None
+        end = None
+    else:
+        start = today - timedelta(days=today.weekday())
+        end = start + timedelta(days=6)
+
+    logs = WorkLog.objects.filter(staff=staff).select_related('project')
+    if start and end:
+        logs = logs.filter(date__gte=start, date__lte=end)
+
+    total_logs = logs.count()
+    total_hours = logs.aggregate(total=Sum('hours')).get('total') or 0
+    status_counts = list(logs.values('status').annotate(count=Count('id')).order_by('status'))
+    by_project = list(
+        logs.values('project__name')
+        .annotate(hours=Sum('hours'), count=Count('id'))
+        .order_by('project__name')
+    )
+    by_date = list(
+        logs.values('date')
+        .annotate(hours=Sum('hours'), count=Count('id'))
+        .order_by('-date')
+    )
+
+    return Response(
+        {
+            'staff': UserSerializer(staff).data,
+            'range': range_filter,
+            'start_date': start,
+            'end_date': end,
+            'total_logs': total_logs,
+            'total_hours': total_hours,
+            'status_counts': status_counts,
+            'by_project': by_project,
+            'by_date': by_date,
+        }
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def admin_projects(request):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
