@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="520" viewBox="0 0 760 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe4f3"/>
+      <stop offset="1" stop-color="#f8f5ff"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f3f4ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="520" rx="32" fill="url(#bg)"/>
+  <rect x="70" y="80" width="620" height="120" rx="22" fill="url(#card)" stroke="#f3c1da" stroke-width="2"/>
+  <rect x="70" y="230" width="360" height="220" rx="22" fill="#ffffff" stroke="#f3c1da" stroke-width="2"/>
+  <rect x="460" y="230" width="230" height="220" rx="22" fill="#ffffff" stroke="#f3c1da" stroke-width="2"/>
+  <circle cx="120" cy="140" r="22" fill="#f472b6"/>
+  <rect x="160" y="120" width="320" height="16" rx="8" fill="#f1c7df"/>
+  <rect x="160" y="150" width="240" height="12" rx="6" fill="#f6d6e7"/>
+  <rect x="110" y="275" width="220" height="18" rx="9" fill="#f1c7df"/>
+  <rect x="110" y="310" width="160" height="12" rx="6" fill="#f6d6e7"/>
+  <rect x="110" y="345" width="260" height="12" rx="6" fill="#f6d6e7"/>
+  <rect x="110" y="380" width="140" height="12" rx="6" fill="#f6d6e7"/>
+  <rect x="495" y="275" width="150" height="18" rx="9" fill="#f1c7df"/>
+  <rect x="495" y="310" width="110" height="12" rx="6" fill="#f6d6e7"/>
+  <rect x="495" y="345" width="150" height="12" rx="6" fill="#f6d6e7"/>
+  <rect x="495" y="380" width="90" height="12" rx="6" fill="#f6d6e7"/>
+  <circle cx="650" cy="140" r="26" fill="#f472b6"/>
+  <path d="M640 140h20" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M650 130v20" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+</svg>

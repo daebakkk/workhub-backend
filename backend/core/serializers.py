@@ -1,0 +1,144 @@
+from rest_framework import serializers
+from .models import User, Project, WorkLog, Task, Report, Notification
+from django.contrib.auth import authenticate
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'role',
+            'specialization',
+            'email_notifications',
+            'dark_mode',
+            'weekly_goal_hours',
+        )
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    staff = UserSerializer(many=True, read_only=True)
+    total_tasks = serializers.IntegerField(read_only=True)
+    completed_tasks = serializers.IntegerField(read_only=True)
+    completion_percent = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = (
+            'id',
+            'name',
+            'description',
+            'staff',
+            'total_tasks',
+            'completed_tasks',
+            'completion_percent',
+        )
+
+    def get_completion_percent(self, obj):
+        total = getattr(obj, 'total_tasks', 0) or 0
+        completed = getattr(obj, 'completed_tasks', 0) or 0
+        if total == 0:
+            return 0
+        return round((completed / total) * 100)
+
+
+class WorkLogSerializer(serializers.ModelSerializer):
+    staff = UserSerializer(read_only=True)
+    project = ProjectSerializer(read_only=True)
+    approved_by = UserSerializer(read_only=True)
+    rejected_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = WorkLog
+        fields = (
+            'id',
+            'title',
+            'date',
+            'hours',
+            'status',
+            'rejection_reason',
+            'approved_by',
+            'rejected_by',
+            'approved_at',
+            'rejected_at',
+            'created_at',
+            'staff',
+            'project',
+        )
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'password',
+            'first_name',
+            'last_name',
+            'role',
+            'specialization',
+            'weekly_goal_hours',
+        )
+
+    def validate_email(self, value):
+        allowed_domain = "@thefifthlab.com"
+        if not value.endswith(allowed_domain):
+            raise serializers.ValidationError(
+                f"Email must end with {allowed_domain}"
+            )
+        return value
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            role=validated_data.get('role', 'staff'),
+            specialization=validated_data.get('specialization', 'frontend'),
+            weekly_goal_hours=validated_data.get('weekly_goal_hours', 0),
+        )
+        return user
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = (
+            'id',
+            'title',
+            'message',
+            'notification_type',
+            'is_read',
+            'data',
+            'created_at',
+        )
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    assigned_to = UserSerializer(read_only=True)
+    class Meta:
+        model = Task
+        fields = ('id', 'title', 'is_completed', 'created_at', 'project', 'assigned_to')
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    created_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Report
+        fields = (
+            'id',
+            'created_at',
+            'created_by',
+            'total_logs',
+            'total_hours',
+            'status_counts',
+            'by_project',
+            'by_date',
+        )

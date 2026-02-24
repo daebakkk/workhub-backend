@@ -1,0 +1,35 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('logs/submit/', views.submit_log),
+    path('logs/my/', views.my_logs),
+    path('logs/<int:log_id>/delete/', views.delete_log),
+    path('logs/pending/', views.pending_logs),
+    path('logs/<int:log_id>/approve/', views.approve_log),
+    path('logs/approve-all/', views.approve_all_logs),
+    path('logs/<int:log_id>/reject/', views.reject_log),
+    path('auth/register/', views.register),
+    path('auth/login/', views.login),
+    path('auth/refresh/', views.refresh_token),
+    path('settings/', views.user_settings),
+    path('settings/password/', views.change_password),
+    path('projects/my/', views.my_projects),
+    path('projects/<int:project_id>/delete/', views.delete_project),
+    path('reports/summary/', views.reports_summary),
+    path('reports/', views.list_reports),
+    path('reports/create/', views.create_report),
+    path('notifications/', views.notifications_list),
+    path('notifications/mark-all-read/', views.notifications_mark_all_read),
+    path('logs/history/', views.admin_log_history),
+    path('admin/projects/', views.admin_projects),
+    path('admin/users/', views.admin_users),
+    path('users/staff/', views.staff_users),
+    path('dashboard/summary/', views.dashboard_summary),
+    path('admin/projects/<int:project_id>/assign/', views.assign_project_staff),
+    path('admin/projects/create/', views.create_project),
+    path('projects/<int:project_id>/tasks/', views.project_tasks),
+    path('tasks/<int:task_id>/', views.update_task),
+    path('tasks/<int:task_id>/delete/', views.delete_task),
+
+]
