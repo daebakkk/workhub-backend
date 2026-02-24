@@ -8,9 +8,14 @@ function Dashboard() {
   const user = storedUser ? JSON.parse(storedUser) : null;
   const isAdmin = user?.role === 'admin';
   const displayName = user?.first_name || user?.username || 'there';
-  const [projects, setProjects] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [pendingLogs, setPendingLogs] = useState(0);
+  const [summary, setSummary] = useState({
+    hours_this_week: 0,
+    active_projects: 0,
+    approval_rate: 0,
+    pending_logs: 0,
+    weekly_goal_hours: 0,
+    recent_projects: [],
+  });
   const [weeklyGoal, setWeeklyGoal] = useState(0);
   const [goalDraft, setGoalDraft] = useState('');
   const [editingGoal, setEditingGoal] = useState(true);
@@ -24,16 +29,17 @@ function Dashboard() {
       setLoading(true);
       setError('');
       try {
-        const [projectsRes, logsRes, pendingRes, settingsRes] = await Promise.all([
-          API.get('projects/my/'),
-          API.get('logs/my/'),
-          isAdmin ? API.get('logs/pending/') : Promise.resolve({ data: [] }),
-          API.get('settings/'),
-        ]);
-        setProjects(projectsRes.data || []);
-        setLogs(logsRes.data || []);
-        setPendingLogs((pendingRes.data || []).length);
-        const goalValue = Number(settingsRes.data?.weekly_goal_hours || 0);
+        const res = await API.get('dashboard/summary/');
+        const payload = res.data || {};
+        setSummary({
+          hours_this_week: Number(payload.hours_this_week || 0),
+          active_projects: Number(payload.active_projects || 0),
+          approval_rate: Number(payload.approval_rate || 0),
+          pending_logs: Number(payload.pending_logs || 0),
+          weekly_goal_hours: Number(payload.weekly_goal_hours || 0),
+          recent_projects: payload.recent_projects || [],
+        });
+        const goalValue = Number(payload.weekly_goal_hours || 0);
         setWeeklyGoal(goalValue);
         setGoalDraft(goalValue ? String(goalValue) : '');
         setEditingGoal(goalValue === 0);
@@ -49,30 +55,14 @@ function Dashboard() {
     return () => clearInterval(interval);
   }, [isAdmin]);
 
-  const stats = useMemo(() => {
-    const now = new Date();
-    const weekAgo = new Date(now);
-    weekAgo.setDate(now.getDate() - 7);
-
-    const hoursThisWeek = logs.reduce((sum, log) => {
-      const logDate = new Date(log.date);
-      if (logDate >= weekAgo && logDate <= now) {
-        const hours = typeof log.hours === 'number' ? log.hours : parseFloat(log.hours || '0');
-        return sum + (Number.isFinite(hours) ? hours : 0);
-      }
-      return sum;
-    }, 0);
-
-    const totalLogs = logs.length;
-    const approvedLogs = logs.filter((log) => log.status === 'approved').length;
-    const approvalRate = totalLogs ? Math.round((approvedLogs / totalLogs) * 100) : 0;
-
-    return {
-      hoursThisWeek: hoursThisWeek.toFixed(1),
-      activeProjects: projects.length,
-      approvalRate,
-    };
-  }, [logs, projects]);
+  const stats = useMemo(
+    () => ({
+      hoursThisWeek: Number(summary.hours_this_week || 0).toFixed(1),
+      activeProjects: Number(summary.active_projects || 0),
+      approvalRate: Number(summary.approval_rate || 0),
+    }),
+    [summary]
+  );
 
   const goalProgress = useMemo(() => {
     const goal = Number(weeklyGoal || 0);
@@ -92,6 +82,7 @@ function Dashboard() {
       window.dispatchEvent(new Event('user:updated'));
       const savedGoal = Number(res.data.weekly_goal_hours || 0);
       setWeeklyGoal(savedGoal);
+      setSummary((prev) => ({ ...prev, weekly_goal_hours: savedGoal }));
       setGoalDraft(savedGoal ? String(savedGoal) : '');
       setEditingGoal(false);
       setGoalMessage('Goal saved.');
@@ -148,7 +139,7 @@ function Dashboard() {
           {isAdmin && (
             <div className="sidebarNote">
               <p className="sidebarNoteTitle">Logs to review</p>
-              <p className="sidebarNoteValue">{pendingLogs}</p>
+              <p className="sidebarNoteValue">{summary.pending_logs}</p>
             </div>
           )}
         </aside>
@@ -172,7 +163,7 @@ function Dashboard() {
             {isAdmin ? (
               <div className="statCard">
                 <p className="statLabel">Logs to review</p>
-                <p className="statValue">{pendingLogs}</p>
+                <p className="statValue">{summary.pending_logs}</p>
                 <p className="statMeta">Awaiting review</p>
               </div>
             ) : (
@@ -249,7 +240,7 @@ function Dashboard() {
             </div>
             {loading && <p className="inlineStatus">Loading projects…</p>}
             {error && <p className="inlineError">{error}</p>}
-            {!loading && !error && projects.length === 0 && (
+            {!loading && !error && summary.recent_projects.length === 0 && (
               <div className="emptyState">
                 <p className="emptyTitle">No projects yet</p>
                 <p className="emptySubtitle">
@@ -257,9 +248,9 @@ function Dashboard() {
                 </p>
               </div>
             )}
-            {!loading && !error && projects.length > 0 && (
+            {!loading && !error && summary.recent_projects.length > 0 && (
               <div className="projectList">
-                {projects.slice(0, 3).map((project) => {
+                {summary.recent_projects.map((project) => {
                   const percent = project.completion_percent || 0;
                   const totalTasks = project.total_tasks || 0;
                   const status = getStatus(percent, totalTasks);
