@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Reports from "./pages/Reports";
+import StaffReport from './pages/StaffReport';
 import WorkLogs from './pages/WorkLogs';
 import Projects from './pages/Projects';
 import Profile from './pages/Profile';
@@ -37,6 +38,11 @@ function App() {
         <Route path="/reports" element={
           <ProtectedRoute>
             <Reports />
+          </ProtectedRoute>
+        } />
+        <Route path="/reports/staff/:staffId" element={
+          <ProtectedRoute>
+            <StaffReport />
           </ProtectedRoute>
         } />
         <Route path="/profile" element={

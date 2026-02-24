@@ -600,6 +600,14 @@ a {
   flex-wrap: wrap;
 }
 
+.reportTopControls {
+  width: 100%;
+  max-width: 860px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .reportFilters {
   display: flex;
   flex-wrap: wrap;
@@ -609,6 +617,7 @@ a {
 
 .reportSelect {
   min-width: 220px;
+  max-height: 40px;
   padding: 10px 36px 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -666,6 +675,11 @@ a {
 
   .reportTables {
     grid-template-columns: 1fr;
+  }
+
+  .reportTopControls {
+    justify-content: stretch;
+    flex-direction: column;
   }
 }
 

@@ -1,18 +1,10 @@
 import Navbar from '../components/Navbar';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import API from '../api/api';
 
-const TIME_RANGES = [
-  { value: 'this_week', label: 'This week' },
-  { value: 'last_week', label: 'Last week' },
-  { value: 'last_30_days', label: 'Last 30 days' },
-  { value: 'last_6_months', label: 'Last 6 months' },
-  { value: 'last_year', label: 'Last year' },
-  { value: 'all', label: 'All time' },
-];
-
 export default function Reports() {
+  const navigate = useNavigate();
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const isAdmin = user?.role === 'admin';
@@ -21,12 +13,8 @@ export default function Reports() {
   const [reports, setReports] = useState([]);
   const [staff, setStaff] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState('');
-  const [selectedRange, setSelectedRange] = useState('this_week');
-  const [staffReport, setStaffReport] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [staffLoading, setStaffLoading] = useState(false);
   const [error, setError] = useState('');
-  const [staffError, setStaffError] = useState('');
 
   const sortedStaff = useMemo(() => {
     return [...staff].sort((a, b) => {
@@ -54,10 +42,9 @@ export default function Reports() {
       if (!isAdmin) return;
       try {
         const res = await API.get('users/staff/');
-        const users = res.data || [];
-        setStaff(users);
+        setStaff(res.data || []);
       } catch (err) {
-        setStaffError('Could not load staff list.');
+        setError('Could not load staff list.');
       }
     }
 
@@ -66,35 +53,6 @@ export default function Reports() {
     const interval = setInterval(fetchReports, 30000);
     return () => clearInterval(interval);
   }, [isAdmin]);
-
-  useEffect(() => {
-    async function fetchStaffReport() {
-      if (!selectedStaffId) {
-        setStaffReport(null);
-        return;
-      }
-      setStaffLoading(true);
-      setStaffError('');
-      try {
-        const res = await API.get(`reports/staff/${selectedStaffId}/summary/`, {
-          params: { range: selectedRange },
-        });
-        setStaffReport(res.data);
-      } catch (err) {
-        setStaffError('Could not load staff report.');
-      } finally {
-        setStaffLoading(false);
-      }
-    }
-
-    fetchStaffReport();
-  }, [selectedStaffId, selectedRange]);
-
-  function formatStaffName(person) {
-    if (!person) return 'Staff';
-    const full = `${person.first_name || ''} ${person.last_name || ''}`.trim();
-    return full || person.username || 'Staff';
-  }
 
   async function generateReport() {
     setLoading(true);
@@ -120,20 +78,19 @@ export default function Reports() {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const approvedCount =
       report.status_counts?.find((s) => s.status === 'approved')?.count ?? 0;
-    const summaryBody = [
-      ['Total logs', String(report.total_logs ?? 0)],
-      ['Total hours', String(report.total_hours ?? 0)],
-      ['Approved', String(approvedCount)],
-    ];
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
-    doc.text('WorkHub Report', 40, 50);
+    doc.text('WorkHub General Report', 40, 50);
 
     autoTable(doc, {
       startY: 70,
       head: [['Metric', 'Value']],
-      body: summaryBody,
+      body: [
+        ['Total logs', String(report.total_logs ?? 0)],
+        ['Total hours', String(report.total_hours ?? 0)],
+        ['Approved', String(approvedCount)],
+      ],
       styles: { font: 'helvetica', fontSize: 10 },
       headStyles: { fillColor: [17, 24, 39] },
     });
@@ -162,75 +119,7 @@ export default function Reports() {
     });
 
     const datePart = new Date().toISOString().slice(0, 10);
-    doc.save(`workhub-report-${datePart}.pdf`);
-  }
-
-  async function downloadStaffPdf() {
-    if (!staffReport) return;
-    const [{ jsPDF }, { default: autoTable }] = await Promise.all([
-      import('jspdf'),
-      import('jspdf-autotable'),
-    ]);
-
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    const staffName = formatStaffName(staffReport.staff);
-    const rangeLabel = TIME_RANGES.find((item) => item.value === selectedRange)?.label || 'This week';
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text(`${staffName} - Work Report`, 40, 45);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Timeframe: ${rangeLabel}`, 40, 65);
-
-    autoTable(doc, {
-      startY: 82,
-      head: [['Metric', 'Value']],
-      body: [
-        ['Total logs', String(staffReport.total_logs ?? 0)],
-        ['Total hours', String(staffReport.total_hours ?? 0)],
-      ],
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 16,
-      head: [['Status', 'Count']],
-      body: (staffReport.status_counts || []).map((row) => [
-        String(row.status ?? ''),
-        String(row.count ?? 0),
-      ]),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 16,
-      head: [['Project', 'Hours', 'Logs']],
-      body: (staffReport.by_project || []).map((row) => [
-        String(row.project__name || 'Unassigned'),
-        String(row.hours ?? 0),
-        String(row.count ?? 0),
-      ]),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 16,
-      head: [['Date', 'Hours', 'Logs']],
-      body: (staffReport.by_date || []).map((row) => [
-        String(row.date ?? ''),
-        String(row.hours ?? 0),
-        String(row.count ?? 0),
-      ]),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-
-    const datePart = new Date().toISOString().slice(0, 10);
-    doc.save(`staff-report-${staffName.toLowerCase().replace(/\s+/g, '-')}-${datePart}.pdf`);
+    doc.save(`workhub-general-report-${datePart}.pdf`);
   }
 
   return (
@@ -271,95 +160,26 @@ export default function Reports() {
           <p className="dashSubtitle">Overview of staff work activity</p>
           {loading && <p className="inlineStatus">Generating report...</p>}
           {error && <p className="inlineError">{error}</p>}
-          {staffError && <p className="inlineError">{staffError}</p>}
 
           {isAdmin && (
-            <section className="reportHistory">
-              <p className="reportTableTitle">Employee report</p>
-              <div className="reportFilters">
-                <select
-                  className="reportSelect"
-                  value={selectedStaffId}
-                  onChange={(e) => setSelectedStaffId(e.target.value)}
-                >
-                  <option value="">General report</option>
-                  {sortedStaff.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {formatStaffName(person)}
-                    </option>
-                  ))}
-                </select>
-                {selectedStaffId && (
-                  <select
-                    className="reportSelect"
-                    value={selectedRange}
-                    onChange={(e) => setSelectedRange(e.target.value)}
-                  >
-                    {TIME_RANGES.map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              {!selectedStaffId && (
-                <p className="inlineStatus">Viewing general report.</p>
-              )}
-              {selectedStaffId && staffLoading && <p className="inlineStatus">Loading employee report...</p>}
-            </section>
-          )}
-
-          {isAdmin && selectedStaffId && staffReport && !staffLoading && (
-            <>
-              <div className="reportGrid">
-                <div className="reportCard">
-                  <p className="reportLabel">Employee</p>
-                  <p className="reportValue">{formatStaffName(staffReport.staff)}</p>
-                </div>
-                <div className="reportCard">
-                  <p className="reportLabel">Total logs</p>
-                  <p className="reportValue">{staffReport.total_logs}</p>
-                </div>
-                <div className="reportCard">
-                  <p className="reportLabel">Total hours</p>
-                  <p className="reportValue">{staffReport.total_hours}</p>
-                </div>
-              </div>
-
-              <div className="reportTables">
-                <div className="reportTable">
-                  <p className="reportTableTitle">Hours by project</p>
-                  {(staffReport.by_project || []).map((row) => (
-                    <div className="reportRow" key={row.project__name || 'none'}>
-                      <span>{row.project__name || 'Unassigned'}</span>
-                      <span>{row.hours || 0} hrs</span>
-                      <span>{row.count} logs</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="reportTable">
-                  <p className="reportTableTitle">Logs by date</p>
-                  {(staffReport.by_date || []).map((row) => (
-                    <div className="reportRow" key={row.date}>
-                      <span>{row.date}</span>
-                      <span>{row.hours || 0} hrs</span>
-                      <span>{row.count} logs</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="reportActions">
-                <button
-                  className="btn btnSecondary"
-                  type="button"
-                  onClick={downloadStaffPdf}
-                >
-                  Download Staff PDF
-                </button>
-              </div>
-            </>
+            <div className="reportTopControls">
+              <select
+                className="reportSelect"
+                value={selectedStaffId}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setSelectedStaffId(next);
+                  if (next) navigate(`/reports/staff/${next}`);
+                }}
+              >
+                <option value="">General report</option>
+                {sortedStaff.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {`${person.first_name || ''} ${person.last_name || ''}`.trim() || person.username}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
 
           {!report && !loading && !error && (
