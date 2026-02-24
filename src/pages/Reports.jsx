@@ -118,6 +118,17 @@ export default function Reports() {
       headStyles: { fillColor: [17, 24, 39] },
     });
 
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 18,
+      head: [['Date', 'Hours']],
+      body: (report.by_date || []).map((row) => [
+        String(row.date ?? ''),
+        String(row.hours ?? 0),
+      ]),
+      styles: { font: 'helvetica', fontSize: 10 },
+      headStyles: { fillColor: [17, 24, 39] },
+    });
+
     const datePart = new Date().toISOString().slice(0, 10);
     doc.save(`workhub-general-report-${datePart}.pdf`);
   }
@@ -173,6 +184,9 @@ export default function Reports() {
                 }}
               >
                 <option value="">General report</option>
+                {isAdmin && user?.id && (
+                  <option value={String(user.id)}>My report</option>
+                )}
                 {sortedStaff.map((person) => (
                   <option key={person.id} value={person.id}>
                     {`${person.first_name || ''} ${person.last_name || ''}`.trim() || person.username}
@@ -241,12 +255,11 @@ export default function Reports() {
                 ))}
               </div>
               <div className="reportTable">
-                <p className="reportTableTitle">Logs by date</p>
+                <p className="reportTableTitle">Hours per day</p>
                 {report.by_date.map((row) => (
-                  <div className="reportRow" key={row.date}>
+                  <div className="reportRow reportRowTwo" key={row.date}>
                     <span>{row.date}</span>
                     <span>{row.hours || 0} hrs</span>
-                    <span>{row.count} logs</span>
                   </div>
                 ))}
               </div>

@@ -451,6 +451,7 @@ def admin_log_history(request):
     if range_filter == 'all':
         logs = (
             WorkLog.objects.filter(Q(approved_by=request.user) | Q(rejected_by=request.user))
+            .exclude(staff=request.user)
             .select_related('staff', 'project', 'approved_by', 'rejected_by')
             .prefetch_related('project__staff')
             .order_by('-approved_at', '-rejected_at')
@@ -478,6 +479,7 @@ def admin_log_history(request):
             Q(approved_by=request.user, approved_at__date__gte=start, approved_at__date__lte=end) |
             Q(rejected_by=request.user, rejected_at__date__gte=start, rejected_at__date__lte=end)
         )
+        .exclude(staff=request.user)
         .select_related('staff', 'project', 'approved_by', 'rejected_by')
         .prefetch_related('project__staff')
         .order_by('-approved_at', '-rejected_at')
@@ -501,7 +503,7 @@ def staff_report_summary(request, staff_id):
     if request.user.role != 'admin' and request.user.id != staff_id:
         return Response({'detail': 'Not allowed'}, status=403)
 
-    staff = get_object_or_404(User, id=staff_id, role='staff')
+    staff = get_object_or_404(User, id=staff_id)
     range_filter = request.query_params.get('range', 'this_week')
     today = timezone.now().date()
     start = None
