@@ -18,6 +18,25 @@ function formatStaffName(person) {
   return fullName || person.username || 'Staff';
 }
 
+function getPeriodTitle(periodUnit) {
+  if (periodUnit === 'week') return 'Hours per week';
+  if (periodUnit === 'month') return 'Hours per month';
+  return 'Hours per day';
+}
+
+function formatPeriodLabel(period, periodUnit) {
+  if (!period) return '';
+  const date = new Date(period);
+  if (Number.isNaN(date.getTime())) return String(period);
+  if (periodUnit === 'month') {
+    return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  }
+  if (periodUnit === 'week') {
+    return `Week of ${date.toLocaleDateString()}`;
+  }
+  return date.toLocaleDateString();
+}
+
 export default function StaffReport() {
   const navigate = useNavigate();
   const { staffId } = useParams();
@@ -126,9 +145,9 @@ export default function StaffReport() {
 
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 16,
-      head: [['Date', 'Hours']],
-      body: (report.by_date || []).map((row) => [
-        String(row.date ?? ''),
+      head: [[getPeriodTitle(report.period_unit).replace('Hours per ', ''), 'Hours']],
+      body: (report.by_period || []).map((row) => [
+        formatPeriodLabel(row.period, report.period_unit),
         String(row.hours ?? 0),
       ]),
       styles: { font: 'helvetica', fontSize: 10 },
@@ -242,10 +261,10 @@ export default function StaffReport() {
                   ))}
                 </div>
                 <div className="reportTable">
-                  <p className="reportTableTitle">Hours per day</p>
-                  {(report.by_date || []).map((row) => (
-                    <div className="reportRow reportRowTwo" key={row.date}>
-                      <span>{row.date}</span>
+                  <p className="reportTableTitle">{getPeriodTitle(report.period_unit)}</p>
+                  {(report.by_period || []).map((row) => (
+                    <div className="reportRow reportRowTwo" key={row.period}>
+                      <span>{formatPeriodLabel(row.period, report.period_unit)}</span>
                       <span>{row.hours || 0} hrs</span>
                     </div>
                   ))}

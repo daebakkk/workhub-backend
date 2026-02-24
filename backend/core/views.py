@@ -12,7 +12,8 @@ from .serializers import RegisterSerializer, UserSerializer, NotificationSeriali
 
 from .models import Project, WorkLog, User, Report, Task, Notification
 from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer, TaskSerializer
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, F, Q, Sum
+from django.db.models.functions import TruncMonth, TruncWeek
 from django.utils import timezone
 from datetime import timedelta
 
@@ -540,11 +541,29 @@ def staff_report_summary(request, staff_id):
         .annotate(hours=Sum('hours'), count=Count('id'))
         .order_by('project__name')
     )
-    by_date = list(
-        logs.values('date')
-        .annotate(hours=Sum('hours'), count=Count('id'))
-        .order_by('-date')
-    )
+    if range_filter == 'last_30_days':
+        period_unit = 'week'
+        by_period = list(
+            logs.annotate(period=TruncWeek('date'))
+            .values('period')
+            .annotate(hours=Sum('hours'))
+            .order_by('-period')
+        )
+    elif range_filter in ('last_6_months', 'last_year', 'all'):
+        period_unit = 'month'
+        by_period = list(
+            logs.annotate(period=TruncMonth('date'))
+            .values('period')
+            .annotate(hours=Sum('hours'))
+            .order_by('-period')
+        )
+    else:
+        period_unit = 'day'
+        by_period = list(
+            logs.values(period=F('date'))
+            .annotate(hours=Sum('hours'))
+            .order_by('-period')
+        )
 
     return Response(
         {
@@ -556,7 +575,8 @@ def staff_report_summary(request, staff_id):
             'total_hours': total_hours,
             'status_counts': status_counts,
             'by_project': by_project,
-            'by_date': by_date,
+            'period_unit': period_unit,
+            'by_period': by_period,
         }
     )
 
