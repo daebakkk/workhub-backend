@@ -248,67 +248,6 @@ function WorkLogs() {
 
           <section className="card workLogCard">
             <h2 className="cardTitle">Work Logs</h2>
-            <div className="timerCard">
-              <div className="timerHeader">
-                <p className="timerTitle">Timer</p>
-                <p className="timerValue">{elapsedLabel}</p>
-              </div>
-              {timerError && <p className="inlineError">{timerError}</p>}
-              <div className="timerFields">
-                <input
-                  type="text"
-                  placeholder="What did you work on?"
-                  value={timerTitle}
-                  onChange={(e) => setTimerTitle(e.target.value)}
-                  disabled={timerRunning || timerSaving}
-                />
-                <div className="timerRow">
-                  <input
-                    type="date"
-                    value={timerDate}
-                    onChange={(e) => setTimerDate(e.target.value)}
-                    disabled={timerRunning || timerSaving}
-                  />
-                  {timerProjectsLoading ? (
-                    <div className="timerSelectPlaceholder">Loading projects...</div>
-                  ) : (
-                    <select
-                      value={timerProjectId}
-                      onChange={(e) => setTimerProjectId(e.target.value)}
-                      disabled={timerRunning || timerSaving}
-                    >
-                      <option value="">Select a project</option>
-                      {timerProjects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              </div>
-              <div className="timerActions">
-                {!timerRunning ? (
-                  <button
-                    className="btn btnPrimary"
-                    type="button"
-                    onClick={startTimer}
-                    disabled={timerSaving}
-                  >
-                    Start timer
-                  </button>
-                ) : (
-                  <button
-                    className="btn btnSecondary"
-                    type="button"
-                    onClick={stopTimer}
-                    disabled={timerSaving}
-                  >
-                    {timerSaving ? 'Saving...' : 'Stop & save log'}
-                  </button>
-                )}
-              </div>
-            </div>
             {!showAddLogForm && (
               <button
                 className="btn btnPrimary dashAddLogBtn"
@@ -317,6 +256,69 @@ function WorkLogs() {
               >
                 Add Log
               </button>
+            )}
+            {showAddLogForm && (
+              <div className="timerCard">
+                <div className="timerHeader">
+                  <p className="timerTitle">Timer</p>
+                  <p className="timerValue">{elapsedLabel}</p>
+                </div>
+                {timerError && <p className="inlineError">{timerError}</p>}
+                <div className="timerFields">
+                  <input
+                    type="text"
+                    placeholder="What did you work on?"
+                    value={timerTitle}
+                    onChange={(e) => setTimerTitle(e.target.value)}
+                    disabled={timerRunning || timerSaving}
+                  />
+                  <div className="timerRow">
+                    <input
+                      type="date"
+                      value={timerDate}
+                      onChange={(e) => setTimerDate(e.target.value)}
+                      disabled={timerRunning || timerSaving}
+                    />
+                    {timerProjectsLoading ? (
+                      <div className="timerSelectPlaceholder">Loading projects...</div>
+                    ) : (
+                      <select
+                        value={timerProjectId}
+                        onChange={(e) => setTimerProjectId(e.target.value)}
+                        disabled={timerRunning || timerSaving}
+                      >
+                        <option value="">Select a project</option>
+                        {timerProjects.map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </div>
+                <div className="timerActions">
+                  {!timerRunning ? (
+                    <button
+                      className="btn btnPrimary"
+                      type="button"
+                      onClick={startTimer}
+                      disabled={timerSaving}
+                    >
+                      Start timer
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btnSecondary"
+                      type="button"
+                      onClick={stopTimer}
+                      disabled={timerSaving}
+                    >
+                      {timerSaving ? 'Saving...' : 'Stop & save log'}
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
             {!showLogs && (
               <button
