@@ -743,6 +743,77 @@ a {
   color: var(--text);
 }
 
+.workLogCard .timerCard {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  text-align: left;
+}
+
+.workLogCard .timerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.workLogCard .timerTitle {
+  margin: 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.workLogCard .timerValue {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.workLogCard .timerFields {
+  display: grid;
+  gap: 10px;
+}
+
+.workLogCard .timerFields input,
+.workLogCard .timerFields select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.workLogCard .timerRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.workLogCard .timerActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.workLogCard .timerSelectPlaceholder {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 .logItem {
   display: flex;
   align-items: center;

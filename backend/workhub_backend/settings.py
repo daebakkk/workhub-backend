@@ -150,6 +150,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "https://workhub1.vercel.app",
+    "http://localhost:5173",
 ]
 
 extra_cors = os.getenv("CORS_ALLOWED_ORIGINS", "")

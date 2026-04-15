@@ -14,6 +14,16 @@ function WorkLogs() {
   const [logsRange, setLogsRange] = useState('this_week');
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [logsError, setLogsError] = useState('');
+  const [timerTitle, setTimerTitle] = useState('');
+  const [timerDate, setTimerDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [timerProjectId, setTimerProjectId] = useState('');
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerStart, setTimerStart] = useState(null);
+  const [timerElapsedMs, setTimerElapsedMs] = useState(0);
+  const [timerError, setTimerError] = useState('');
+  const [timerSaving, setTimerSaving] = useState(false);
+  const [timerProjects, setTimerProjects] = useState([]);
+  const [timerProjectsLoading, setTimerProjectsLoading] = useState(true);
 
   async function fetchLogs() {
     setLoadingLogs(true);
@@ -43,6 +53,46 @@ function WorkLogs() {
     const interval = setInterval(fetchLogs, 30000);
     return () => clearInterval(interval);
   }, [showLogs]);
+
+  useEffect(() => {
+    async function fetchTimerProjects() {
+      try {
+        const res = await API.get('projects/my/');
+        setTimerProjects(res.data || []);
+      } catch (err) {
+        setTimerError('Could not load projects for timer.');
+      } finally {
+        setTimerProjectsLoading(false);
+      }
+    }
+
+    fetchTimerProjects();
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('workhub_timer');
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      if (!parsed?.startTime) return;
+      setTimerTitle(parsed.title || '');
+      setTimerDate(parsed.date || new Date().toISOString().slice(0, 10));
+      setTimerProjectId(parsed.projectId || '');
+      setTimerStart(parsed.startTime);
+      setTimerRunning(true);
+      setTimerElapsedMs(Date.now() - parsed.startTime);
+    } catch (err) {
+      localStorage.removeItem('workhub_timer');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!timerRunning || !timerStart) return undefined;
+    const interval = setInterval(() => {
+      setTimerElapsedMs(Date.now() - timerStart);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerRunning, timerStart]);
 
   function formatStatus(status) {
     const value = status || 'pending';
@@ -95,6 +145,68 @@ function WorkLogs() {
     });
   }, [logs, logsRange]);
 
+  const elapsedLabel = useMemo(() => {
+    const totalSeconds = Math.floor(timerElapsedMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  }, [timerElapsedMs]);
+
+  async function startTimer() {
+    setTimerError('');
+    if (!timerTitle.trim()) {
+      setTimerError('Please enter a title before starting the timer.');
+      return;
+    }
+    if (!timerDate) {
+      setTimerError('Please select a date.');
+      return;
+    }
+    const startTime = Date.now();
+    setTimerStart(startTime);
+    setTimerElapsedMs(0);
+    setTimerRunning(true);
+    localStorage.setItem(
+      'workhub_timer',
+      JSON.stringify({
+        title: timerTitle.trim(),
+        date: timerDate,
+        projectId: timerProjectId || '',
+        startTime,
+      })
+    );
+  }
+
+  async function stopTimer() {
+    if (!timerRunning) return;
+    setTimerSaving(true);
+    setTimerError('');
+    const hoursRaw = timerElapsedMs / 3600000;
+    const hours = Math.max(0.01, Number(hoursRaw.toFixed(2)));
+    try {
+      await API.post('logs/submit/', {
+        title: timerTitle.trim(),
+        hours,
+        date: timerDate,
+        project: timerProjectId || null,
+      });
+      setTimerTitle('');
+      setTimerDate(new Date().toISOString().slice(0, 10));
+      setTimerProjectId('');
+      setTimerRunning(false);
+      setTimerStart(null);
+      setTimerElapsedMs(0);
+      localStorage.removeItem('workhub_timer');
+      if (showLogs) fetchLogs();
+    } catch (err) {
+      setTimerError('Could not save timed log. Please try again.');
+    } finally {
+      setTimerSaving(false);
+    }
+  }
+
   return (
     <div className="dashPage">
       <header className="topBar">
@@ -136,6 +248,67 @@ function WorkLogs() {
 
           <section className="card workLogCard">
             <h2 className="cardTitle">Work Logs</h2>
+            <div className="timerCard">
+              <div className="timerHeader">
+                <p className="timerTitle">Timer</p>
+                <p className="timerValue">{elapsedLabel}</p>
+              </div>
+              {timerError && <p className="inlineError">{timerError}</p>}
+              <div className="timerFields">
+                <input
+                  type="text"
+                  placeholder="What did you work on?"
+                  value={timerTitle}
+                  onChange={(e) => setTimerTitle(e.target.value)}
+                  disabled={timerRunning || timerSaving}
+                />
+                <div className="timerRow">
+                  <input
+                    type="date"
+                    value={timerDate}
+                    onChange={(e) => setTimerDate(e.target.value)}
+                    disabled={timerRunning || timerSaving}
+                  />
+                  {timerProjectsLoading ? (
+                    <div className="timerSelectPlaceholder">Loading projects...</div>
+                  ) : (
+                    <select
+                      value={timerProjectId}
+                      onChange={(e) => setTimerProjectId(e.target.value)}
+                      disabled={timerRunning || timerSaving}
+                    >
+                      <option value="">Select a project</option>
+                      {timerProjects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+              <div className="timerActions">
+                {!timerRunning ? (
+                  <button
+                    className="btn btnPrimary"
+                    type="button"
+                    onClick={startTimer}
+                    disabled={timerSaving}
+                  >
+                    Start timer
+                  </button>
+                ) : (
+                  <button
+                    className="btn btnSecondary"
+                    type="button"
+                    onClick={stopTimer}
+                    disabled={timerSaving}
+                  >
+                    {timerSaving ? 'Saving...' : 'Stop & save log'}
+                  </button>
+                )}
+              </div>
+            </div>
             {!showAddLogForm && (
               <button
                 className="btn btnPrimary dashAddLogBtn"
