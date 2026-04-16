@@ -314,8 +314,8 @@ def my_projects(request):
         Project.objects.filter(staff=request.user)
         .prefetch_related('staff')
         .annotate(
-            total_tasks=Count('tasks', distinct=True),
-            completed_tasks=Count('tasks', filter=Q(tasks__progress=100), distinct=True),
+            total_tasks=Count('tasks'),
+            completed_tasks=Count('tasks', filter=Q(tasks__progress__gte=100)),
         )
         .order_by('name')
     )
@@ -592,8 +592,8 @@ def admin_projects(request):
         Project.objects.all()
         .prefetch_related('staff')
         .annotate(
-            total_tasks=Count('tasks', distinct=True),
-            completed_tasks=Count('tasks', filter=Q(tasks__progress=100), distinct=True),
+            total_tasks=Count('tasks'),
+            completed_tasks=Count('tasks', filter=Q(tasks__progress__gte=100)),
         )
         .order_by('name')
     )
@@ -631,8 +631,8 @@ def dashboard_summary(request):
         Project.objects.filter(staff=request.user)
         .prefetch_related('staff')
         .annotate(
-            total_tasks=Count('tasks', distinct=True),
-            completed_tasks=Count('tasks', filter=Q(tasks__progress=100), distinct=True),
+            total_tasks=Count('tasks'),
+            completed_tasks=Count('tasks', filter=Q(tasks__progress__gte=100)),
         )
         .order_by('name')
     )
@@ -788,7 +788,7 @@ def project_tasks(request, project_id):
         return Response({'detail': 'Not allowed'}, status=403)
 
     if request.method == 'GET':
-        tasks = Task.objects.filter(project=project).order_by('-created_at')
+        tasks = Task.objects.filter(project=project).prefetch_related('logs').order_by('-created_at')
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
 

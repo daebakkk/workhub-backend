@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User, Project, WorkLog, Task, Report, Notification
 from django.contrib.auth import authenticate
+from django.db.models import Sum
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -133,7 +134,7 @@ class TaskSerializer(serializers.ModelSerializer):
         return obj.get_progress_percent()
     
     def get_current_hours(self, obj):
-        return sum(log.hours for log in obj.logs.filter(status='approved'))
+        return obj.logs.filter(status='approved').aggregate(total=Sum('hours'))['total'] or 0
 
 
 class ReportSerializer(serializers.ModelSerializer):
