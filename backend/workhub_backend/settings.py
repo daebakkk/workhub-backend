@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-pgp#wlo2urf8&jb0p(vkqp7zbr(mlnq*)%9knu&q!rne8^t0gm'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-pgp#wlo2urf8&jb0p(vkqp7zbr(mlnq*)%9knu&q!rne8^t0gm')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*"] if DEBUG else [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'workhub-backend.onrender.com').split(',')]
 
 
 # Application definition
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -159,3 +160,6 @@ if extra_cors:
         [origin.strip() for origin in extra_cors.split(",") if origin.strip()]
     )
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# WhiteNoise configuration for serving static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
