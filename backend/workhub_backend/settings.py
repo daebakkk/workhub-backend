@@ -27,7 +27,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-pgp#wlo2urf8&jb0p(vkqp7zbr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ["*"] if DEBUG else [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'workhub-backend.onrender.com').split(',')]
+ALLOWED_HOSTS = ["*"] if DEBUG else [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'workhub-backend.onrender.com,workhub-backend-1.onrender.com').split(',') if host.strip()]
 
 
 # Application definition
