@@ -737,9 +737,11 @@ def create_project(request):
             if isinstance(item, dict):
                 title = str(item.get('title', '')).strip()
                 assigned_id = item.get('assigned_to')
+                required_hours = item.get('required_hours', 0)
             elif isinstance(item, str):
                 title = item.strip()
                 assigned_id = None
+                required_hours = 0
             else:
                 continue
             if not title or title in seen:
@@ -770,7 +772,7 @@ def create_project(request):
                     assignee = members[0]
                 else:
                     assignee = request.user
-            task_items.append(Task(project=project, title=title, assigned_to=assignee))
+            task_items.append(Task(project=project, title=title, assigned_to=assignee, required_hours=required_hours))
         if task_items:
             Task.objects.bulk_create(task_items)
     serializer = ProjectSerializer(project)

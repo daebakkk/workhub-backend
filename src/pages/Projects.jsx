@@ -826,6 +826,13 @@ function Projects() {
                                 </div>
                                 <span className="taskProgressText">{task.progress || 0}%</span>
                               </div>
+                              {task.required_hours > 0 && (
+                                <div className="taskHours">
+                                  <span className="taskCurrentHours">{task.current_hours || 0}h</span>
+                                  <span className="taskHoursSeparator"> / </span>
+                                  <span className="taskRequiredHoursTotal">{task.required_hours}h required</span>
+                                </div>
+                              )}
                               {isAssignee && (
                                 <div className="taskProgressEdit">
                                   <input

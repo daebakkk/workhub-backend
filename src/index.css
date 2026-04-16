@@ -1899,6 +1899,29 @@ body.dark .showcaseBubble {
   appearance: none;
 }
 
+.taskHours {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.taskCurrentHours {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.taskHoursSeparator {
+  color: var(--text-muted);
+}
+
+.taskRequiredHoursTotal {
+  color: var(--text-muted);
+}
+
 .taskProgressEdit input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
