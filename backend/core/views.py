@@ -21,6 +21,22 @@ from datetime import timedelta
 @permission_classes([IsAuthenticated])
 def submit_log(request):
     data = request.data
+    
+    # Validate required fields
+    if not data.get('title') or not str(data.get('title')).strip():
+        return Response({'detail': 'Title is required'}, status=400)
+    if not data.get('date'):
+        return Response({'detail': 'Date is required'}, status=400)
+    if data.get('hours') is None:
+        return Response({'detail': 'Hours is required'}, status=400)
+    
+    # Validate that project and task exist if provided
+    if data.get('project'):
+        if not Project.objects.filter(id=data.get('project')).exists():
+            return Response({'detail': 'Project not found'}, status=404)
+    if data.get('task'):
+        if not Task.objects.filter(id=data.get('task')).exists():
+            return Response({'detail': 'Task not found'}, status=404)
 
     log = WorkLog.objects.create(
         staff=request.user,
@@ -114,7 +130,7 @@ def approve_log(request, log_id):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    log = WorkLog.objects.get(id=log_id)
+    log = get_object_or_404(WorkLog, id=log_id)
     log.status = 'approved'
     log.rejection_reason = ''
     log.approved_by = request.user
@@ -168,7 +184,7 @@ def reject_log(request, log_id):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    log = WorkLog.objects.get(id=log_id)
+    log = get_object_or_404(WorkLog, id=log_id)
     log.status = 'rejected'
     log.rejection_reason = request.data.get('reason', '')
     log.rejected_by = request.user
@@ -298,14 +314,6 @@ def change_password(request):
     request.user.set_password(new_password)
     request.user.save()
     return Response({'message': 'Password updated'})
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-
-from .models import Project
-from .serializers import ProjectSerializer
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -681,7 +689,7 @@ def assign_project_staff(request, project_id):
     if not isinstance(user_ids, list):
         return Response({'detail': 'user_ids must be a list'}, status=400)
 
-    project = Project.objects.get(id=project_id)
+    project = get_object_or_404(Project, id=project_id)
     project.staff.set(User.objects.filter(id__in=user_ids))
     project.save()
 
