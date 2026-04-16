@@ -6,12 +6,15 @@ function WorkLogForm({ onSubmitted }) {
   const [hours, setHours] = useState("");
   const [date, setDate] = useState("");
   const [projectId, setProjectId] = useState("");
+  const [taskId, setTaskId] = useState("");
 
   const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingTasks, setLoadingTasks] = useState(false);
 
   useEffect(() => {
     async function fetchProjects() {
@@ -28,6 +31,29 @@ function WorkLogForm({ onSubmitted }) {
     fetchProjects();
   }, []);
 
+  useEffect(() => {
+    if (!projectId) {
+      setTasks([]);
+      setTaskId("");
+      return;
+    }
+
+    async function fetchTasks() {
+      setLoadingTasks(true);
+      try {
+        const res = await API.get(`projects/${projectId}/tasks/`);
+        setTasks(res.data || []);
+      } catch (err) {
+        setError("Failed to load tasks");
+        setTasks([]);
+      } finally {
+        setLoadingTasks(false);
+      }
+    }
+
+    fetchTasks();
+  }, [projectId]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -38,7 +64,8 @@ function WorkLogForm({ onSubmitted }) {
         title,
         hours,
         date,
-        project: projectId || null
+        project: projectId || null,
+        task: taskId || null
       };
 
       await API.post("logs/submit/", payload);
@@ -47,6 +74,7 @@ function WorkLogForm({ onSubmitted }) {
       setHours("");
       setDate("");
       setProjectId("");
+      setTaskId("");
 
       if (onSubmitted) onSubmitted();
     } catch (err) {
@@ -105,7 +133,28 @@ function WorkLogForm({ onSubmitted }) {
 
       <br />
 
-      <button type="submit" disabled={loading || loadingProjects}>
+      {projectId && (
+        <>
+          {loadingTasks ? (
+            <p>Loading tasks…</p>
+          ) : (
+            <select
+              value={taskId}
+              onChange={(e) => setTaskId(e.target.value)}
+            >
+              <option value="">Select a task (optional)</option>
+              {tasks.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title}
+                </option>
+              ))}
+            </select>
+          )}
+          <br />
+        </>
+      )}
+
+      <button type="submit" disabled={loading || loadingProjects || loadingTasks}>
         {loading ? "Submitting..." : "Add Log"}
       </button>
 

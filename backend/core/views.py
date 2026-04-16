@@ -25,6 +25,7 @@ def submit_log(request):
     log = WorkLog.objects.create(
         staff=request.user,
         project_id=data.get('project'),
+        task_id=data.get('task'),
         title=data.get('title'),
         date=data.get('date'),
         hours=data.get('hours'),
@@ -314,7 +315,7 @@ def my_projects(request):
         .prefetch_related('staff')
         .annotate(
             total_tasks=Count('tasks', distinct=True),
-            completed_tasks=Count('tasks', filter=Q(tasks__is_completed=True), distinct=True),
+            completed_tasks=Count('tasks', filter=Q(tasks__progress=100), distinct=True),
         )
         .order_by('name')
     )
@@ -592,7 +593,7 @@ def admin_projects(request):
         .prefetch_related('staff')
         .annotate(
             total_tasks=Count('tasks', distinct=True),
-            completed_tasks=Count('tasks', filter=Q(tasks__is_completed=True), distinct=True),
+            completed_tasks=Count('tasks', filter=Q(tasks__progress=100), distinct=True),
         )
         .order_by('name')
     )
@@ -631,7 +632,7 @@ def dashboard_summary(request):
         .prefetch_related('staff')
         .annotate(
             total_tasks=Count('tasks', distinct=True),
-            completed_tasks=Count('tasks', filter=Q(tasks__is_completed=True), distinct=True),
+            completed_tasks=Count('tasks', filter=Q(tasks__progress=100), distinct=True),
         )
         .order_by('name')
     )
@@ -794,6 +795,7 @@ def project_tasks(request, project_id):
 
     title = request.data.get('title', '').strip()
     assigned_to_id = request.data.get('assigned_to')
+    required_hours = request.data.get('required_hours', 0)
     if not title:
         return Response({'detail': 'Task title is required'}, status=400)
     if not assigned_to_id:
@@ -806,7 +808,7 @@ def project_tasks(request, project_id):
     if not assignee:
         return Response({'detail': 'Assignee must be a project member'}, status=400)
 
-    task = Task.objects.create(project=project, title=title, assigned_to=assignee)
+    task = Task.objects.create(project=project, title=title, assigned_to=assignee, required_hours=required_hours)
     serializer = TaskSerializer(task)
     return Response(serializer.data, status=201)
 
@@ -817,22 +819,37 @@ def update_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
     if request.user not in task.project.staff.all():
         return Response({'detail': 'Not allowed'}, status=403)
-    is_completed = request.data.get('is_completed')
+    
+    progress = request.data.get('progress')
+    required_hours = request.data.get('required_hours')
     assigned_to_id = request.data.get('assigned_to')
+    
     is_single_member_project = task.project.staff.count() <= 1
-    if isinstance(is_completed, bool):
+    
+    if progress is not None:
         if (
             task.assigned_to
             and task.assigned_to_id != request.user.id
             and not is_single_member_project
         ):
             return Response({'detail': 'Only the assignee can update this task.'}, status=403)
-        task.is_completed = is_completed
+        if isinstance(progress, int) and 0 <= progress <= 100:
+            task.progress = progress
+        else:
+            return Response({'detail': 'Progress must be between 0 and 100'}, status=400)
+    
+    if required_hours is not None:
+        try:
+            task.required_hours = float(required_hours)
+        except (TypeError, ValueError):
+            return Response({'detail': 'Invalid required_hours value'}, status=400)
+    
     if assigned_to_id is not None:
         assignee = task.project.staff.filter(id=assigned_to_id).first()
         if not assignee:
             return Response({'detail': 'Assignee must be a project member'}, status=400)
         task.assigned_to = assignee
+    
     task.save()
     serializer = TaskSerializer(task)
     return Response(serializer.data)

@@ -124,6 +124,14 @@ class WorkLog(models.Model):
         blank=True
     )
 
+    task = models.ForeignKey(
+        'Task',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='logs'
+    )
+
     title = models.CharField(max_length=255)
     date = models.DateField()
     hours = models.DecimalField(max_digits=5, decimal_places=2)
@@ -180,18 +188,32 @@ class Task(models.Model):
         related_name='tasks'
     )
     title = models.CharField(max_length=255)
-    is_completed = models.BooleanField(default=False)
+    required_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    progress = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         indexes = [
             models.Index(fields=['project', '-created_at']),
             models.Index(fields=['project', 'assigned_to']),
-            models.Index(fields=['assigned_to', 'is_completed']),
+            models.Index(fields=['assigned_to', 'progress']),
         ]
 
+    def get_progress_percent(self):
+        """Calculate progress based on work logs vs task's required hours"""
+        if self.required_hours == 0:
+            return 0
+        
+        total_hours = sum(
+            log.hours 
+            for log in self.logs.filter(status='approved')
+        )
+        
+        progress = min(100, int((float(total_hours) / float(self.required_hours)) * 100))
+        return progress
+
     def __str__(self):
-        return f"{self.title} ({'done' if self.is_completed else 'open'})"
+        return f"{self.title} ({self.progress}%)"
 
 
 class Report(models.Model):

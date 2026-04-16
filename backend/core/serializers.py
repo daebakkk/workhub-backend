@@ -122,9 +122,14 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     assigned_to = UserSerializer(read_only=True)
+    progress_percent = serializers.SerializerMethodField()
+    
     class Meta:
         model = Task
-        fields = ('id', 'title', 'is_completed', 'created_at', 'project', 'assigned_to')
+        fields = ('id', 'title', 'required_hours', 'progress', 'progress_percent', 'created_at', 'project', 'assigned_to')
+    
+    def get_progress_percent(self, obj):
+        return obj.get_progress_percent()
 
 
 class ReportSerializer(serializers.ModelSerializer):

@@ -17,9 +17,11 @@ function Projects() {
   const [newDescription, setNewDescription] = useState('');
   const [createAssignees, setCreateAssignees] = useState([]);
   const [createTaskInput, setCreateTaskInput] = useState('');
+  const [createTaskRequiredHours, setCreateTaskRequiredHours] = useState('');
   const [createTasks, setCreateTasks] = useState([]);
   const [tasksByProject, setTasksByProject] = useState({});
   const [taskTitleByProject, setTaskTitleByProject] = useState({});
+  const [taskRequiredHoursByProject, setTaskRequiredHoursByProject] = useState({});
   const [taskAssigneeByProject, setTaskAssigneeByProject] = useState({});
   const [tasksLoading, setTasksLoading] = useState({});
   const [loading, setLoading] = useState(true);
@@ -104,10 +106,12 @@ function Projects() {
     try {
       if (createTasks.some((task) => task.title === trimmed)) {
         setCreateTaskInput('');
+        setCreateTaskRequiredHours('');
         return;
       }
-      setCreateTasks((prev) => [...prev, { title: trimmed, assigned_to: '' }]);
+      setCreateTasks((prev) => [...prev, { title: trimmed, assigned_to: '', required_hours: createTaskRequiredHours ? parseFloat(createTaskRequiredHours) : 0 }]);
       setCreateTaskInput('');
+      setCreateTaskRequiredHours('');
     } finally {
       setAddingCreateTask(false);
     }
@@ -148,6 +152,7 @@ function Projects() {
         tasks: createTasks.map((task) => ({
           title: task.title,
           assigned_to: task.assigned_to || null,
+          required_hours: task.required_hours || 0,
         })),
       });
       const created = res.data;
@@ -194,6 +199,7 @@ function Projects() {
     const project = projects.find((item) => item.id === projectId);
     const members = project?.staff || [];
     const assignee = taskAssigneeByProject[projectId] || (members.length === 1 ? members[0].id : '');
+    const requiredHours = taskRequiredHoursByProject[projectId] || 0;
     if (!title) return;
     if (!assignee) {
       setError('Please select a task assignee.');
@@ -201,12 +207,13 @@ function Projects() {
     }
     setAddingTaskByProject((prev) => ({ ...prev, [projectId]: true }));
     try {
-      const res = await API.post(`projects/${projectId}/tasks/`, { title, assigned_to: assignee });
+      const res = await API.post(`projects/${projectId}/tasks/`, { title, assigned_to: assignee, required_hours: requiredHours });
       setTasksByProject((prev) => ({
         ...prev,
         [projectId]: [res.data, ...(prev[projectId] || [])],
       }));
       setTaskTitleByProject((prev) => ({ ...prev, [projectId]: '' }));
+      setTaskRequiredHoursByProject((prev) => ({ ...prev, [projectId]: '' }));
       setTaskAssigneeByProject((prev) => ({ ...prev, [projectId]: '' }));
     } catch (err) {
       setError('Failed to create task.');
@@ -215,9 +222,9 @@ function Projects() {
     }
   }
 
-  async function toggleTask(taskId, projectId, isCompleted) {
+  async function updateTaskProgress(taskId, projectId, newProgress) {
     try {
-      const res = await API.patch(`tasks/${taskId}/`, { is_completed: isCompleted });
+      const res = await API.patch(`tasks/${taskId}/`, { progress: newProgress });
       setTasksByProject((prev) => ({
         ...prev,
         [projectId]: (prev[projectId] || []).map((task) =>
@@ -439,6 +446,13 @@ function Projects() {
                       }
                     }}
                   />
+                  <input
+                    type="number"
+                    step="0.5"
+                    placeholder="Required hours (optional)"
+                    value={createTaskRequiredHours}
+                    onChange={(e) => setCreateTaskRequiredHours(e.target.value)}
+                  />
                   <button
                     className="btn btnSecondary"
                     type="button"
@@ -614,7 +628,7 @@ function Projects() {
                 const totalTasks = project.total_tasks || 0;
                 const completedTasks = project.completed_tasks || 0;
                 const derivedTotal = tasks.length;
-                const derivedCompleted = tasks.filter((task) => task.is_completed).length;
+                const derivedCompleted = tasks.filter((task) => task.progress === 100).length;
                 const displayTotal = hasTasksLoaded ? derivedTotal : totalTasks;
                 const displayCompleted = hasTasksLoaded ? derivedCompleted : completedTasks;
                 const percent = displayTotal > 0
@@ -643,7 +657,7 @@ function Projects() {
                 const totalTasks = project.total_tasks || 0;
                 const completedTasks = project.completed_tasks || 0;
                 const derivedTotal = tasks.length;
-                const derivedCompleted = tasks.filter((task) => task.is_completed).length;
+                const derivedCompleted = tasks.filter((task) => task.progress === 100).length;
                 const displayTotal = hasTasksLoaded ? derivedTotal : totalTasks;
                 const displayCompleted = hasTasksLoaded ? derivedCompleted : completedTasks;
                 const percent = displayTotal > 0 ? Math.round((displayCompleted / displayTotal) * 100) : (project.completion_percent || 0);
@@ -715,6 +729,18 @@ function Projects() {
                           }
                         }}
                       />
+                      <input
+                        type="number"
+                        step="0.5"
+                        placeholder="Required hours"
+                        value={taskRequiredHoursByProject[project.id] || ''}
+                        onChange={(e) =>
+                          setTaskRequiredHoursByProject((prev) => ({
+                            ...prev,
+                            [project.id]: e.target.value,
+                          }))
+                        }
+                      />
                       {(project.staff || []).length > 1 && (
                         <select
                           value={taskAssigneeByProject[project.id] || ''}
@@ -762,37 +788,58 @@ function Projects() {
                               isSingleMemberProject &&
                               canEditTasks);
                           return (
-                            <label className="taskItem" key={task.id}>
-                              <input
-                                type="checkbox"
-                                checked={task.is_completed}
-                                disabled={!isAssignee}
-                                onChange={(e) =>
-                                  toggleTask(task.id, project.id, e.target.checked)
-                                }
-                              />
-                              <span className={task.is_completed ? 'taskDone' : ''}>
-                                {task.title}
-                              </span>
-                              {!isSingleMemberProject && task.assigned_to && (
-                                <span className="taskAssignee">
-                                  - {memberDisplayName(task.assigned_to)}
-                                </span>
-                              )}
+                            <div className="taskItem" key={task.id}>
+                              <div className="taskHeader">
+                                <div>
+                                  <span className="taskTitle">{task.title}</span>
+                                  {!isSingleMemberProject && task.assigned_to && (
+                                    <span className="taskAssignee">
+                                      - {memberDisplayName(task.assigned_to)}
+                                    </span>
+                                  )}
+                                  {task.required_hours > 0 && (
+                                    <span className="taskRequiredHours">
+                                      {task.required_hours}h required
+                                    </span>
+                                  )}
+                                </div>
+                                {isAssignee && (
+                                  <button
+                                    className="taskDelete"
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      deleteTask(task.id, project.id);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
+                              <div className="taskProgress">
+                                <div className="taskProgressBar">
+                                  <div
+                                    className="taskProgressFill"
+                                    style={{ width: `${task.progress || 0}%` }}
+                                  />
+                                </div>
+                                <span className="taskProgressText">{task.progress || 0}%</span>
+                              </div>
                               {isAssignee && (
-                                <button
-                                  className="taskDelete"
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    deleteTask(task.id, project.id);
-                                  }}
-                                >
-                                  Delete
-                                </button>
+                                <div className="taskProgressEdit">
+                                  <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={task.progress || 0}
+                                    onChange={(e) =>
+                                      updateTaskProgress(task.id, project.id, parseInt(e.target.value))
+                                    }
+                                  />
+                                </div>
                               )}
-                            </label>
+                            </div>
                           );
                         })}
                       </div>

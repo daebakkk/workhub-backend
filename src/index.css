@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
+/*
+ok so, for tasks in projects, i think checkbox is a bit too tedious, so id like each task to have a like required number of hours kind of that will be input by the user, and now tasks will be completed based on a progress system, like using work logs, as you get closer to the required hours, progress increases, but the user can also edit the prpogress a bit, also now work logs will be attached to project and task not just project can you do this
+*/
+
 :root {
   --bg: #f8fafc;
   --surface: #ffffff;
@@ -1801,22 +1805,44 @@ body.dark .showcaseBubble {
 
 .taskItem {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   font-size: 13px;
   color: var(--text);
 }
+
+.taskHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.taskTitle {
+  font-weight: 600;
+  color: var(--text);
+}
+
 .taskAssignee {
-  margin-left: 4px;
+  margin-left: 8px;
   font-size: 0.8rem;
   color: var(--text-muted);
 }
 
+.taskRequiredHours {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
 .taskDelete {
-  margin-left: auto;
   background: transparent;
   border: none;
-  padding: 0;
+  padding: 4px 8px;
   color: var(--text-muted);
   font-size: 0.75rem;
   text-decoration: underline;
@@ -1830,24 +1856,69 @@ body.dark .showcaseBubble {
   color: var(--accent-dark);
 }
 
-.taskAssignSelect {
-  margin-left: auto;
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.85rem;
+.taskProgress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.taskItem input {
+.taskProgressBar {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.taskProgressFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.taskProgressText {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 35px;
+  text-align: right;
+}
+
+.taskProgressEdit {
+  margin-top: 8px;
+}
+
+.taskProgressEdit input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.taskProgressEdit input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
   width: 16px;
   height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.taskDone {
-  text-decoration: line-through;
-  color: var(--text-muted);
+.taskProgressEdit input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .taskEmpty {

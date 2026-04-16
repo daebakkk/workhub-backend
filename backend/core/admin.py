@@ -23,7 +23,7 @@ class WorkLogAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'project', 'is_completed', 'created_at')
-    list_filter = ('is_completed', 'project')
+    list_display = ('title', 'project', 'progress', 'required_hours', 'created_at')
+    list_filter = ('project',)
     search_fields = ('title', 'project__name')
 
