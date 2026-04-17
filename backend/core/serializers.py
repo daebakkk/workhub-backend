@@ -22,8 +22,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     staff = UserSerializer(many=True, read_only=True)
-    total_tasks = serializers.IntegerField(read_only=True)
-    completed_tasks = serializers.IntegerField(read_only=True)
+    total_tasks = serializers.SerializerMethodField()
+    completed_tasks = serializers.SerializerMethodField()
     completion_percent = serializers.SerializerMethodField()
 
     class Meta:
@@ -39,11 +39,23 @@ class ProjectSerializer(serializers.ModelSerializer):
         )
 
     def get_completion_percent(self, obj):
-        total = getattr(obj, 'total_tasks', 0) or 0
-        completed = getattr(obj, 'completed_tasks', 0) or 0
+        total = self.get_total_tasks(obj)
+        completed = self.get_completed_tasks(obj)
         if total == 0:
             return 0
         return round((completed / total) * 100)
+
+    def get_total_tasks(self, obj):
+        annotated = getattr(obj, 'total_tasks', None)
+        if annotated is not None:
+            return annotated
+        return obj.tasks.count()
+
+    def get_completed_tasks(self, obj):
+        annotated = getattr(obj, 'completed_tasks', None)
+        if annotated is not None:
+            return annotated
+        return obj.tasks.filter(progress__gte=100).count()
 
 
 class WorkLogSerializer(serializers.ModelSerializer):
