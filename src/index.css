@@ -390,48 +390,88 @@ a {
 .statCard {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 18px 20px;
+  border-radius: 12px;
+  padding: 20px;
   box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.statCard:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(225, 29, 139, 0.1);
+}
+
+.statIcon {
+  font-size: 24px;
+  line-height: 1;
 }
 
 .statLabel {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .statValue {
-  margin: 10px 0 4px;
-  font-size: 26px;
+  margin: 0;
+  font-size: 28px;
   font-weight: 800;
   color: var(--text);
 }
 
 .statMeta {
   margin: 0;
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
-.dashContent .card {
-  width: 100%;
+.dashGoalCard {
   max-width: 760px;
-  text-align: left;
 }
 
-.cardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
+.dashGoalEdit {
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.cardHeader .cardTitle {
+.dashGoalInput {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.dashGoalInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.dashGoalProgress {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dashGoalPercent {
   margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.dashProjectCard {
+  max-width: 760px;
 }
 
 .projectList {
@@ -444,44 +484,115 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 16px;
-  border-radius: 14px;
+  padding: 16px;
+  border-radius: 10px;
   border: 1px solid var(--border);
-  background: var(--surface-muted);
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.projectItem:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+  box-shadow: 0 2px 8px rgba(225, 29, 139, 0.08);
+}
+
+.projectItemContent {
+  flex: 1;
+  min-width: 0;
 }
 
 .projectTitle {
   margin: 0;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .projectMeta {
   margin: 4px 0 0;
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.projectItemRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.projectItemProgress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+}
+
+.projectItemProgressBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.projectItemProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #ec4899);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.projectItemProgressText {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  min-width: 28px;
+  text-align: right;
 }
 
 .projectStatus {
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.08);
-  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+  text-transform: capitalize;
 }
 
-.projectStatus.warn {
-  background: rgba(251, 146, 60, 0.18);
-  color: #9a3412;
+.projectStatus.completed {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
 }
 
-.projectStatus.success {
-  background: rgba(34, 197, 94, 0.18);
-  color: #166534;
+.projectStatus.review {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.projectStatus.in-progress {
+  background: rgba(225, 29, 139, 0.1);
+  color: var(--accent);
+}
+
+.projectStatus.starting {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.projectStatus.no-tasks {
+  background: rgba(156, 163, 175, 0.1);
+  color: #9ca3af;
+}
 }
 
 .projectStatus.in-progress {
@@ -2196,6 +2307,16 @@ body.dark .showcaseBubble {
   .statGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .dashGoalEdit {
+    grid-template-columns: 1fr;
+  }
+
+  .projectItemRight {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2227,6 +2348,16 @@ body.dark .showcaseBubble {
   .projectItem {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .projectItemRight {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .projectItemProgress {
+    flex: 1;
   }
 }
 

@@ -154,23 +154,27 @@ function Dashboard() {
 
           <section className="statGrid">
             <div className="statCard">
+              <div className="statIcon">📊</div>
               <p className="statLabel">Hours logged</p>
               <p className="statValue">{stats.hoursThisWeek}</p>
               <p className="statMeta">This week</p>
             </div>
             <div className="statCard">
+              <div className="statIcon">📁</div>
               <p className="statLabel">Active projects</p>
               <p className="statValue">{stats.activeProjects}</p>
               <p className="statMeta">In progress</p>
             </div>
             {isAdmin ? (
               <div className="statCard">
+                <div className="statIcon">✓</div>
                 <p className="statLabel">Logs to review</p>
                 <p className="statValue">{summary.pending_logs}</p>
                 <p className="statMeta">Awaiting review</p>
               </div>
             ) : (
               <div className="statCard">
+                <div className="statIcon">⭐</div>
                 <p className="statLabel">Approval rate</p>
                 <p className="statValue">{stats.approvalRate}%</p>
                 <p className="statMeta">Last 30 days</p>
@@ -178,21 +182,30 @@ function Dashboard() {
             )}
           </section>
 
-          <section className="card">
+          <section className="card dashGoalCard">
             <div className="cardHeader">
-              <h2 className="cardTitle">Weekly goal</h2>
-              <p className="cardSubtitle">{stats.hoursThisWeek} hrs logged</p>
+              <div>
+                <h2 className="cardTitle">Weekly goal</h2>
+                <p className="cardSubtitle">{stats.hoursThisWeek} of {weeklyGoal || '—'} hours</p>
+              </div>
+              {!editingGoal && (
+                <button
+                  className="btn btnSecondary"
+                  type="button"
+                  onClick={() => setEditingGoal(true)}
+                >
+                  Change
+                </button>
+              )}
             </div>
-            {!editingGoal && weeklyGoal > 0 && (
-              <p className="goalValue">{weeklyGoal} hours</p>
-            )}
             {editingGoal && (
-              <div className="settingsRow">
-                <span>Target hours</span>
+              <div className="dashGoalEdit">
                 <input
                   type="number"
                   min="0"
                   step="0.5"
+                  className="dashGoalInput"
+                  placeholder="Target hours"
                   value={goalDraft}
                   onChange={(e) => setGoalDraft(e.target.value)}
                   onKeyDown={(e) => {
@@ -202,39 +215,29 @@ function Dashboard() {
                     }
                   }}
                 />
-              </div>
-            )}
-            <div className="progressBar">
-              <div
-                className="progressFill"
-                style={{ width: `${goalProgress}%` }}
-              />
-            </div>
-            <div className="settingsRow">
-              <span>{goalProgress}% of goal</span>
-              {editingGoal ? (
                 <button
                   className="btn btnPrimary"
                   type="button"
                   onClick={saveWeeklyGoal}
                   disabled={savingGoal}
                 >
-                  {savingGoal ? 'Saving...' : 'Save goal'}
+                  {savingGoal ? 'Saving...' : 'Save'}
                 </button>
-              ) : (
-                <button
-                  className="btn btnSecondary"
-                  type="button"
-                  onClick={() => setEditingGoal(true)}
-                >
-                  Change goal
-                </button>
-              )}
+              </div>
+            )}
+            <div className="dashGoalProgress">
+              <div className="progressBar">
+                <div
+                  className="progressFill"
+                  style={{ width: `${goalProgress}%` }}
+                />
+              </div>
+              <p className="dashGoalPercent">{goalProgress}% complete</p>
             </div>
             {goalMessage && <p className="inlineStatus">{goalMessage}</p>}
           </section>
 
-          <section className="card projectCard">
+          <section className="card dashProjectCard">
             <div className="cardHeader">
               <h2 className="cardTitle">Recent Projects</h2>
               <Link to="/projects" className="btn btnSecondary">
@@ -259,17 +262,28 @@ function Dashboard() {
                   const status = getStatus(percent, totalTasks);
                   const badgeClass = status.toLowerCase().replace(' ', '-');
                   return (
-                    <div className="projectItem" key={project.id}>
-                      <div>
+                    <Link to="/projects" className="projectItem" key={project.id}>
+                      <div className="projectItemContent">
                         <p className="projectTitle">{project.name}</p>
                         <p className="projectMeta">
                           {project.description || 'No description yet'}
                         </p>
                       </div>
-                      <span className={`projectStatus ${badgeClass}`}>
-                        {status}
-                      </span>
-                    </div>
+                      <div className="projectItemRight">
+                        <div className="projectItemProgress">
+                          <div className="projectItemProgressBar">
+                            <div
+                              className="projectItemProgressFill"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                          <span className="projectItemProgressText">{percent}%</span>
+                        </div>
+                        <span className={`projectStatus ${badgeClass}`}>
+                          {status}
+                        </span>
+                      </div>
+                    </Link>
                   );
                 })}
               </div>
