@@ -68,6 +68,7 @@ class WorkLogSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(read_only=True)
     approved_by = UserSerializer(read_only=True)
     rejected_by = UserSerializer(read_only=True)
+    task = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkLog
@@ -85,7 +86,13 @@ class WorkLogSerializer(serializers.ModelSerializer):
             'created_at',
             'staff',
             'project',
+            'task',
         )
+
+    def get_task(self, obj):
+        if obj.task_id is None:
+            return None
+        return {'id': obj.task.id, 'title': obj.task.title}
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

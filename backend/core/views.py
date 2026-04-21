@@ -83,7 +83,7 @@ def my_logs(request):
     try:
         logs = (
             WorkLog.objects.filter(staff=request.user)
-            .select_related('staff', 'project', 'approved_by', 'rejected_by')
+            .select_related('staff', 'project', 'approved_by', 'rejected_by', 'task')
             .prefetch_related('project__staff')
             .order_by('-created_at')
         )
@@ -111,7 +111,7 @@ def pending_logs(request):
         logs = (
             WorkLog.objects.filter(status='pending')
             .exclude(staff=request.user)
-            .select_related('staff', 'project', 'approved_by', 'rejected_by')
+            .select_related('staff', 'project', 'approved_by', 'rejected_by', 'task')
             .prefetch_related('project__staff')
         )
         serializer = WorkLogSerializer(logs, many=True)
@@ -481,7 +481,7 @@ def admin_log_history(request):
             logs = (
                 WorkLog.objects.filter(Q(approved_by=request.user) | Q(rejected_by=request.user))
                 .exclude(staff=request.user)
-                .select_related('staff', 'project', 'approved_by', 'rejected_by')
+                .select_related('staff', 'project', 'approved_by', 'rejected_by', 'task')
                 .prefetch_related('project__staff')
                 .order_by('-approved_at', '-rejected_at')
             )
@@ -512,7 +512,7 @@ def admin_log_history(request):
                 Q(rejected_by=request.user, rejected_at__date__gte=start, rejected_at__date__lte=end)
             )
             .exclude(staff=request.user)
-            .select_related('staff', 'project', 'approved_by', 'rejected_by')
+            .select_related('staff', 'project', 'approved_by', 'rejected_by', 'task')
             .prefetch_related('project__staff')
             .order_by('-approved_at', '-rejected_at')
         )
@@ -841,7 +841,7 @@ def project_tasks(request, project_id):
                 row['current_hours'] = 0
             return Response(fallback)
 
-    if request.user not in project.staff.all():
+    if request.user.role != 'admin' and request.user not in project.staff.all():
         return Response({'detail': 'Not allowed'}, status=403)
 
     title = request.data.get('title', '').strip()
@@ -907,6 +907,9 @@ def update_task(request, task_id):
         task.assigned_to = assignee
     
     task.save()
+    serializer = TaskSerializer(task)
+    return Response(serializer.data)
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_task(request, task_id):
