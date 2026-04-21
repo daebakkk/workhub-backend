@@ -13,6 +13,7 @@ import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import AdminApprovals from './pages/AdminApprovals';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
   return (
@@ -59,6 +60,11 @@ function App() {
           <AdminRoute>
             <AdminApprovals />
           </AdminRoute>
+        } />
+        <Route path="/leaderboard" element={
+          <ProtectedRoute>
+            <Leaderboard />
+          </ProtectedRoute>
         } />
       </Routes>
   );

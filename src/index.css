@@ -2166,3 +2166,229 @@ body.dark .showcaseBubble {
     z-index: 15;
   }
 }
+
+/* ── Leaderboard ─────────────────────────────────────────── */
+.lbControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.lbSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 860px;
+}
+
+.lbSummaryCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.lbSummaryCard.lbSummaryOver {
+  border-color: rgba(251, 146, 60, 0.35);
+  background: rgba(251, 146, 60, 0.06);
+}
+
+.lbSummaryCard.lbSummaryUnder {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.lbSummaryLabel {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.lbSummaryValue {
+  margin: 6px 0 2px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.lbSummaryMeta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.lbTable {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  gap: 6px;
+}
+
+.lbTableHeader {
+  display: grid;
+  grid-template-columns: 36px 1fr 64px 48px 120px 100px;
+  gap: 12px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.lbRow {
+  display: grid;
+  grid-template-columns: 36px 1fr 64px 48px 120px 100px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lbRow:hover {
+  border-color: rgba(225, 29, 139, 0.22);
+  box-shadow: 0 4px 14px rgba(225, 29, 139, 0.07);
+}
+
+.lbRowMe {
+  border-color: rgba(225, 29, 139, 0.35);
+  background: var(--accent-soft);
+}
+
+.lbRank {
+  font-size: 18px;
+  text-align: center;
+}
+
+.lbRankNum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.lbName {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lbNameText {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lbYou {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 1px 5px;
+  border-radius: 999px;
+}
+
+.lbSpec {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lbHours {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.lbLogs {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.lbGoalWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lbGoalBar {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.lbGoalFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.lbGoalOk  { background: linear-gradient(90deg, var(--accent), #f472b6); }
+.lbGoalOver { background: linear-gradient(90deg, #fb923c, #f97316); }
+.lbGoalUnder { background: linear-gradient(90deg, #818cf8, #6366f1); }
+
+.lbGoalPct {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+.lbGoalNone {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* status pills */
+.lbPill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.lbPillOver  { background: rgba(251,146,60,0.18); color: #9a3412; }
+.lbPillUnder { background: rgba(99,102,241,0.18); color: #3730a3; }
+.lbPillOk    { background: rgba(34,197,94,0.18);  color: #166534; }
+.lbPillNone  { background: rgba(148,163,184,0.18); color: #475569; }
+
+.dark .lbPillOver  { color: #fdba74; }
+.dark .lbPillUnder { color: #a5b4fc; }
+.dark .lbPillOk    { color: #86efac; }
+.dark .lbPillNone  { color: #94a3b8; }
+
+@media (max-width: 700px) {
+  .lbTableHeader,
+  .lbRow {
+    grid-template-columns: 28px 1fr 52px 40px;
+  }
+  .lbTableHeader span:nth-child(5),
+  .lbTableHeader span:nth-child(6),
+  .lbRow span:nth-child(5),
+  .lbRow span:nth-child(6) {
+    display: none;
+  }
+  .lbSummary {
+    grid-template-columns: 1fr;
+  }
+}

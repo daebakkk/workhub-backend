@@ -114,6 +114,9 @@ function AdminApprovals() {
             <Link to="/projects" className="sidebarLink">
               Projects
             </Link>
+            <Link to="/leaderboard" className="sidebarLink">
+              Leaderboard
+            </Link>
             <Link to="/reports" className="sidebarLink">
               Reports
             </Link>

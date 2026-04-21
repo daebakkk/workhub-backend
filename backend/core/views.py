@@ -915,9 +915,62 @@ def update_task(request, task_id):
     serializer = TaskSerializer(task)
     return Response(serializer.data)
 
-@api_view(['DELETE'])
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def delete_task(request, task_id):
+def leaderboard(request):
+    range_filter = request.query_params.get('range', 'this_week')
+    today = timezone.now().date()
+
+    if range_filter == 'last_week':
+        end = today - timedelta(days=today.weekday() + 1)
+        start = end - timedelta(days=6)
+    elif range_filter == 'last_30_days':
+        start = today - timedelta(days=30)
+        end = today
+    else:  # this_week default
+        start = today - timedelta(days=today.weekday())
+        end = today
+
+    staff_users = User.objects.filter(role='staff')
+    results = []
+
+    for user in staff_users:
+        logs = WorkLog.objects.filter(staff=user, date__gte=start, date__lte=end)
+        total_hours = logs.aggregate(total=Sum('hours'))['total'] or 0
+        approved_hours = logs.filter(status='approved').aggregate(total=Sum('hours'))['total'] or 0
+        log_count = logs.count()
+        results.append({
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'specialization': user.specialization,
+            'weekly_goal_hours': float(user.weekly_goal_hours or 0),
+            'total_hours': float(total_hours),
+            'approved_hours': float(approved_hours),
+            'log_count': log_count,
+        })
+
+    results.sort(key=lambda x: x['total_hours'], reverse=True)
+
+    # Tag overworked / underworked based on goal
+    for entry in results:
+        goal = entry['weekly_goal_hours']
+        hours = entry['total_hours']
+        if goal > 0:
+            ratio = hours / goal
+            if ratio >= 1.25:
+                entry['status'] = 'overworked'
+            elif ratio < 0.5:
+                entry['status'] = 'underworked'
+            else:
+                entry['status'] = 'on_track'
+        else:
+            entry['status'] = 'no_goal'
+
+    return Response(results)
+
+
     task = get_object_or_404(Task, id=task_id)
     if request.user not in task.project.staff.all():
         return Response({'detail': 'Not allowed'}, status=403)
