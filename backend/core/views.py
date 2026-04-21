@@ -23,22 +23,6 @@ from datetime import timedelta
 @permission_classes([IsAuthenticated])
 def submit_log(request):
     data = request.data
-    
-    # Validate required fields
-    if not data.get('title') or not str(data.get('title')).strip():
-        return Response({'detail': 'Title is required'}, status=400)
-    if not data.get('date'):
-        return Response({'detail': 'Date is required'}, status=400)
-    if data.get('hours') is None:
-        return Response({'detail': 'Hours is required'}, status=400)
-    
-    # Validate that project and task exist if provided
-    if data.get('project'):
-        if not Project.objects.filter(id=data.get('project')).exists():
-            return Response({'detail': 'Project not found'}, status=404)
-    if data.get('task'):
-        if not Task.objects.filter(id=data.get('task')).exists():
-            return Response({'detail': 'Task not found'}, status=404)
 
     log = WorkLog.objects.create(
         staff=request.user,
