@@ -2298,7 +2298,6 @@ body.dark .showcaseBubble {
     align-items: flex-start;
   }
 }
-}
 
 @media (max-width: 640px) {
   .dashSidebar {
