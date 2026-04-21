@@ -381,7 +381,6 @@ a {
 
 .statGrid {
   width: 100%;
-  max-width: 760px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -395,18 +394,7 @@ a {
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  transition: all 0.2s ease;
-}
-
-.statCard:hover {
-  border-color: var(--accent);
-  box-shadow: 0 4px 12px rgba(225, 29, 139, 0.1);
-}
-
-.statIcon {
-  font-size: 24px;
-  line-height: 1;
+  gap: 4px;
 }
 
 .statLabel {
@@ -419,7 +407,7 @@ a {
 }
 
 .statValue {
-  margin: 0;
+  margin: 8px 0 4px;
   font-size: 28px;
   font-weight: 800;
   color: var(--text);
@@ -431,8 +419,21 @@ a {
   color: var(--text-secondary);
 }
 
-.dashGoalCard {
-  max-width: 760px;
+.dashContent .card {
+  width: 100%;
+  text-align: left;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.cardHeader .cardTitle {
+  margin: 0;
 }
 
 .dashGoalEdit {
@@ -459,7 +460,7 @@ a {
 
 .dashGoalProgress {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   margin-top: 16px;
 }
 
@@ -470,13 +471,9 @@ a {
   font-weight: 600;
 }
 
-.dashProjectCard {
-  max-width: 760px;
-}
-
 .projectList {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .projectItem {
@@ -484,19 +481,12 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px;
+  padding: 14px 16px;
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--surface-muted);
   text-decoration: none;
   color: inherit;
-  transition: all 0.2s ease;
-}
-
-.projectItem:hover {
-  border-color: var(--accent);
-  background: var(--surface-hover);
-  box-shadow: 0 2px 8px rgba(225, 29, 139, 0.08);
 }
 
 .projectItemContent {
@@ -539,7 +529,7 @@ a {
 
 .projectItemProgressBar {
   flex: 1;
-  height: 6px;
+  height: 5px;
   border-radius: 999px;
   background: var(--border);
   overflow: hidden;
@@ -549,7 +539,6 @@ a {
   height: 100%;
   background: linear-gradient(90deg, var(--accent), #ec4899);
   border-radius: 999px;
-  transition: width 0.3s ease;
 }
 
 .projectItemProgressText {
@@ -566,7 +555,6 @@ a {
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  text-transform: capitalize;
 }
 
 .projectStatus.completed {
@@ -2277,12 +2265,6 @@ body.dark .showcaseBubble {
   .dashGoalEdit {
     grid-template-columns: 1fr;
   }
-
-  .projectItemRight {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
 }
 
 @media (max-width: 640px) {
@@ -2315,16 +2297,7 @@ body.dark .showcaseBubble {
     flex-direction: column;
     align-items: flex-start;
   }
-
-  .projectItemRight {
-    width: 100%;
-    flex-direction: row;
-    justify-content: space-between;
-  }
-
-  .projectItemProgress {
-    flex: 1;
-  }
+}
 }
 
 @media (max-width: 640px) {

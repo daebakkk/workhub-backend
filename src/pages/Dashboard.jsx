@@ -154,27 +154,23 @@ function Dashboard() {
 
           <section className="statGrid">
             <div className="statCard">
-              <div className="statIcon">📊</div>
               <p className="statLabel">Hours logged</p>
               <p className="statValue">{stats.hoursThisWeek}</p>
               <p className="statMeta">This week</p>
             </div>
             <div className="statCard">
-              <div className="statIcon">📁</div>
               <p className="statLabel">Active projects</p>
               <p className="statValue">{stats.activeProjects}</p>
               <p className="statMeta">In progress</p>
             </div>
             {isAdmin ? (
               <div className="statCard">
-                <div className="statIcon">✓</div>
                 <p className="statLabel">Logs to review</p>
                 <p className="statValue">{summary.pending_logs}</p>
                 <p className="statMeta">Awaiting review</p>
               </div>
             ) : (
               <div className="statCard">
-                <div className="statIcon">⭐</div>
                 <p className="statLabel">Approval rate</p>
                 <p className="statValue">{stats.approvalRate}%</p>
                 <p className="statMeta">Last 30 days</p>
@@ -182,7 +178,7 @@ function Dashboard() {
             )}
           </section>
 
-          <section className="card dashGoalCard">
+          <section className="card">
             <div className="cardHeader">
               <div>
                 <h2 className="cardTitle">Weekly goal</h2>
@@ -237,7 +233,7 @@ function Dashboard() {
             {goalMessage && <p className="inlineStatus">{goalMessage}</p>}
           </section>
 
-          <section className="card dashProjectCard">
+          <section className="card">
             <div className="cardHeader">
               <h2 className="cardTitle">Recent Projects</h2>
               <Link to="/projects" className="btn btnSecondary">
