@@ -971,6 +971,9 @@ def leaderboard(request):
     return Response(results)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
     if request.user not in task.project.staff.all():
         return Response({'detail': 'Not allowed'}, status=403)
