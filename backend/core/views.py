@@ -14,6 +14,7 @@ from .models import Project, WorkLog, User, Report, Task, Notification
 from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer, TaskSerializer
 from django.db.models import Count, F, Q, Sum
 from django.db.utils import OperationalError, ProgrammingError
+from django.db import DatabaseError
 from django.db.models.functions import TruncMonth, TruncWeek
 from django.utils import timezone
 from datetime import timedelta
@@ -92,14 +93,17 @@ def submit_log(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def my_logs(request):
-    logs = (
-        WorkLog.objects.filter(staff=request.user)
-        .select_related('staff', 'project', 'approved_by', 'rejected_by')
-        .prefetch_related('project__staff')
-        .order_by('-created_at')
-    )
-    serializer = WorkLogSerializer(logs, many=True)
-    return Response(serializer.data)
+    try:
+        logs = (
+            WorkLog.objects.filter(staff=request.user)
+            .select_related('staff', 'project', 'approved_by', 'rejected_by')
+            .prefetch_related('project__staff')
+            .order_by('-created_at')
+        )
+        serializer = WorkLogSerializer(logs, many=True)
+        return Response(serializer.data)
+    except (ProgrammingError, OperationalError, DatabaseError):
+        return Response([])
 
 
 @api_view(['DELETE'])
@@ -116,14 +120,17 @@ def pending_logs(request):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    logs = (
-        WorkLog.objects.filter(status='pending')
-        .exclude(staff=request.user)
-        .select_related('staff', 'project', 'approved_by', 'rejected_by')
-        .prefetch_related('project__staff')
-    )
-    serializer = WorkLogSerializer(logs, many=True)
-    return Response(serializer.data)
+    try:
+        logs = (
+            WorkLog.objects.filter(status='pending')
+            .exclude(staff=request.user)
+            .select_related('staff', 'project', 'approved_by', 'rejected_by')
+            .prefetch_related('project__staff')
+        )
+        serializer = WorkLogSerializer(logs, many=True)
+        return Response(serializer.data)
+    except (ProgrammingError, OperationalError, DatabaseError):
+        return Response([])
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -131,14 +138,20 @@ def approve_log(request, log_id):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    log = get_object_or_404(WorkLog, id=log_id)
-    log.status = 'approved'
-    log.rejection_reason = ''
-    log.approved_by = request.user
-    log.approved_at = timezone.now()
-    log.rejected_by = None
-    log.rejected_at = None
-    log.save()
+    try:
+        log = get_object_or_404(WorkLog, id=log_id)
+        log.status = 'approved'
+        log.rejection_reason = ''
+        log.approved_by = request.user
+        log.approved_at = timezone.now()
+        log.rejected_by = None
+        log.rejected_at = None
+        log.save()
+    except (ProgrammingError, OperationalError, DatabaseError):
+        return Response(
+            {'detail': 'Log schema is out of date on the server. Deploy with migrations first.'},
+            status=503
+        )
     if log.staff.email_notifications:
         Notification.objects.create(
             user=log.staff,
@@ -157,16 +170,28 @@ def approve_all_logs(request):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    logs = WorkLog.objects.filter(status='pending').exclude(staff=request.user)
+    try:
+        logs = WorkLog.objects.filter(status='pending').exclude(staff=request.user)
+    except (ProgrammingError, OperationalError, DatabaseError):
+        return Response(
+            {'detail': 'Log schema is out of date on the server. Deploy with migrations first.'},
+            status=503
+        )
     updated = []
     for log in logs:
-        log.status = 'approved'
-        log.rejection_reason = ''
-        log.approved_by = request.user
-        log.approved_at = timezone.now()
-        log.rejected_by = None
-        log.rejected_at = None
-        log.save()
+        try:
+            log.status = 'approved'
+            log.rejection_reason = ''
+            log.approved_by = request.user
+            log.approved_at = timezone.now()
+            log.rejected_by = None
+            log.rejected_at = None
+            log.save()
+        except (ProgrammingError, OperationalError, DatabaseError):
+            return Response(
+                {'detail': 'Log schema is out of date on the server. Deploy with migrations first.'},
+                status=503
+            )
         updated.append(log)
         if log.staff.email_notifications:
             Notification.objects.create(
@@ -185,14 +210,20 @@ def reject_log(request, log_id):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
-    log = get_object_or_404(WorkLog, id=log_id)
-    log.status = 'rejected'
-    log.rejection_reason = request.data.get('reason', '')
-    log.rejected_by = request.user
-    log.rejected_at = timezone.now()
-    log.approved_by = None
-    log.approved_at = None
-    log.save()
+    try:
+        log = get_object_or_404(WorkLog, id=log_id)
+        log.status = 'rejected'
+        log.rejection_reason = request.data.get('reason', '')
+        log.rejected_by = request.user
+        log.rejected_at = timezone.now()
+        log.approved_by = None
+        log.approved_at = None
+        log.save()
+    except (ProgrammingError, OperationalError, DatabaseError):
+        return Response(
+            {'detail': 'Log schema is out of date on the server. Deploy with migrations first.'},
+            status=503
+        )
     if log.staff.email_notifications:
         Notification.objects.create(
             user=log.staff,
@@ -459,15 +490,18 @@ def admin_log_history(request):
     range_filter = request.query_params.get('range', 'this_week')
     today = timezone.now().date()
     if range_filter == 'all':
-        logs = (
-            WorkLog.objects.filter(Q(approved_by=request.user) | Q(rejected_by=request.user))
-            .exclude(staff=request.user)
-            .select_related('staff', 'project', 'approved_by', 'rejected_by')
-            .prefetch_related('project__staff')
-            .order_by('-approved_at', '-rejected_at')
-        )
-        serializer = WorkLogSerializer(logs, many=True)
-        return Response(serializer.data)
+        try:
+            logs = (
+                WorkLog.objects.filter(Q(approved_by=request.user) | Q(rejected_by=request.user))
+                .exclude(staff=request.user)
+                .select_related('staff', 'project', 'approved_by', 'rejected_by')
+                .prefetch_related('project__staff')
+                .order_by('-approved_at', '-rejected_at')
+            )
+            serializer = WorkLogSerializer(logs, many=True)
+            return Response(serializer.data)
+        except (ProgrammingError, OperationalError, DatabaseError):
+            return Response([])
     if range_filter == 'last_week':
         end = today - timedelta(days=today.weekday() + 1)
         start = end - timedelta(days=6)
@@ -484,19 +518,22 @@ def admin_log_history(request):
         start = today - timedelta(days=today.weekday())
         end = start + timedelta(days=6)
 
-    logs = (
-        WorkLog.objects.filter(
-            Q(approved_by=request.user, approved_at__date__gte=start, approved_at__date__lte=end) |
-            Q(rejected_by=request.user, rejected_at__date__gte=start, rejected_at__date__lte=end)
+    try:
+        logs = (
+            WorkLog.objects.filter(
+                Q(approved_by=request.user, approved_at__date__gte=start, approved_at__date__lte=end) |
+                Q(rejected_by=request.user, rejected_at__date__gte=start, rejected_at__date__lte=end)
+            )
+            .exclude(staff=request.user)
+            .select_related('staff', 'project', 'approved_by', 'rejected_by')
+            .prefetch_related('project__staff')
+            .order_by('-approved_at', '-rejected_at')
         )
-        .exclude(staff=request.user)
-        .select_related('staff', 'project', 'approved_by', 'rejected_by')
-        .prefetch_related('project__staff')
-        .order_by('-approved_at', '-rejected_at')
-    )
 
-    serializer = WorkLogSerializer(logs, many=True)
-    return Response(serializer.data)
+        serializer = WorkLogSerializer(logs, many=True)
+        return Response(serializer.data)
+    except (ProgrammingError, OperationalError, DatabaseError):
+        return Response([])
 
 
 @api_view(['GET'])
