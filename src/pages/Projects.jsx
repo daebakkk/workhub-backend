@@ -31,6 +31,7 @@ function Projects() {
   const [addingCreateTask, setAddingCreateTask] = useState(false);
   const [addingTaskByProject, setAddingTaskByProject] = useState({});
   const [showCreate, setShowCreate] = useState(false);
+  const [createTab, setCreateTab] = useState('self'); // 'self' or 'others'
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState(isAdmin ? 'my-projects' : 'all');
 
@@ -404,7 +405,7 @@ function Projects() {
                 type="button"
                 onClick={() => setShowCreate((prev) => !prev)}
               >
-                {showCreate ? 'Close' : 'Create a project'}
+                {showCreate ? 'Close' : '+ Create project'}
               </button>
               <div className="projectTabs">
                 {tabOptions.map((tab) => (
@@ -420,178 +421,163 @@ function Projects() {
               </div>
             </div>
             {showCreate && (
-              <form className="assignCreate" onSubmit={(e) => createProject(e)}>
-                <div className="assignCreateFields">
-                  <input
-                    type="text"
-                    placeholder="Project name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Short description"
-                    value={newDescription}
-                    onChange={(e) => setNewDescription(e.target.value)}
-                  />
-                </div>
-                <div className="taskCreate">
-                  <input
-                    type="text"
-                    placeholder="Add task (optional)"
-                    value={createTaskInput}
-                    onChange={(e) => setCreateTaskInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addCreateTask();
-                      }
-                    }}
-                  />
-                  <input
-                    type="number"
-                    step="0.5"
-                    placeholder="Required hours (optional)"
-                    value={createTaskRequiredHours}
-                    onChange={(e) => setCreateTaskRequiredHours(e.target.value)}
-                  />
+              <div className="projectCreatePanel">
+                <div className="projectCreateTabs">
                   <button
-                    className="btn btnSecondary"
                     type="button"
-                    onClick={addCreateTask}
-                    disabled={addingCreateTask || !createTaskInput.trim()}
+                    className={`projectCreateTab ${createTab === 'self' ? 'isActive' : ''}`}
+                    onClick={() => setCreateTab('self')}
                   >
-                    {addingCreateTask ? 'Adding...' : 'Add task'}
+                    For myself
                   </button>
-                </div>
-                {createTasks.length > 0 && (
-                  <div className="taskList">
-                    {createTasks.map((task) => (
-                      <div className="taskItem" key={task.title}>
-                        <span>{task.title}</span>
-                        {needsCreateAssignment && (
-                          <select
-                            className="taskAssignSelect"
-                            value={task.assigned_to || ''}
-                            onChange={(e) => {
-                              const value = e.target.value ? Number(e.target.value) : '';
-                              setCreateTasks((prev) =>
-                                prev.map((item) =>
-                                  item.title === task.title
-                                    ? { ...item, assigned_to: value }
-                                    : item
-                                )
-                              );
-                            }}
-                          >
-                            <option value="">Assign to...</option>
-                            {createMembers.map((member) => (
-                            <option key={`create-assign-${member.id}`} value={member.id}>
-                                {memberDisplayName(member)}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                        <button
-                          className="btn btnSecondary"
-                          type="button"
-                          onClick={() => removeCreateTask(task.title)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {isAdmin && (
-                  <div className="assignList">
-                    <p className="assignListHint">Assign to:</p>
-                    {specializationGroups.map((group) => {
-                      const members = staffUsers.filter(
-                        (staff) => staff.specialization === group.key
-                      );
-                      if (members.length === 0) return null;
-                      return (
-                        <div className="assignGroup" key={group.key}>
-                          <p className="assignGroupTitle">{group.label}</p>
-                          {members.map((staff) => {
-                            const checked = createAssignees.includes(staff.id);
-                            return (
-                              <label className="assignItem" key={`create-${staff.id}`}>
-                                <span>
-                                  {memberDisplayName(staff)}
-                                </span>
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={() => toggleCreateAssignee(staff.id)}
-                                />
-                              </label>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                {!isAdmin && staffOptions.length > 0 && (
-                  <div className="assignList">
-                    {specializationGroups.map((group) => {
-                      const members = staffOptions.filter(
-                        (staff) => staff.specialization === group.key
-                      );
-                      if (members.length === 0) return null;
-                      return (
-                        <div className="assignGroup" key={`staff-${group.key}`}>
-                          <p className="assignGroupTitle">{group.label} (with)</p>
-                          {members.map((staff) => {
-                            const checked = createAssignees.includes(staff.id);
-                            return (
-                              <label className="assignItem" key={`create-${staff.id}`}>
-                                <span>
-                                  {memberDisplayName(staff)}
-                                </span>
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={() => toggleCreateAssignee(staff.id)}
-                                />
-                              </label>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                <div className="settingsRow">
-                  <span />
-                  <div className="reportActions">
-                    <button className="btn btnPrimary" type="submit" disabled={creating}>
-                      {creating && creatingMode === 'default' ? 'Creating...' : 'Create'}
-                    </button>
-                    {isAdmin && (
-                      <button
-                        className="btn btnSecondary"
-                        type="button"
-                        disabled={creating}
-                        onClick={(e) => createProject(e, true)}
-                      >
-                        {creating && creatingMode === 'self' ? 'Creating...' : 'Create for myself'}
-                      </button>
-                    )}
+                  {isAdmin && (
                     <button
-                      className="btn btnSecondary"
                       type="button"
+                      className={`projectCreateTab ${createTab === 'others' ? 'isActive' : ''}`}
+                      onClick={() => setCreateTab('others')}
+                    >
+                      For others
+                    </button>
+                  )}
+                </div>
+
+                <form className="projectCreateForm" onSubmit={(e) => createProject(e, createTab === 'self')}>
+                  <div className="projectCreateSection">
+                    <p className="projectCreateSectionTitle">Project details</p>
+                    <input
+                      type="text"
+                      className="projectCreateInput"
+                      placeholder="Project name"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      required
+                    />
+                    <input
+                      type="text"
+                      className="projectCreateInput"
+                      placeholder="Short description (optional)"
+                      value={newDescription}
+                      onChange={(e) => setNewDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="projectCreateSection">
+                    <p className="projectCreateSectionTitle">Tasks (optional)</p>
+                    <div className="projectCreateTaskInput">
+                      <input
+                        type="text"
+                        className="projectCreateInput"
+                        placeholder="Task title"
+                        value={createTaskInput}
+                        onChange={(e) => setCreateTaskInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addCreateTask();
+                          }
+                        }}
+                      />
+                      <input
+                        type="number"
+                        step="0.5"
+                        className="projectCreateInput"
+                        placeholder="Hours (optional)"
+                        value={createTaskRequiredHours}
+                        onChange={(e) => setCreateTaskRequiredHours(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="btn btnSecondary"
+                        onClick={addCreateTask}
+                        disabled={addingCreateTask || !createTaskInput.trim()}
+                      >
+                        Add
+                      </button>
+                    </div>
+                    {createTasks.length > 0 && (
+                      <div className="projectCreateTaskList">
+                        {createTasks.map((task) => (
+                          <div className="projectCreateTaskItem" key={task.title}>
+                            <div>
+                              <span className="projectCreateTaskTitle">{task.title}</span>
+                              {task.required_hours > 0 && (
+                                <span className="projectCreateTaskHours">{task.required_hours}h</span>
+                              )}
+                            </div>
+                            {needsCreateAssignment && (
+                              <select
+                                className="projectCreateTaskAssign"
+                                value={task.assigned_to || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value ? Number(e.target.value) : '';
+                                  setCreateTasks((prev) =>
+                                    prev.map((t) =>
+                                      t.title === task.title ? { ...t, assigned_to: val } : t
+                                    )
+                                  );
+                                }}
+                              >
+                                <option value="">Assign to…</option>
+                                {createMembers.map((m) => (
+                                  <option key={m.id} value={m.id}>{memberDisplayName(m)}</option>
+                                ))}
+                              </select>
+                            )}
+                            <button
+                              type="button"
+                              className="projectCreateTaskRemove"
+                              onClick={() => removeCreateTask(task.title)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {createTab === 'others' && isAdmin && (
+                    <div className="projectCreateSection">
+                      <p className="projectCreateSectionTitle">Assign to</p>
+                      <div className="projectCreateAssignees">
+                        {specializationGroups.map((group) => {
+                          const members = staffUsers.filter((s) => s.specialization === group.key);
+                          if (members.length === 0) return null;
+                          return (
+                            <div className="projectCreateGroup" key={group.key}>
+                              <p className="projectCreateGroupTitle">{group.label}</p>
+                              {members.map((m) => (
+                                <label className="projectCreateCheckbox" key={m.id}>
+                                  <input
+                                    type="checkbox"
+                                    checked={createAssignees.includes(m.id)}
+                                    onChange={() => toggleCreateAssignee(m.id)}
+                                  />
+                                  <span>{memberDisplayName(m)}</span>
+                                </label>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="projectCreateActions">
+                    <button className="btn btnPrimary" type="submit" disabled={creating}>
+                      {creating ? 'Creating…' : 'Create project'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btnSecondary"
                       onClick={() => setShowCreate(false)}
                       disabled={creating}
                     >
                       Cancel
                     </button>
                   </div>
-                </div>
-              </form>
+                </form>
+              </div>
             )}
             <div className="projectSearch">
               <input
