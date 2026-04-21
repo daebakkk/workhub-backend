@@ -509,7 +509,7 @@ def admin_log_history(request):
         start = today - timedelta(days=30)
         end = today
     elif range_filter == 'last_6_months':
-        start = today - timedelta(days=182)
+        start = today - timedelta(days=180)  # More accurate 6 months
         end = today
     elif range_filter == 'last_year':
         start = today - timedelta(days=365)
@@ -563,7 +563,7 @@ def staff_report_summary(request, staff_id):
         start = today - timedelta(days=30)
         end = today
     elif range_filter == 'last_6_months':
-        start = today - timedelta(days=182)
+        start = today - timedelta(days=180)  # More accurate 6 months
         end = today
     elif range_filter == 'last_year':
         start = today - timedelta(days=365)
@@ -575,7 +575,7 @@ def staff_report_summary(request, staff_id):
         start = today - timedelta(days=today.weekday())
         end = start + timedelta(days=6)
 
-    logs = WorkLog.objects.filter(staff=staff).select_related('project')
+    logs = WorkLog.objects.filter(staff=staff).select_related('project').order_by('-date')
     if start and end:
         logs = logs.filter(date__gte=start, date__lte=end)
 
