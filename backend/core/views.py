@@ -663,8 +663,15 @@ def dashboard_summary(request):
         .prefetch_related('staff')
         .annotate(
             total_tasks=Count('tasks'),
+            completed_tasks=Count('tasks', filter=Q(tasks__progress__gte=100)),
         )
         .order_by('name')
+    )
+
+    # Only count projects that aren't 100% complete
+    active_projects = sum(
+        1 for p in projects_qs
+        if p.total_tasks == 0 or (p.total_tasks > 0 and p.completed_tasks < p.total_tasks)
     )
 
     hours_this_week = (
@@ -692,7 +699,7 @@ def dashboard_summary(request):
     return Response(
         {
             'hours_this_week': float(hours_this_week),
-            'active_projects': projects_qs.count(),
+            'active_projects': active_projects,
             'approval_rate': approval_rate,
             'pending_logs': pending_count,
             'weekly_goal_hours': float(request.user.weekly_goal_hours or 0),
