@@ -13,6 +13,7 @@ from .serializers import RegisterSerializer, UserSerializer, NotificationSeriali
 from .models import Project, WorkLog, User, Report, Task, Notification
 from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer, TaskSerializer
 from django.db.models import Count, F, Q, Sum
+from django.db.utils import OperationalError, ProgrammingError
 from django.db.models.functions import TruncMonth, TruncWeek
 from django.utils import timezone
 from datetime import timedelta
@@ -779,7 +780,11 @@ def create_project(request):
                     assignee = request.user
             task_items.append(Task(project=project, title=title, assigned_to=assignee, required_hours=required_hours))
         if task_items:
-            Task.objects.bulk_create(task_items)
+            try:
+                Task.objects.bulk_create(task_items)
+            except (ProgrammingError, OperationalError):
+                # Project creation should still succeed even if task schema is behind.
+                pass
     serializer = ProjectSerializer(project)
     return Response(serializer.data, status=201)
 
@@ -793,9 +798,24 @@ def project_tasks(request, project_id):
         return Response({'detail': 'Not allowed'}, status=403)
 
     if request.method == 'GET':
-        tasks = Task.objects.filter(project=project).prefetch_related('logs').order_by('-created_at')
-        serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data)
+        try:
+            tasks = Task.objects.filter(project=project).prefetch_related('logs').order_by('-created_at')
+            serializer = TaskSerializer(tasks, many=True)
+            return Response(serializer.data)
+        except (ProgrammingError, OperationalError):
+            # Graceful fallback when production DB schema is behind code.
+            fallback = list(
+                Task.objects.filter(project=project)
+                .values('id', 'title', 'created_at', 'project_id', 'assigned_to_id')
+                .order_by('-created_at')
+            )
+            for row in fallback:
+                row['project'] = row.pop('project_id')
+                row['assigned_to'] = row.pop('assigned_to_id')
+                row['required_hours'] = 0
+                row['progress'] = 0
+                row['current_hours'] = 0
+            return Response(fallback)
 
     if request.user not in project.staff.all():
         return Response({'detail': 'Not allowed'}, status=403)
@@ -815,7 +835,21 @@ def project_tasks(request, project_id):
     if not assignee:
         return Response({'detail': 'Assignee must be a project member'}, status=400)
 
-    task = Task.objects.create(project=project, title=title, assigned_to=assignee, required_hours=required_hours)
+    try:
+        task = Task.objects.create(
+            project=project,
+            title=title,
+            assigned_to=assignee,
+            required_hours=required_hours
+        )
+    except (ProgrammingError, OperationalError):
+        return Response(
+            {
+                'detail': 'Task schema is out of date on the server. '
+                          'Deploy with migrations before creating tasks.'
+            },
+            status=503
+        )
     serializer = TaskSerializer(task)
     return Response(serializer.data, status=201)
 
@@ -857,7 +891,16 @@ def update_task(request, task_id):
             return Response({'detail': 'Assignee must be a project member'}, status=400)
         task.assigned_to = assignee
     
-    task.save()
+    try:
+        task.save()
+    except (ProgrammingError, OperationalError):
+        return Response(
+            {
+                'detail': 'Task schema is out of date on the server. '
+                          'Deploy with migrations before updating tasks.'
+            },
+            status=503
+        )
     serializer = TaskSerializer(task)
     return Response(serializer.data)
 
