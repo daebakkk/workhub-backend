@@ -23,6 +23,9 @@ function WorkLogs() {
   const [timerTitle, setTimerTitle] = useState('');
   const [timerDate, setTimerDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [timerProjectId, setTimerProjectId] = useState('');
+  const [timerTaskId, setTimerTaskId] = useState('');
+  const [timerTasks, setTimerTasks] = useState([]);
+  const [timerTasksLoading, setTimerTasksLoading] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerStart, setTimerStart] = useState(null);
   const [timerElapsedMs, setTimerElapsedMs] = useState(0);
@@ -39,6 +42,20 @@ function WorkLogs() {
       .finally(() => setTimerProjectsLoading(false));
   }, []);
 
+  // fetch tasks when timer project changes
+  useEffect(() => {
+    if (!timerProjectId) {
+      setTimerTasks([]);
+      setTimerTaskId('');
+      return;
+    }
+    setTimerTasksLoading(true);
+    API.get(`projects/${timerProjectId}/tasks/`)
+      .then((res) => setTimerTasks(res.data || []))
+      .catch(() => setTimerError('Could not load tasks.'))
+      .finally(() => setTimerTasksLoading(false));
+  }, [timerProjectId]);
+
   // restore timer from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('workhub_timer');
@@ -49,6 +66,7 @@ function WorkLogs() {
       setTimerTitle(parsed.title || '');
       setTimerDate(parsed.date || new Date().toISOString().slice(0, 10));
       setTimerProjectId(parsed.projectId || '');
+      setTimerTaskId(parsed.taskId || '');
       setTimerStart(parsed.startTime);
       setTimerRunning(true);
       setTimerElapsedMs(Date.now() - parsed.startTime);
@@ -135,7 +153,7 @@ function WorkLogs() {
     const startTime = Date.now();
     setTimerStart(startTime); setTimerElapsedMs(0); setTimerRunning(true);
     localStorage.setItem('workhub_timer', JSON.stringify({
-      title: timerTitle.trim(), date: timerDate, projectId: timerProjectId || '', startTime,
+      title: timerTitle.trim(), date: timerDate, projectId: timerProjectId || '', taskId: timerTaskId || '', startTime,
     }));
   }
 
@@ -145,10 +163,13 @@ function WorkLogs() {
     const hours = Math.max(0.01, Number((timerElapsedMs / 3600000).toFixed(2)));
     try {
       await API.post('logs/submit/', {
-        title: timerTitle.trim(), hours, date: timerDate, project: timerProjectId || null,
+        title: timerTitle.trim(), hours, date: timerDate,
+        project: timerProjectId || null,
+        task: timerTaskId || null,
       });
       setTimerTitle(''); setTimerDate(new Date().toISOString().slice(0, 10));
-      setTimerProjectId(''); setTimerRunning(false); setTimerStart(null); setTimerElapsedMs(0);
+      setTimerProjectId(''); setTimerTaskId(''); setTimerTasks([]);
+      setTimerRunning(false); setTimerStart(null); setTimerElapsedMs(0);
       localStorage.removeItem('workhub_timer');
       setPanel('logs'); fetchLogs();
     } catch {
@@ -266,6 +287,23 @@ function WorkLogs() {
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
+                    )}
+                    {timerProjectId && (
+                      timerTasksLoading ? (
+                        <div className="wlInput wlInputPlaceholder">Loading tasks…</div>
+                      ) : (
+                        <select
+                          className="wlInput wlSelect"
+                          value={timerTaskId}
+                          onChange={(e) => setTimerTaskId(e.target.value)}
+                          disabled={timerRunning || timerSaving}
+                        >
+                          <option value="">Link a task (optional)</option>
+                          {timerTasks.map((t) => (
+                            <option key={t.id} value={t.id}>{t.title}</option>
+                          ))}
+                        </select>
+                      )
                     )}
                   </div>
                   <div className="wlTimerBtns">
