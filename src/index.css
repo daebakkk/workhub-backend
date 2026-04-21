@@ -1804,144 +1804,150 @@ body.dark .showcaseBubble {
 }
 
 .taskItem {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 8px 10px;
+  border-radius: 10px;
   background: var(--surface);
   border: 1px solid var(--border);
   font-size: 13px;
   color: var(--text);
+  transition: border-color 0.2s ease;
 }
 
-.taskHeader {
+.taskItem:hover {
+  border-color: rgba(225, 29, 139, 0.25);
+}
+
+.taskItemLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.taskItemRight {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .taskTitle {
   font-weight: 600;
   color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .taskAssignee {
-  margin-left: 8px;
-  font-size: 0.8rem;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
-.taskRequiredHours {
-  margin-left: 8px;
-  font-size: 0.8rem;
+.taskHoursPill {
+  font-size: 11px;
+  font-weight: 600;
   color: var(--accent);
-  font-weight: 500;
+  background: var(--accent-soft);
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
-.taskDelete {
-  background: transparent;
-  border: none;
-  padding: 4px 8px;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  text-decoration: underline;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s ease, color 0.2s ease;
-}
-
-.taskItem:hover .taskDelete {
-  opacity: 1;
-  color: var(--accent-dark);
-}
-
-.taskProgress {
+.taskProgressWrap {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
 }
 
 .taskProgressBar {
-  flex: 1;
-  height: 8px;
+  width: 72px;
+  height: 5px;
   background: var(--border);
-  border-radius: 4px;
+  border-radius: 999px;
   overflow: hidden;
 }
 
 .taskProgressFill {
   height: 100%;
-  background: var(--accent);
-  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), #f472b6);
+  border-radius: 999px;
   transition: width 0.3s ease;
 }
 
 .taskProgressText {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text);
-  min-width: 35px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 28px;
   text-align: right;
 }
 
+.taskDelete {
+  background: transparent;
+  border: none;
+  padding: 2px 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  border-radius: 6px;
+}
+
+.taskItem:hover .taskDelete {
+  opacity: 1;
+}
+
+.taskDelete:hover {
+  color: #ef4444;
+}
+
+/* slider row — spans full width, only visible on hover */
 .taskProgressEdit {
-  margin-top: 8px;
+  grid-column: 1 / -1;
+  display: none;
+}
+
+.taskItem:hover .taskProgressEdit,
+.taskItem:focus-within .taskProgressEdit {
+  display: block;
 }
 
 .taskProgressEdit input[type="range"] {
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 999px;
   background: var(--border);
   outline: none;
   -webkit-appearance: none;
   appearance: none;
-}
-
-.taskHours {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-.taskCurrentHours {
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.taskHoursSeparator {
-  color: var(--text-muted);
-}
-
-.taskRequiredHoursTotal {
-  color: var(--text-muted);
+  cursor: pointer;
 }
 
 .taskProgressEdit input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--accent);
   cursor: pointer;
   border: 2px solid var(--surface);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 
 .taskProgressEdit input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--accent);
   cursor: pointer;
   border: 2px solid var(--surface);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .taskEmpty {

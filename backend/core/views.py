@@ -818,7 +818,11 @@ def create_project(request):
 def project_tasks(request, project_id):
     project = get_object_or_404(Project, id=project_id)
 
-    if request.user.role != 'admin' and request.user not in project.staff.all():
+    is_member = request.user in project.staff.all()
+    is_admin = request.user.role == 'admin'
+
+    # Non-members who aren't admin can't access at all
+    if not is_admin and not is_member:
         return Response({'detail': 'Not allowed'}, status=403)
 
     if request.method == 'GET':
@@ -841,7 +845,8 @@ def project_tasks(request, project_id):
                 row['current_hours'] = 0
             return Response(fallback)
 
-    if request.user.role != 'admin' and request.user not in project.staff.all():
+    # POST: only members can create tasks (admins must be assigned to the project)
+    if not is_member:
         return Response({'detail': 'Not allowed'}, status=403)
 
     title = request.data.get('title', '').strip()

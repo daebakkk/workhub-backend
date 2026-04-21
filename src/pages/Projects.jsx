@@ -789,19 +789,26 @@ function Projects() {
                               canEditTasks);
                           return (
                             <div className="taskItem" key={task.id}>
-                              <div className="taskHeader">
-                                <div>
-                                  <span className="taskTitle">{task.title}</span>
-                                  {!isSingleMemberProject && task.assigned_to && (
-                                    <span className="taskAssignee">
-                                      - {memberDisplayName(task.assigned_to)}
-                                    </span>
-                                  )}
-                                  {task.required_hours > 0 && (
-                                    <span className="taskRequiredHours">
-                                      {task.required_hours}h required
-                                    </span>
-                                  )}
+                              <div className="taskItemLeft">
+                                <span className="taskTitle">{task.title}</span>
+                                {!isSingleMemberProject && task.assigned_to && (
+                                  <span className="taskAssignee">{memberDisplayName(task.assigned_to)}</span>
+                                )}
+                              </div>
+                              <div className="taskItemRight">
+                                {task.required_hours > 0 && (
+                                  <span className="taskHoursPill">
+                                    {task.current_hours || 0}/{task.required_hours}h
+                                  </span>
+                                )}
+                                <div className="taskProgressWrap">
+                                  <div className="taskProgressBar">
+                                    <div
+                                      className="taskProgressFill"
+                                      style={{ width: `${task.progress || 0}%` }}
+                                    />
+                                  </div>
+                                  <span className="taskProgressText">{task.progress || 0}%</span>
                                 </div>
                                 {isAssignee && (
                                   <button
@@ -813,26 +820,10 @@ function Projects() {
                                       deleteTask(task.id, project.id);
                                     }}
                                   >
-                                    Delete
+                                    ✕
                                   </button>
                                 )}
                               </div>
-                              <div className="taskProgress">
-                                <div className="taskProgressBar">
-                                  <div
-                                    className="taskProgressFill"
-                                    style={{ width: `${task.progress || 0}%` }}
-                                  />
-                                </div>
-                                <span className="taskProgressText">{task.progress || 0}%</span>
-                              </div>
-                              {task.required_hours > 0 && (
-                                <div className="taskHours">
-                                  <span className="taskCurrentHours">{task.current_hours || 0}h</span>
-                                  <span className="taskHoursSeparator"> / </span>
-                                  <span className="taskRequiredHoursTotal">{task.required_hours}h required</span>
-                                </div>
-                              )}
                               {isAssignee && (
                                 <div className="taskProgressEdit">
                                   <input
