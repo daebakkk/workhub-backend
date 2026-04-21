@@ -27,7 +27,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-pgp#wlo2urf8&jb0p(vkqp7zbr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ["*"] if DEBUG else [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'workhub-backend.onrender.com,workhub-backend-1.onrender.com').split(',') if host.strip()]
+ALLOWED_HOSTS = ["*"] if DEBUG else [host.strip() for host in os.getenv('ALLOWED_HOSTS', '.onrender.com,localhost,127.0.0.1').split(',') if host.strip()]
 
 
 # Application definition
@@ -152,6 +152,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "https://workhub1.vercel.app",
     "http://localhost:5173",
+]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
 ]
 
 extra_cors = os.getenv("CORS_ALLOWED_ORIGINS", "")

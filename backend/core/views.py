@@ -323,7 +323,6 @@ def my_projects(request):
         .prefetch_related('staff')
         .annotate(
             total_tasks=Count('tasks'),
-            completed_tasks=Count('tasks', filter=Q(tasks__progress__gte=100)),
         )
         .order_by('name')
     )
@@ -601,7 +600,6 @@ def admin_projects(request):
         .prefetch_related('staff')
         .annotate(
             total_tasks=Count('tasks'),
-            completed_tasks=Count('tasks', filter=Q(tasks__progress__gte=100)),
         )
         .order_by('name')
     )
@@ -640,7 +638,6 @@ def dashboard_summary(request):
         .prefetch_related('staff')
         .annotate(
             total_tasks=Count('tasks'),
-            completed_tasks=Count('tasks', filter=Q(tasks__progress__gte=100)),
         )
         .order_by('name')
     )
