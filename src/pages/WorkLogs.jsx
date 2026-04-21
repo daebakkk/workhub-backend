@@ -8,12 +8,18 @@ function WorkLogs() {
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const isAdmin = user?.role === 'admin';
-  const [showAddLogForm, setShowAddLogForm] = useState(false);
-  const [showLogs, setShowLogs] = useState(false);
+
+  // panel state: null | 'add' | 'logs'
+  const [panel, setPanel] = useState(null);
+  // add-log tab: 'timer' | 'manual'
+  const [addTab, setAddTab] = useState('timer');
+
   const [logs, setLogs] = useState([]);
   const [logsRange, setLogsRange] = useState('this_week');
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [logsError, setLogsError] = useState('');
+
+  // timer state
   const [timerTitle, setTimerTitle] = useState('');
   const [timerDate, setTimerDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [timerProjectId, setTimerProjectId] = useState('');
@@ -25,50 +31,15 @@ function WorkLogs() {
   const [timerProjects, setTimerProjects] = useState([]);
   const [timerProjectsLoading, setTimerProjectsLoading] = useState(true);
 
-  async function fetchLogs() {
-    setLoadingLogs(true);
-    setLogsError('');
-    try {
-      const res = await API.get('logs/my/');
-      setLogs(res.data || []);
-    } catch (err) {
-      setLogsError('Could not load logs. Please try again.');
-    } finally {
-      setLoadingLogs(false);
-    }
-  }
-
-  async function deleteLog(id) {
-    try {
-      await API.delete(`logs/${id}/delete/`);
-      setLogs((prev) => prev.filter((log) => log.id !== id));
-    } catch (err) {
-      setLogsError('Could not delete log. Please try again.');
-    }
-  }
-
+  // fetch projects for timer
   useEffect(() => {
-    if (!showLogs) return undefined;
-    fetchLogs();
-    const interval = setInterval(fetchLogs, 30000);
-    return () => clearInterval(interval);
-  }, [showLogs]);
-
-  useEffect(() => {
-    async function fetchTimerProjects() {
-      try {
-        const res = await API.get('projects/my/');
-        setTimerProjects(res.data || []);
-      } catch (err) {
-        setTimerError('Could not load projects for timer.');
-      } finally {
-        setTimerProjectsLoading(false);
-      }
-    }
-
-    fetchTimerProjects();
+    API.get('projects/my/')
+      .then((res) => setTimerProjects(res.data || []))
+      .catch(() => setTimerError('Could not load projects.'))
+      .finally(() => setTimerProjectsLoading(false));
   }, []);
 
+  // restore timer from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('workhub_timer');
     if (!saved) return;
@@ -81,57 +52,64 @@ function WorkLogs() {
       setTimerStart(parsed.startTime);
       setTimerRunning(true);
       setTimerElapsedMs(Date.now() - parsed.startTime);
-    } catch (err) {
+    } catch {
       localStorage.removeItem('workhub_timer');
     }
   }, []);
 
+  // tick
   useEffect(() => {
     if (!timerRunning || !timerStart) return undefined;
-    const interval = setInterval(() => {
-      setTimerElapsedMs(Date.now() - timerStart);
-    }, 1000);
+    const interval = setInterval(() => setTimerElapsedMs(Date.now() - timerStart), 1000);
     return () => clearInterval(interval);
   }, [timerRunning, timerStart]);
 
-  function formatStatus(status) {
-    const value = status || 'pending';
-    return value.charAt(0).toUpperCase() + value.slice(1);
+  // fetch logs
+  async function fetchLogs() {
+    setLoadingLogs(true);
+    setLogsError('');
+    try {
+      const res = await API.get('logs/my/');
+      setLogs(res.data || []);
+    } catch {
+      setLogsError('Could not load logs.');
+    } finally {
+      setLoadingLogs(false);
+    }
+  }
+
+  useEffect(() => {
+    if (panel !== 'logs') return undefined;
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 30000);
+    return () => clearInterval(interval);
+  }, [panel]);
+
+  async function deleteLog(id) {
+    try {
+      await API.delete(`logs/${id}/delete/`);
+      setLogs((prev) => prev.filter((l) => l.id !== id));
+    } catch {
+      setLogsError('Could not delete log.');
+    }
   }
 
   function getRangeBounds(range) {
     const today = new Date();
-    const end = new Date(today);
-    end.setHours(23, 59, 59, 999);
-    const start = new Date(today);
-    start.setHours(0, 0, 0, 0);
-
+    const end = new Date(today); end.setHours(23, 59, 59, 999);
+    const start = new Date(today); start.setHours(0, 0, 0, 0);
     if (range === 'all') return { start: null, end: null };
     if (range === 'last_week') {
-      const weekday = today.getDay();
-      const mondayOffset = weekday === 0 ? 6 : weekday - 1;
-      end.setDate(today.getDate() - mondayOffset - 1);
-      end.setHours(23, 59, 59, 999);
-      start.setTime(end.getTime());
-      start.setDate(end.getDate() - 6);
-      start.setHours(0, 0, 0, 0);
+      const off = today.getDay() === 0 ? 6 : today.getDay() - 1;
+      end.setDate(today.getDate() - off - 1); end.setHours(23, 59, 59, 999);
+      start.setTime(end.getTime()); start.setDate(end.getDate() - 6); start.setHours(0, 0, 0, 0);
       return { start, end };
     }
-    if (range === 'last_30_days') {
-      start.setDate(today.getDate() - 30);
-      return { start, end };
-    }
-    if (range === 'last_6_months') {
-      start.setDate(today.getDate() - 182);
-      return { start, end };
-    }
-    if (range === 'last_year') {
-      start.setDate(today.getDate() - 365);
-      return { start, end };
-    }
-    const weekday = today.getDay();
-    const mondayOffset = weekday === 0 ? 6 : weekday - 1;
-    start.setDate(today.getDate() - mondayOffset);
+    if (range === 'last_30_days') { start.setDate(today.getDate() - 30); return { start, end }; }
+    if (range === 'last_6_months') { start.setDate(today.getDate() - 182); return { start, end }; }
+    if (range === 'last_year') { start.setDate(today.getDate() - 365); return { start, end }; }
+    const off = today.getDay() === 0 ? 6 : today.getDay() - 1;
+    start.setDate(today.getDate() - off);
     return { start, end };
   }
 
@@ -140,270 +118,243 @@ function WorkLogs() {
     if (!start || !end) return logs;
     return logs.filter((log) => {
       if (!log?.date) return false;
-      const logDate = new Date(`${log.date}T12:00:00`);
-      return logDate >= start && logDate <= end;
+      const d = new Date(`${log.date}T12:00:00`);
+      return d >= start && d <= end;
     });
   }, [logs, logsRange]);
 
   const elapsedLabel = useMemo(() => {
-    const totalSeconds = Math.floor(timerElapsedMs / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    const pad = (value) => String(value).padStart(2, '0');
-    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    const s = Math.floor(timerElapsedMs / 1000);
+    const pad = (v) => String(v).padStart(2, '0');
+    return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
   }, [timerElapsedMs]);
 
-  async function startTimer() {
+  function startTimer() {
     setTimerError('');
-    if (!timerTitle.trim()) {
-      setTimerError('Please enter a title before starting the timer.');
-      return;
-    }
-    if (!timerDate) {
-      setTimerError('Please select a date.');
-      return;
-    }
+    if (!timerTitle.trim()) { setTimerError('Enter a title first.'); return; }
     const startTime = Date.now();
-    setTimerStart(startTime);
-    setTimerElapsedMs(0);
-    setTimerRunning(true);
-    localStorage.setItem(
-      'workhub_timer',
-      JSON.stringify({
-        title: timerTitle.trim(),
-        date: timerDate,
-        projectId: timerProjectId || '',
-        startTime,
-      })
-    );
+    setTimerStart(startTime); setTimerElapsedMs(0); setTimerRunning(true);
+    localStorage.setItem('workhub_timer', JSON.stringify({
+      title: timerTitle.trim(), date: timerDate, projectId: timerProjectId || '', startTime,
+    }));
   }
 
   async function stopTimer() {
     if (!timerRunning) return;
-    setTimerSaving(true);
-    setTimerError('');
-    const hoursRaw = timerElapsedMs / 3600000;
-    const hours = Math.max(0.01, Number(hoursRaw.toFixed(2)));
+    setTimerSaving(true); setTimerError('');
+    const hours = Math.max(0.01, Number((timerElapsedMs / 3600000).toFixed(2)));
     try {
       await API.post('logs/submit/', {
-        title: timerTitle.trim(),
-        hours,
-        date: timerDate,
-        project: timerProjectId || null,
+        title: timerTitle.trim(), hours, date: timerDate, project: timerProjectId || null,
       });
-      setTimerTitle('');
-      setTimerDate(new Date().toISOString().slice(0, 10));
-      setTimerProjectId('');
-      setTimerRunning(false);
-      setTimerStart(null);
-      setTimerElapsedMs(0);
+      setTimerTitle(''); setTimerDate(new Date().toISOString().slice(0, 10));
+      setTimerProjectId(''); setTimerRunning(false); setTimerStart(null); setTimerElapsedMs(0);
       localStorage.removeItem('workhub_timer');
-      if (showLogs) fetchLogs();
-    } catch (err) {
-      setTimerError('Could not save timed log. Please try again.');
+      setPanel('logs'); fetchLogs();
+    } catch {
+      setTimerError('Could not save log.');
     } finally {
       setTimerSaving(false);
     }
   }
 
+  function formatStatus(s) {
+    const v = s || 'pending';
+    return v.charAt(0).toUpperCase() + v.slice(1);
+  }
+
   return (
     <div className="dashPage">
       <header className="topBar">
-        <h1 className="dashTitle">Work Logs</h1>
+        <div className="dashHeaderText">
+          <h1 className="dashTitle">Work Logs</h1>
+          <p className="dashWelcome">Track your time and activity</p>
+        </div>
         <Navbar />
       </header>
+
       <div className="dashLayout">
         <aside className="dashSidebar">
           <p className="sidebarTitle">Workspace</p>
           <p className="sidebarSubtitle">WorkHub</p>
           <nav className="sidebarNav">
-            <Link to="/dashboard" className="sidebarLink">
-              Overview
-            </Link>
-            <Link to="/work-logs" className="sidebarLink isActive">
-              Work Logs
-            </Link>
-            <Link to="/projects" className="sidebarLink">
-              Projects
-            </Link>
-            <Link to="/leaderboard" className="sidebarLink">
-              Leaderboard
-            </Link>
-            <Link to="/reports" className="sidebarLink">
-              Reports
-            </Link>
-            {isAdmin && (
-              <Link to="/admin/approvals" className="sidebarLink">
-                Approvals
-              </Link>
-            )}
-            <Link to="/settings" className="sidebarLink">
-              Settings
-            </Link>
+            <Link to="/dashboard" className="sidebarLink">Overview</Link>
+            <Link to="/work-logs" className="sidebarLink isActive">Work Logs</Link>
+            <Link to="/projects" className="sidebarLink">Projects</Link>
+            <Link to="/leaderboard" className="sidebarLink">Leaderboard</Link>
+            <Link to="/reports" className="sidebarLink">Reports</Link>
+            {isAdmin && <Link to="/admin/approvals" className="sidebarLink">Approvals</Link>}
+            <Link to="/settings" className="sidebarLink">Settings</Link>
           </nav>
         </aside>
 
         <main className="dashMain dashContent">
-          <p className="dashSubtitle">
-            Add new work logs and review recent activity
-          </p>
+          <p className="dashSubtitle">Log your work manually or use the timer</p>
 
-          <section className="card workLogCard">
-            <h2 className="cardTitle">Work Logs</h2>
-            {!showAddLogForm && (
-              <button
-                className="btn btnPrimary dashAddLogBtn"
-                onClick={() => setShowAddLogForm(true)}
-                type="button"
-              >
-                Add Log
-              </button>
-            )}
-            {showAddLogForm && (
-              <div className="timerCard">
-                <div className="timerHeader">
-                  <p className="timerTitle">Timer</p>
-                  <p className="timerValue">{elapsedLabel}</p>
-                </div>
-                {timerError && <p className="inlineError">{timerError}</p>}
-                <div className="timerFields">
-                  <input
-                    type="text"
-                    placeholder="What did you work on?"
-                    value={timerTitle}
-                    onChange={(e) => setTimerTitle(e.target.value)}
-                    disabled={timerRunning || timerSaving}
-                  />
-                  <div className="timerRow">
+          {/* action buttons */}
+          <div className="wlActions">
+            <button
+              type="button"
+              className={`btn ${panel === 'add' ? 'btnPrimary' : 'btnSecondary'}`}
+              onClick={() => setPanel(panel === 'add' ? null : 'add')}
+            >
+              {panel === 'add' ? 'Close' : '+ Add log'}
+            </button>
+            <button
+              type="button"
+              className={`btn ${panel === 'logs' ? 'btnPrimary' : 'btnSecondary'}`}
+              onClick={() => setPanel(panel === 'logs' ? null : 'logs')}
+            >
+              View my logs
+            </button>
+          </div>
+
+          {/* add log panel */}
+          {panel === 'add' && (
+            <div className="wlPanel">
+              <div className="wlTabs">
+                <button
+                  type="button"
+                  className={`wlTab ${addTab === 'timer' ? 'isActive' : ''}`}
+                  onClick={() => setAddTab('timer')}
+                >
+                  Timer
+                </button>
+                <button
+                  type="button"
+                  className={`wlTab ${addTab === 'manual' ? 'isActive' : ''}`}
+                  onClick={() => setAddTab('manual')}
+                >
+                  Manual
+                </button>
+              </div>
+
+              {addTab === 'timer' && (
+                <div className="wlTimerBody">
+                  <div className="wlTimerDisplay">
+                    <span className="wlTimerClock">{elapsedLabel}</span>
+                    {timerRunning && <span className="wlTimerLive">live</span>}
+                  </div>
+                  {timerError && <p className="inlineError">{timerError}</p>}
+                  <div className="wlFormGrid">
                     <input
+                      className="wlInput wlInputFull"
+                      type="text"
+                      placeholder="What did you work on?"
+                      value={timerTitle}
+                      onChange={(e) => setTimerTitle(e.target.value)}
+                      disabled={timerRunning || timerSaving}
+                    />
+                    <input
+                      className="wlInput"
                       type="date"
                       value={timerDate}
                       onChange={(e) => setTimerDate(e.target.value)}
                       disabled={timerRunning || timerSaving}
                     />
                     {timerProjectsLoading ? (
-                      <div className="timerSelectPlaceholder">Loading projects...</div>
+                      <div className="wlInput wlInputPlaceholder">Loading projects…</div>
                     ) : (
                       <select
+                        className="wlInput wlSelect"
                         value={timerProjectId}
                         onChange={(e) => setTimerProjectId(e.target.value)}
                         disabled={timerRunning || timerSaving}
                       >
                         <option value="">Select a project</option>
-                        {timerProjects.map((project) => (
-                          <option key={project.id} value={project.id}>
-                            {project.name}
-                          </option>
+                        {timerProjects.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
                     )}
                   </div>
+                  <div className="wlTimerBtns">
+                    {!timerRunning ? (
+                      <button className="btn btnPrimary" type="button" onClick={startTimer} disabled={timerSaving}>
+                        Start timer
+                      </button>
+                    ) : (
+                      <button className="btn btnSecondary" type="button" onClick={stopTimer} disabled={timerSaving}>
+                        {timerSaving ? 'Saving…' : 'Stop & save'}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="timerActions">
-                  {!timerRunning ? (
-                    <button
-                      className="btn btnPrimary"
-                      type="button"
-                      onClick={startTimer}
-                      disabled={timerSaving}
-                    >
-                      Start timer
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btnSecondary"
-                      type="button"
-                      onClick={stopTimer}
-                      disabled={timerSaving}
-                    >
-                      {timerSaving ? 'Saving...' : 'Stop & save log'}
-                    </button>
-                  )}
-                </div>
+              )}
+
+              {addTab === 'manual' && (
+                <WorkLogForm
+                  onSubmitted={() => {
+                    setPanel('logs');
+                    fetchLogs();
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+          {/* logs panel */}
+          {panel === 'logs' && (
+            <div className="wlPanel">
+              <div className="wlLogsHeader">
+                <p className="wlLogsTitle">My logs</p>
+                <select
+                  className="wlRangeSelect"
+                  value={logsRange}
+                  onChange={(e) => setLogsRange(e.target.value)}
+                >
+                  <option value="this_week">This week</option>
+                  <option value="last_week">Last week</option>
+                  <option value="last_30_days">Last 30 days</option>
+                  <option value="last_6_months">Last 6 months</option>
+                  <option value="last_year">Last year</option>
+                  <option value="all">All time</option>
+                </select>
               </div>
-            )}
-            {!showLogs && (
-              <button
-                className="btn dashViewLogsBtn"
-                onClick={() => {
-                  setShowLogs(true);
-                }}
-                type="button"
-              >
-                View my logs
-              </button>
-            )}
-            {showAddLogForm && (
-              <WorkLogForm
-                onSubmitted={() => {
-                  setShowLogs(true);
-                  fetchLogs();
-                }}
-              />
-            )}
-            {showLogs && (
-              <>
-                <div className="logFilters">
-                  <select
-                    value={logsRange}
-                    onChange={(e) => setLogsRange(e.target.value)}
-                  >
-                    <option value="this_week">This week</option>
-                    <option value="last_week">Last week</option>
-                    <option value="last_30_days">Last 30 days</option>
-                    <option value="last_6_months">Last 6 months</option>
-                    <option value="last_year">Last year</option>
-                    <option value="all">All time</option>
-                  </select>
+
+              {loadingLogs && <p className="inlineStatus">Loading…</p>}
+              {logsError && <p className="inlineError">{logsError}</p>}
+              {!loadingLogs && filteredLogs.length === 0 && (
+                <div className="emptyState">
+                  <p className="emptyTitle">No logs yet</p>
+                  <p className="emptySubtitle">Logs you add will show up here.</p>
                 </div>
-                {loadingLogs && <p className="inlineStatus">Loading logs…</p>}
-                {logsError && <p className="inlineError">{logsError}</p>}
-                {!loadingLogs && !logsError && filteredLogs.length === 0 && (
-                  <div className="emptyState">
-                    <p className="emptyTitle">No work logs yet</p>
-                    <p className="emptySubtitle">
-                      When you start adding logs, they will appear here.
-                    </p>
-                  </div>
-                )}
-                {!loadingLogs && filteredLogs.length > 0 && (
-                  <div className="logList">
-                    {filteredLogs.map((log) => (
-                      <div className="logItem" key={log.id}>
-                        <div>
-                          <p className="logTitle">{log.title}</p>
-                          <p className="logMeta">
-                            {log.project?.name ? log.project.name : 'No project'} •{' '}
-                            {log.date} • {log.hours} hrs
-                          </p>
-                          {log.status === 'rejected' && log.rejection_reason && (
-                            <p className="logMeta logReason">
-                              Rejection: {log.rejection_reason}
-                            </p>
-                          )}
-                        </div>
-                        <div className="logActions">
-                          {user?.role !== 'admin' && (
-                            <span className={`logStatus ${log.status || 'pending'}`}>
-                              {formatStatus(log.status)}
-                            </span>
-                          )}
-                          <button
-                            className="btn btnSecondary"
-                            type="button"
-                            onClick={() => deleteLog(log.id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
+              )}
+              {!loadingLogs && filteredLogs.length > 0 && (
+                <div className="wlLogList">
+                  {filteredLogs.map((log) => (
+                    <div className="wlLogItem" key={log.id}>
+                      <div className="wlLogLeft">
+                        <p className="wlLogTitle">{log.title}</p>
+                        <p className="wlLogMeta">
+                          {log.project?.name || 'No project'}
+                          {log.task?.title ? ` · ${log.task.title}` : ''}
+                          {' · '}{log.date}{' · '}{log.hours}h
+                        </p>
+                        {log.status === 'rejected' && log.rejection_reason && (
+                          <p className="wlLogReason">Rejected: {log.rejection_reason}</p>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </section>
+                      <div className="wlLogRight">
+                        {!isAdmin && (
+                          <span className={`logStatus ${log.status || 'pending'}`}>
+                            {formatStatus(log.status)}
+                          </span>
+                        )}
+                        <button
+                          className="wlDeleteBtn"
+                          type="button"
+                          onClick={() => deleteLog(log.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </div>
