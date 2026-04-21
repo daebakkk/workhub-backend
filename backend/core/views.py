@@ -22,57 +22,60 @@ from datetime import timedelta
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_log(request):
-    data = request.data
+    try:
+        data = request.data
 
-    log = WorkLog.objects.create(
-        staff=request.user,
-        project_id=data.get('project'),
-        task_id=data.get('task'),
-        title=data.get('title'),
-        date=data.get('date'),
-        hours=data.get('hours'),
-        status='approved' if request.user.role == 'admin' else 'pending',
-    )
-    if request.user.role == 'admin':
-        log.approved_by = request.user
-        log.approved_at = timezone.now()
-        log.save()
+        log = WorkLog.objects.create(
+            staff=request.user,
+            project_id=data.get('project'),
+            task_id=data.get('task'),
+            title=data.get('title'),
+            date=data.get('date'),
+            hours=data.get('hours'),
+            status='approved' if request.user.role == 'admin' else 'pending',
+        )
+        if request.user.role == 'admin':
+            log.approved_by = request.user
+            log.approved_at = timezone.now()
+            log.save()
 
-    # Weekly goal notification (once per week)
-    goal = float(request.user.weekly_goal_hours or 0)
-    if goal > 0 and request.user.email_notifications:
-        today = timezone.now().date()
-        # Only notify on Saturday (weekday 5)
-        if today.weekday() == 5:
-            week_start = today - timedelta(days=today.weekday())
-            week_end = week_start + timedelta(days=6)
-            total_hours = (
-                WorkLog.objects.filter(
-                    staff=request.user,
-                    date__gte=week_start,
-                    date__lte=week_end,
-                )
-                .aggregate(total=Sum('hours'))['total']
-                or 0
-            )
-            if float(total_hours) >= goal:
-                week_key = week_start.isoformat()
-                already_notified = Notification.objects.filter(
-                    user=request.user,
-                    notification_type='weekly_goal_reached',
-                    data__contains={'week_start': week_key},
-                ).exists()
-                if not already_notified:
-                    Notification.objects.create(
-                        user=request.user,
-                        title='Weekly goal reached',
-                        message='You hit your weekly hours goal. Great work!',
-                        notification_type='weekly_goal_reached',
-                        data={'week_start': week_key, 'hours': float(total_hours)},
+        # Weekly goal notification (once per week)
+        goal = float(request.user.weekly_goal_hours or 0)
+        if goal > 0 and request.user.email_notifications:
+            today = timezone.now().date()
+            # Only notify on Saturday (weekday 5)
+            if today.weekday() == 5:
+                week_start = today - timedelta(days=today.weekday())
+                week_end = week_start + timedelta(days=6)
+                total_hours = (
+                    WorkLog.objects.filter(
+                        staff=request.user,
+                        date__gte=week_start,
+                        date__lte=week_end,
                     )
+                    .aggregate(total=Sum('hours'))['total']
+                    or 0
+                )
+                if float(total_hours) >= goal:
+                    week_key = week_start.isoformat()
+                    already_notified = Notification.objects.filter(
+                        user=request.user,
+                        notification_type='weekly_goal_reached',
+                        data__contains={'week_start': week_key},
+                    ).exists()
+                    if not already_notified:
+                        Notification.objects.create(
+                            user=request.user,
+                            title='Weekly goal reached',
+                            message='You hit your weekly hours goal. Great work!',
+                            notification_type='weekly_goal_reached',
+                            data={'week_start': week_key, 'hours': float(total_hours)},
+                        )
 
-    serializer = WorkLogSerializer(log)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer = WorkLogSerializer(log)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({'detail': f'Error creating log: {str(e)}'}, status=400)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -856,21 +859,12 @@ def project_tasks(request, project_id):
     if not assignee:
         return Response({'detail': 'Assignee must be a project member'}, status=400)
 
-    try:
-        task = Task.objects.create(
-            project=project,
-            title=title,
-            assigned_to=assignee,
-            required_hours=required_hours
-        )
-    except (ProgrammingError, OperationalError):
-        return Response(
-            {
-                'detail': 'Task schema is out of date on the server. '
-                          'Deploy with migrations before creating tasks.'
-            },
-            status=503
-        )
+    task = Task.objects.create(
+        project=project,
+        title=title,
+        assigned_to=assignee,
+        required_hours=required_hours
+    )
     serializer = TaskSerializer(task)
     return Response(serializer.data, status=201)
 
@@ -912,20 +906,7 @@ def update_task(request, task_id):
             return Response({'detail': 'Assignee must be a project member'}, status=400)
         task.assigned_to = assignee
     
-    try:
-        task.save()
-    except (ProgrammingError, OperationalError):
-        return Response(
-            {
-                'detail': 'Task schema is out of date on the server. '
-                          'Deploy with migrations before updating tasks.'
-            },
-            status=503
-        )
-    serializer = TaskSerializer(task)
-    return Response(serializer.data)
-
-
+    task.save()
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_task(request, task_id):
