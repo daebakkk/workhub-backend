@@ -1963,9 +1963,62 @@ body.dark .showcaseBubble {
   }
 }
 
-.profileCard {
+/* ── Profile page ────────────────────────────────────────── */
+.profileLayout {
   max-width: 760px;
-  text-align: left;
+  display: grid;
+  gap: 24px;
+}
+
+.profileHero {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, rgba(225, 29, 139, 0.04) 100%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.profileHeroContent {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.profileAvatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.profileName {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.profileRole {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.profileSpec {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .profileGrid {
@@ -1974,24 +2027,66 @@ body.dark .showcaseBubble {
   gap: 16px;
 }
 
-.profileLabel {
-  margin: 0;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
+.profileInfoCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.profileValue {
-  margin: 6px 0 0;
+.profileInfoLabel {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.profileInfoValue {
+  margin: 0;
   font-size: 15px;
-  font-weight: 700;
   color: var(--text);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.profileFooter {
+  display: flex;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.profileFooter .btn {
+  flex: 1;
+  max-width: 200px;
 }
 
 @media (max-width: 640px) {
+  .profileHero {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+  }
+
+  .profileHeroContent {
+    flex-direction: column;
+    width: 100%;
+  }
+
   .profileGrid {
     grid-template-columns: 1fr;
+  }
+
+  .profileFooter {
+    flex-direction: column;
+  }
+
+  .profileFooter .btn {
+    max-width: 100%;
   }
 }
 
