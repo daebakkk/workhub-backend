@@ -38,6 +38,7 @@ def submit_log(request):
             log.approved_by = request.user
             log.approved_at = timezone.now()
             log.save()
+            _sync_task_progress(log)
 
         # Weekly goal notification (once per week)
         goal = float(request.user.weekly_goal_hours or 0)
@@ -121,7 +122,28 @@ def pending_logs(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def approve_log(request, log_id):
+def _sync_task_progress(log):
+    """After a log is approved, recompute and persist the task's progress.
+    Uses max(hours-based %, manual progress) so manual overrides are preserved
+    but hours always drive it forward automatically.
+    """
+    if not log.task_id:
+        return
+    try:
+        task = log.task
+        if task.required_hours and float(task.required_hours) > 0:
+            from django.db.models import Sum as _Sum
+            total = task.logs.filter(status='approved').aggregate(t=_Sum('hours'))['t'] or 0
+            hours_pct = min(100, int((float(total) / float(task.required_hours)) * 100))
+            new_progress = max(hours_pct, task.progress)
+            if task.progress != new_progress:
+                task.progress = new_progress
+                task.save(update_fields=['progress'])
+    except Exception:
+        pass
+
+
+
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
@@ -139,6 +161,7 @@ def approve_log(request, log_id):
             {'detail': 'Log schema is out of date on the server. Deploy with migrations first.'},
             status=503
         )
+    _sync_task_progress(log)
     if log.staff.email_notifications:
         Notification.objects.create(
             user=log.staff,
@@ -180,6 +203,7 @@ def approve_all_logs(request):
                 status=503
             )
         updated.append(log)
+        _sync_task_progress(log)
         if log.staff.email_notifications:
             Notification.objects.create(
                 user=log.staff,
@@ -902,6 +926,12 @@ def update_task(request, task_id):
         ):
             return Response({'detail': 'Only the assignee can update this task.'}, status=403)
         if isinstance(progress, int) and 0 <= progress <= 100:
+            # Enforce floor: can't set below what hours have already earned
+            if task.required_hours and float(task.required_hours) > 0:
+                from django.db.models import Sum as _Sum
+                total = task.logs.filter(status='approved').aggregate(t=_Sum('hours'))['t'] or 0
+                hours_pct = min(100, int((float(total) / float(task.required_hours)) * 100))
+                progress = max(progress, hours_pct)
             task.progress = progress
         else:
             return Response({'detail': 'Progress must be between 0 and 100'}, status=400)

@@ -817,7 +817,9 @@ function Projects() {
                                 <div className="taskProgressEdit">
                                   <input
                                     type="range"
-                                    min="0"
+                                    min={task.required_hours > 0
+                                      ? Math.min(100, Math.round(((task.current_hours || 0) / task.required_hours) * 100))
+                                      : 0}
                                     max="100"
                                     value={task.progress || 0}
                                     onChange={(e) =>

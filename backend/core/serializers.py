@@ -148,16 +148,27 @@ class NotificationSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     assigned_to = UserSerializer(read_only=True)
     current_hours = serializers.SerializerMethodField()
-    
+    progress = serializers.SerializerMethodField()
+
     class Meta:
         model = Task
         fields = ('id', 'title', 'required_hours', 'progress', 'current_hours', 'created_at', 'project', 'assigned_to')
-    
+
     def get_current_hours(self, obj):
         try:
-            return obj.logs.filter(status='approved').aggregate(total=Sum('hours'))['total'] or 0
-        except:
+            return float(obj.logs.filter(status='approved').aggregate(total=Sum('hours'))['total'] or 0)
+        except Exception:
             return 0
+
+    def get_progress(self, obj):
+        try:
+            if obj.required_hours and float(obj.required_hours) > 0:
+                current = float(obj.logs.filter(status='approved').aggregate(total=Sum('hours'))['total'] or 0)
+                hours_pct = min(100, int((current / float(obj.required_hours)) * 100))
+                return max(hours_pct, obj.progress)
+        except Exception:
+            pass
+        return obj.progress
 
 
 class ReportSerializer(serializers.ModelSerializer):
