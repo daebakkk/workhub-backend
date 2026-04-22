@@ -121,7 +121,6 @@ def pending_logs(request):
         return Response([])
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def _sync_task_progress(log):
     """After a log is approved, recompute and persist the task's progress.
     Uses max(hours-based %, manual progress) so manual overrides are preserved
@@ -143,7 +142,9 @@ def _sync_task_progress(log):
         pass
 
 
-
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def approve_log(request, log_id):
     if request.user.role != 'admin':
         return Response({'detail': 'Not allowed'}, status=403)
 
