@@ -52,7 +52,11 @@ function Dashboard() {
 
     fetchData();
     const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+    window.addEventListener('worklogs:updated', fetchData);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('worklogs:updated', fetchData);
+    };
   }, [isAdmin]);
 
   const stats = useMemo(

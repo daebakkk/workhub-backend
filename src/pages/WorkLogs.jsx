@@ -107,6 +107,7 @@ function WorkLogs() {
     try {
       await API.delete(`logs/${id}/delete/`);
       setLogs((prev) => prev.filter((l) => l.id !== id));
+      window.dispatchEvent(new Event('worklogs:updated'));
     } catch {
       setLogsError('Could not delete log.');
     }
@@ -171,6 +172,7 @@ function WorkLogs() {
       setTimerProjectId(''); setTimerTaskId(''); setTimerTasks([]);
       setTimerRunning(false); setTimerStart(null); setTimerElapsedMs(0);
       localStorage.removeItem('workhub_timer');
+      window.dispatchEvent(new Event('worklogs:updated'));
       setPanel('logs'); fetchLogs();
     } catch {
       setTimerError('Could not save log.');

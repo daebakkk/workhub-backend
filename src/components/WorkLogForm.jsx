@@ -42,6 +42,7 @@ function WorkLogForm({ onSubmitted }) {
       });
       setTitle(""); setHours(""); setDate(new Date().toISOString().slice(0, 10));
       setProjectId(""); setTaskId("");
+      window.dispatchEvent(new Event('worklogs:updated'));
       if (onSubmitted) onSubmitted();
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to submit log");

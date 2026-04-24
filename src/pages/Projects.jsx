@@ -87,7 +87,11 @@ function Projects() {
     }
     refreshAllTasks();
     const interval = setInterval(refreshAllTasks, 30000);
-    return () => clearInterval(interval);
+    window.addEventListener('worklogs:updated', refreshAllTasks);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('worklogs:updated', refreshAllTasks);
+    };
   }, [projects]);
 
   function toggleCreateAssignee(id) {
