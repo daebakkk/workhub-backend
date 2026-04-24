@@ -991,20 +991,18 @@ def leaderboard(request):
 
     results.sort(key=lambda x: x['total_hours'], reverse=True)
 
-    # Tag overworked / underworked based on goal
+    # Tag overworked / underworked based on absolute hours
+    # Baseline: 40h/week (8h × 5 days)
+    # Overworked: ≥ 45h logged
+    # Underworked: < 25h logged
     for entry in results:
-        goal = entry['weekly_goal_hours']
         hours = entry['total_hours']
-        if goal > 0:
-            ratio = hours / goal
-            if ratio >= 1.25:
-                entry['status'] = 'overworked'
-            elif ratio < 0.5:
-                entry['status'] = 'underworked'
-            else:
-                entry['status'] = 'on_track'
+        if hours >= 45:
+            entry['status'] = 'overworked'
+        elif hours < 25:
+            entry['status'] = 'underworked'
         else:
-            entry['status'] = 'no_goal'
+            entry['status'] = 'on_track'
 
     return Response(results)
 

@@ -37,9 +37,8 @@ function StatusPill({ status }) {
     overworked: { label: 'Overworked', cls: 'lbPillOver' },
     underworked: { label: 'Underworked', cls: 'lbPillUnder' },
     on_track: { label: 'On track', cls: 'lbPillOk' },
-    no_goal: { label: 'No goal set', cls: 'lbPillNone' },
   };
-  const { label, cls } = map[status] || map.no_goal;
+  const { label, cls } = map[status] || { label: 'On track', cls: 'lbPillOk' };
   return <span className={`lbPill ${cls}`}>{label}</span>;
 }
 
@@ -136,15 +135,15 @@ export default function Leaderboard() {
                   <p className="lbSummaryValue">{displayName(top)}</p>
                   <p className="lbSummaryMeta">{top.total_hours}h logged</p>
                 </div>
-                <div className="lbSummaryCard lbSummaryOver">
+                <div className="lbSummaryCard">
                   <p className="lbSummaryLabel">Overworked</p>
                   <p className="lbSummaryValue">{overworked.length}</p>
-                  <p className="lbSummaryMeta">≥125% of goal</p>
+                  <p className="lbSummaryMeta">≥45h this period</p>
                 </div>
-                <div className="lbSummaryCard lbSummaryUnder">
+                <div className="lbSummaryCard">
                   <p className="lbSummaryLabel">Underworked</p>
                   <p className="lbSummaryValue">{underworked.length}</p>
-                  <p className="lbSummaryMeta">&lt;50% of goal</p>
+                  <p className="lbSummaryMeta">&lt;25h this period</p>
                 </div>
               </div>
 

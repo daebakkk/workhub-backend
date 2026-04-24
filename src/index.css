@@ -2036,7 +2036,7 @@ body.dark .showcaseBubble {
 }
 
 .profileHero {
-  background: linear-gradient(135deg, var(--accent-soft) 0%, rgba(225, 29, 139, 0.04) 100%);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 32px;
@@ -2121,13 +2121,15 @@ body.dark .showcaseBubble {
 
 .profileFooter {
   display: flex;
+  justify-content: center;
   gap: 10px;
   padding-top: 8px;
 }
 
 .profileFooter .btn {
-  flex: 1;
-  max-width: 200px;
+  min-width: 160px;
+  text-align: center;
+  justify-content: center;
 }
 
 @media (max-width: 640px) {
@@ -2148,10 +2150,12 @@ body.dark .showcaseBubble {
 
   .profileFooter {
     flex-direction: column;
+    align-items: center;
   }
 
   .profileFooter .btn {
-    max-width: 100%;
+    width: 100%;
+    max-width: 300px;
   }
 }
 
@@ -2356,16 +2360,6 @@ body.dark .showcaseBubble {
   border-radius: 16px;
   padding: 16px 18px;
   box-shadow: var(--shadow);
-}
-
-.lbSummaryCard.lbSummaryOver {
-  border-color: rgba(251, 146, 60, 0.35);
-  background: rgba(251, 146, 60, 0.06);
-}
-
-.lbSummaryCard.lbSummaryUnder {
-  border-color: rgba(99, 102, 241, 0.3);
-  background: rgba(99, 102, 241, 0.06);
 }
 
 .lbSummaryLabel {

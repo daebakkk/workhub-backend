@@ -224,6 +224,13 @@ function Projects() {
   }
 
   async function updateTaskProgress(taskId, projectId, newProgress) {
+    // Optimistically update local state so slider moves immediately
+    setTasksByProject((prev) => ({
+      ...prev,
+      [projectId]: (prev[projectId] || []).map((task) =>
+        task.id === taskId ? { ...task, progress: newProgress } : task
+      ),
+    }));
     try {
       const res = await API.patch(`tasks/${taskId}/`, { progress: newProgress });
       setTasksByProject((prev) => ({
@@ -790,44 +797,52 @@ function Projects() {
                                     {task.current_hours || 0}/{task.required_hours}h
                                   </span>
                                 )}
-                                <div className="taskProgressWrap">
-                                  <div className="taskProgressBar">
-                                    <div
-                                      className="taskProgressFill"
-                                      style={{ width: `${task.progress || 0}%` }}
-                                    />
-                                  </div>
-                                  <span className="taskProgressText">{task.progress || 0}%</span>
-                                </div>
-                                {isAssignee && (
-                                  <button
-                                    className="taskDelete"
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      deleteTask(task.id, project.id);
-                                    }}
-                                  >
-                                    ✕
-                                  </button>
-                                )}
+                                {(() => {
+                                  const hoursPct = task.required_hours > 0
+                                    ? Math.min(100, Math.round(((task.current_hours || 0) / task.required_hours) * 100))
+                                    : 0;
+                                  const effectiveProgress = Math.max(hoursPct, task.progress || 0);
+                                  return (
+                                    <>
+                                      <div className="taskProgressWrap">
+                                        <div className="taskProgressBar">
+                                          <div
+                                            className="taskProgressFill"
+                                            style={{ width: `${effectiveProgress}%` }}
+                                          />
+                                        </div>
+                                        <span className="taskProgressText">{effectiveProgress}%</span>
+                                      </div>
+                                      {isAssignee && (
+                                        <button
+                                          className="taskDelete"
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            deleteTask(task.id, project.id);
+                                          }}
+                                        >
+                                          ✕
+                                        </button>
+                                      )}
+                                      {isAssignee && (
+                                        <div className="taskProgressEdit" style={{ width: '100%' }}>
+                                          <input
+                                            type="range"
+                                            min={hoursPct}
+                                            max="100"
+                                            value={effectiveProgress}
+                                            onChange={(e) =>
+                                              updateTaskProgress(task.id, project.id, parseInt(e.target.value))
+                                            }
+                                          />
+                                        </div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
-                              {isAssignee && (
-                                <div className="taskProgressEdit">
-                                  <input
-                                    type="range"
-                                    min={task.required_hours > 0
-                                      ? Math.min(100, Math.round(((task.current_hours || 0) / task.required_hours) * 100))
-                                      : 0}
-                                    max="100"
-                                    value={task.progress || 0}
-                                    onChange={(e) =>
-                                      updateTaskProgress(task.id, project.id, parseInt(e.target.value))
-                                    }
-                                  />
-                                </div>
-                              )}
                             </div>
                           );
                         })}
