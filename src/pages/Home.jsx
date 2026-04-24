@@ -63,7 +63,7 @@ export default function Home() {
               <p className="heroKicker">Built for dev teams</p>
               <h1 className="heroTitle">
                 Track work.<br />
-                Ship faster.<br />
+                Deliver faster.<br />
                 <span className="heroAccent">Stay aligned.</span>
               </h1>
               <p className="heroSubtitle">
