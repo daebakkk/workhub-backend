@@ -120,11 +120,11 @@ def pending_logs(request):
     except (ProgrammingError, OperationalError, DatabaseError):
         return Response([])
 
-@api_view(['POST'])
+
 def _sync_task_progress(log):
-    """After a log is approved, recompute and persist the task's progress.
-    Uses max(hours-based %, manual progress) so manual overrides are preserved
-    but hours always drive it forward automatically.
+    """Recompute and persist task progress after a log is approved.
+    Uses max(hours-based %, manual progress) so hours drive it forward
+    automatically but manual overrides are preserved.
     """
     if not log.task_id:
         return
