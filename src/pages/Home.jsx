@@ -1,10 +1,49 @@
-import Navbar from '../components/Navbar';
 import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
-function Home() {
+const FEATURES = [
+  {
+    icon: '⏱',
+    title: 'Timer & manual logs',
+    desc: 'Start a timer or log hours manually. Every second of work captured, linked to a project and task.',
+  },
+  {
+    icon: '📁',
+    title: 'Project tracking',
+    desc: 'Create projects, assign tasks with required hours, and watch progress move as logs come in.',
+  },
+  {
+    icon: '✓',
+    title: 'Approval workflow',
+    desc: 'Admins review, approve or reject logs with one click. Staff get notified instantly.',
+  },
+  {
+    icon: '📊',
+    title: 'Leaderboard',
+    desc: 'See who\'s putting in the hours. Spot overworked and underworked team members at a glance.',
+  },
+  {
+    icon: '🎯',
+    title: 'Weekly goals',
+    desc: 'Set a weekly hour target and track your progress against it right from the dashboard.',
+  },
+  {
+    icon: '📄',
+    title: 'Reports',
+    desc: 'Generate detailed breakdowns by project, date, and status. Export-ready summaries.',
+  },
+];
+
+const STEPS = [
+  { num: '01', title: 'Log your work', desc: 'Use the timer or manual entry to capture what you worked on, how long, and which project.' },
+  { num: '02', title: 'Get approved', desc: 'Your admin reviews and approves logs. You get notified and your hours count toward your goal.' },
+  { num: '03', title: 'Track progress', desc: 'Watch task progress bars move, hit your weekly goal, and climb the leaderboard.' },
+];
+
+export default function Home() {
   return (
-    <div className="page landingPage">
-      <header className="topBar landingTopBar">
+    <div className="landingPage">
+      <header className="landingTopBar">
         <div className="landingLogo">
           <span className="logoBadge">WH</span>
           <div>
@@ -16,36 +55,35 @@ function Home() {
       </header>
 
       <main className="landingMain">
+
+        {/* ── Hero ── */}
         <section className="landingHero">
           <div className="heroGrid">
             <div className="heroCopy">
-              <p className="heroKicker">Your work, beautifully organized</p>
+              <p className="heroKicker">Built for dev teams</p>
               <h1 className="heroTitle">
-                A polished workspace for tracking progress and celebrating momentum.
+                Track work.<br />
+                Ship faster.<br />
+                <span className="heroAccent">Stay aligned.</span>
               </h1>
               <p className="heroSubtitle">
-                WorkHub keeps your logs, projects, and approvals in one place so teams
-                stay aligned without the chaos. It’s structured, but it still feels
-                human.
+                WorkHub gives your team one place to log hours, manage projects,
+                and celebrate progress — without the spreadsheet chaos.
               </p>
               <div className="heroButtons">
-                <Link className="btn btnPrimary" to="/login">
-                  Login
-                </Link>
-                <Link className="btn btnSecondary" to="/signup">
-                  Sign Up
-                </Link>
+                <Link className="btn btnPrimary" to="/signup">Get started free</Link>
+                <Link className="btn btnSecondary" to="/login">Sign in</Link>
               </div>
               <div className="heroHighlights">
-                <div>
-                  <p className="heroHighlightValue">30s</p>
-                  <p className="heroHighlightLabel">Live refresh</p>
-                </div>
-                <div>
+                <div className="heroHighlightItem">
                   <p className="heroHighlightValue">50+</p>
                   <p className="heroHighlightLabel">Specializations</p>
                 </div>
-                <div>
+                <div className="heroHighlightItem">
+                  <p className="heroHighlightValue">Live</p>
+                  <p className="heroHighlightLabel">Auto-refresh</p>
+                </div>
+                <div className="heroHighlightItem">
                   <p className="heroHighlightValue">1</p>
                   <p className="heroHighlightLabel">Unified workspace</p>
                 </div>
@@ -54,16 +92,8 @@ function Home() {
 
             <div className="heroVisual">
               <div className="heroCard heroCardMain">
-                <img
-                  src="/landing-hero.svg"
-                  alt="WorkHub overview illustration"
-                  className="heroImage heroImageLight"
-                />
-                <img
-                  src="/landing-hero-dark.svg"
-                  alt="WorkHub overview illustration"
-                  className="heroImage heroImageDark"
-                />
+                <img src="/landing-hero.svg" alt="WorkHub dashboard" className="heroImage heroImageLight" />
+                <img src="/landing-hero-dark.svg" alt="WorkHub dashboard" className="heroImage heroImageDark" />
                 <div className="heroCardFooter">
                   <div>
                     <p className="heroCardTitle">Weekly cadence</p>
@@ -73,16 +103,8 @@ function Home() {
                 </div>
               </div>
               <div className="heroCard heroCardMini">
-                <img
-                  src="/landing-collab.svg"
-                  alt="Collaborative planning illustration"
-                  className="heroImageMini heroImageLight"
-                />
-                <img
-                  src="/landing-collab-dark.svg"
-                  alt="Collaborative planning illustration"
-                  className="heroImageMini heroImageDark"
-                />
+                <img src="/landing-collab.svg" alt="Team collaboration" className="heroImageMini heroImageLight" />
+                <img src="/landing-collab-dark.svg" alt="Team collaboration" className="heroImageMini heroImageDark" />
                 <div>
                   <p className="heroCardTitle">Team-ready</p>
                   <p className="heroCardSubtitle">Assign, align, deliver</p>
@@ -96,77 +118,57 @@ function Home() {
           </div>
         </section>
 
+        {/* ── Features ── */}
         <section className="landingSection">
           <div className="sectionHeader">
-            <h2>Everything you need, nothing you don’t</h2>
-            <p>
-              Keep your team in flow with the right mix of structure, visibility,
-              and momentum.
-            </p>
+            <p className="sectionKicker">Features</p>
+            <h2>Everything your team needs</h2>
+            <p className="sectionSub">No bloat. Just the tools that keep work moving.</p>
           </div>
           <div className="featureGrid">
-            <article className="featureCard">
-              <h3>Live work logs</h3>
-              <p>Capture progress in seconds and share it instantly with admins.</p>
-            </article>
-            <article className="featureCard">
-              <h3>Project clarity</h3>
-              <p>Track projects by status, teammates, and completion signals.</p>
-            </article>
-            <article className="featureCard">
-              <h3>Approval rhythm</h3>
-              <p>Approve, reject, and report without leaving the workspace.</p>
-            </article>
-            <article className="featureCard">
-              <h3>Goal tracking</h3>
-              <p>Set weekly targets and celebrate when you hit them.</p>
-            </article>
+            {FEATURES.map((f) => (
+              <article className="featureCard" key={f.title}>
+                <span className="featureIcon">{f.icon}</span>
+                <h3>{f.title}</h3>
+                <p>{f.desc}</p>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section className="landingSection landingShowcase">
-          <div className="showcaseCard">
-            <div>
-              <h2>Designed for teams who move fast</h2>
-              <p>
-                Admins can review logs, staff can focus on execution, and everyone
-                sees the same story.
-              </p>
-              <div className="showcaseTags">
-                <span>Approvals</span>
-                <span>Reports</span>
-                <span>Notifications</span>
+        {/* ── How it works ── */}
+        <section className="landingSection">
+          <div className="sectionHeader">
+            <p className="sectionKicker">How it works</p>
+            <h2>Up and running in minutes</h2>
+            <p className="sectionSub">Three steps from signup to full visibility.</p>
+          </div>
+          <div className="stepsGrid">
+            {STEPS.map((s) => (
+              <div className="stepCard" key={s.num}>
+                <span className="stepNum">{s.num}</span>
+                <h3 className="stepTitle">{s.title}</h3>
+                <p className="stepDesc">{s.desc}</p>
               </div>
-            </div>
-            <div className="showcaseVisual">
-              <div className="showcaseBubble">Reports in seconds</div>
-              <div className="showcaseBubble">Auto-refresh insights</div>
-              <div className="showcaseBubble">Clear accountability</div>
-            </div>
+            ))}
           </div>
         </section>
 
+        {/* ── CTA ── */}
         <section className="landingSection ctaSection">
           <div className="ctaPanel">
-            <div>
+            <div className="ctaCopy">
               <h2>Ready to make progress feel good?</h2>
-              <p>
-                Get started in minutes and give your team a home for their work.
-              </p>
+              <p>Get your team set up in minutes. No credit card required.</p>
             </div>
             <div className="heroButtons">
-              <Link className="btn btnPrimary" to="/signup">
-                Create your account
-              </Link>
-              <Link className="btn btnSecondary" to="/login">
-                I already have one
-              </Link>
+              <Link className="btn btnPrimary" to="/signup">Create your account</Link>
+              <Link className="btn btnSecondary" to="/login">I already have one</Link>
             </div>
           </div>
         </section>
+
       </main>
     </div>
   );
 }
-
-export default Home;

@@ -944,21 +944,22 @@ a {
   display: grid;
   place-items: center;
   font-weight: 700;
-  background: #ffffff;
-  color: var(--accent);
-  box-shadow: 0 10px 20px rgba(225, 29, 139, 0.15);
+  font-size: 0.8rem;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(225, 29, 139, 0.25);
 }
 
 .logoName {
   margin: 0;
   font-weight: 700;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   line-height: 1.1;
 }
 
 .logoTag {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -966,14 +967,15 @@ a {
 .landingMain {
   display: flex;
   flex-direction: column;
-  gap: 64px;
-  padding: 12px 40px 80px;
+  gap: 80px;
+  padding: 12px 40px 100px;
 }
 
+/* ── Hero ── */
 .landingHero {
   background: linear-gradient(130deg, #fff7fb 10%, #f0f6ff 90%);
   border-radius: 32px;
-  padding: 48px;
+  padding: 56px 48px;
   box-shadow: var(--shadow);
   border: 1px solid rgba(225, 29, 139, 0.08);
 }
@@ -981,65 +983,93 @@ a {
 .heroGrid {
   display: grid;
   gap: 48px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   align-items: center;
 }
 
 .heroKicker {
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 0.75rem;
-  color: var(--accent-dark);
-  margin-bottom: 12px;
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heroKicker::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
 }
 
 .heroTitle {
-  font-size: clamp(2.2rem, 2.8vw, 3.4rem);
+  font-size: clamp(2.4rem, 3.5vw, 3.8rem);
   line-height: 1.05;
-  margin: 0 0 16px;
+  margin: 0 0 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.heroAccent {
+  color: var(--accent);
 }
 
 .heroSubtitle {
   font-size: 1.05rem;
   color: var(--text-muted);
-  margin: 0 0 24px;
+  margin: 0 0 28px;
+  line-height: 1.7;
+  max-width: 480px;
 }
 
 .heroButtons {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .heroHighlights {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 16px;
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.heroHighlightItem {
+  display: flex;
+  flex-direction: column;
 }
 
 .heroHighlightValue {
   font-size: 1.6rem;
   margin: 0;
-  font-weight: 700;
+  font-weight: 800;
+  color: var(--text);
 }
 
 .heroHighlightLabel {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
 }
 
 .heroVisual {
   position: relative;
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
 .heroCard {
   background: #ffffff;
-  border-radius: 24px;
+  border-radius: 20px;
   padding: 16px;
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
 }
@@ -1050,20 +1080,15 @@ a {
 
 .heroImage {
   width: 100%;
-  border-radius: 20px;
+  border-radius: 14px;
   display: block;
 }
 
-.heroImageDark {
-  display: none;
-}
-
-.heroImageLight {
-  display: block;
-}
+.heroImageDark { display: none; }
+.heroImageLight { display: block; }
 
 .heroCardFooter {
-  margin-top: 16px;
+  margin-top: 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1072,182 +1097,255 @@ a {
 .statusPill {
   background: var(--accent-soft);
   color: var(--accent-dark);
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 999px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
 .heroCardMini {
   display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 16px;
+  grid-template-columns: 72px 1fr;
+  gap: 14px;
   align-items: center;
 }
 
 .heroImageMini {
-  width: 80px;
-  height: 80px;
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
   object-fit: cover;
 }
 
 .heroCardTitle {
-  margin: 0 0 4px;
+  margin: 0 0 3px;
   font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .heroCardSubtitle {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .floatingBadge {
   position: absolute;
-  right: -10px;
-  top: 20px;
+  right: -12px;
+  top: 16px;
   background: #ffffff;
-  padding: 10px 14px;
+  padding: 9px 14px;
   border-radius: 999px;
   display: flex;
-  gap: 8px;
+  gap: 7px;
   align-items: center;
-  box-shadow: 0 16px 30px rgba(225, 29, 139, 0.15);
+  box-shadow: 0 12px 28px rgba(225, 29, 139, 0.18);
   font-weight: 600;
+  font-size: 0.88rem;
 }
 
+/* ── Sections ── */
 .landingSection {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
+}
+
+.sectionHeader {
+  max-width: 560px;
+}
+
+.sectionKicker {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin: 0 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionKicker::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
 }
 
 .sectionHeader h2 {
   margin: 0 0 10px;
+  font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
-.sectionHeader p {
+.sectionSub {
   margin: 0;
   color: var(--text-muted);
+  font-size: 1rem;
 }
 
+/* ── Feature cards ── */
 .featureGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
 }
 
 .featureCard {
   background: var(--surface);
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 24px;
   border: 1px solid var(--border);
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.featureCard:hover {
+  border-color: rgba(225, 29, 139, 0.25);
+  box-shadow: 0 8px 24px rgba(225, 29, 139, 0.08);
+}
+
+.featureIcon {
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .featureCard h3 {
-  margin: 0 0 8px;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .featureCard p {
   margin: 0;
   color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
-.landingShowcase .showcaseCard {
+/* ── Steps ── */
+.stepsGrid {
   display: grid;
-  gap: 24px;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  padding: 32px;
-  border-radius: 28px;
-  background: #ffffff;
-  border: 1px solid rgba(225, 29, 139, 0.12);
+  gap: 16px;
 }
 
-.showcaseTags {
+.stepCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.showcaseTags span {
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.showcaseVisual {
-  display: grid;
+  flex-direction: column;
   gap: 12px;
+  position: relative;
+  overflow: hidden;
 }
 
-.showcaseBubble {
-  padding: 14px 18px;
-  border-radius: 18px;
-  background: #fdf2f8;
-  font-weight: 600;
+.stepCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), #ec4899);
 }
 
+.stepNum {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  opacity: 0.25;
+  line-height: 1;
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.stepDesc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ── CTA ── */
 .ctaSection .ctaPanel {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 28px;
   justify-content: space-between;
   align-items: center;
-  padding: 32px;
+  padding: 48px;
   border-radius: 28px;
-  background: linear-gradient(135deg, #ffe4f3, #f0f6ff);
+  background: linear-gradient(135deg, #ffe4f3 0%, #f0f6ff 100%);
   border: 1px solid rgba(225, 29, 139, 0.12);
 }
 
+.ctaCopy h2 {
+  margin: 0 0 8px;
+  font-size: clamp(1.4rem, 2vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ctaCopy p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* ── Dark mode ── */
 body.dark .landingPage {
-  background: radial-gradient(circle at top left, rgba(244, 114, 182, 0.18) 0%, transparent 45%),
-    radial-gradient(circle at top right, rgba(99, 102, 241, 0.18) 0%, transparent 40%),
+  background: radial-gradient(circle at top left, rgba(244, 114, 182, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
     var(--bg);
 }
 
 body.dark .landingHero {
   background: linear-gradient(130deg, rgba(31, 41, 55, 0.85) 10%, rgba(17, 24, 39, 0.9) 90%);
-  border: 1px solid rgba(244, 114, 182, 0.18);
+  border-color: rgba(244, 114, 182, 0.15);
 }
 
 body.dark .logoBadge {
-  background: var(--surface);
-  color: var(--accent);
-  box-shadow: 0 10px 24px rgba(244, 114, 182, 0.2);
+  background: var(--accent);
+  box-shadow: 0 10px 24px rgba(244, 114, 182, 0.25);
 }
 
 body.dark .heroCard,
-body.dark .floatingBadge,
-body.dark .landingShowcase .showcaseCard,
-body.dark .ctaSection .ctaPanel {
+body.dark .floatingBadge {
   background: var(--surface);
-  border-color: rgba(244, 114, 182, 0.18);
+  border: 1px solid var(--border);
 }
 
-body.dark .heroImageLight {
-  display: none;
-}
-
-body.dark .heroImageDark {
-  display: block;
-}
+body.dark .heroImageLight { display: none; }
+body.dark .heroImageDark { display: block; }
 
 body.dark .featureCard {
-  border-color: rgba(244, 114, 182, 0.12);
-  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.4);
+  border-color: rgba(244, 114, 182, 0.1);
 }
 
-body.dark .showcaseBubble {
-  background: rgba(244, 114, 182, 0.18);
-  color: var(--text);
+body.dark .featureCard:hover {
+  border-color: rgba(244, 114, 182, 0.3);
 }
 
+body.dark .ctaSection .ctaPanel {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.1) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border-color: rgba(244, 114, 182, 0.15);
+}
+
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .landingTopBar,
   .landingMain {
@@ -1256,7 +1354,7 @@ body.dark .showcaseBubble {
   }
 
   .landingHero {
-    padding: 28px;
+    padding: 32px 24px;
   }
 
   .heroCardMini {
@@ -1266,6 +1364,16 @@ body.dark .showcaseBubble {
   .floatingBadge {
     position: static;
     justify-content: center;
+  }
+
+  .ctaSection .ctaPanel {
+    padding: 32px 24px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heroHighlights {
+    gap: 20px;
   }
 }
 
