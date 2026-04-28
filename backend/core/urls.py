@@ -33,4 +33,7 @@ urlpatterns = [
     path('tasks/<int:task_id>/', views.update_task),
     path('tasks/<int:task_id>/delete/', views.delete_task),
     path('leaderboard/', views.leaderboard),
+    path('teams/', views.teams_list),
+    path('leaderboard/teams/', views.team_leaderboard),
+    path('projects/team/', views.team_projects),
 ]

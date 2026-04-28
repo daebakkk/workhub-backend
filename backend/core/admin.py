@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import User, Project, WorkLog, Task
+from .models import User, Project, WorkLog, Task, Team
+
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    list_display = ('name', 'get_name_display')
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):

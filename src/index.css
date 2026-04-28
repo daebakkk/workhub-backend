@@ -2453,6 +2453,34 @@ body.dark .ctaSection .ctaPanel {
   flex-wrap: wrap;
 }
 
+.lbTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.lbTab {
+  padding: 7px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lbTab:hover {
+  background: var(--surface-hover, var(--border));
+  color: var(--text);
+}
+
+.lbTabActive {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
 .lbSummary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

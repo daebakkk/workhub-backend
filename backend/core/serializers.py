@@ -1,10 +1,24 @@
 from rest_framework import serializers
-from .models import User, Project, WorkLog, Task, Report, Notification
+from .models import User, Project, WorkLog, Task, Report, Notification, Team
 from django.contrib.auth import authenticate
 from django.db.models import Sum
 from django.db.utils import OperationalError, ProgrammingError
 
+
+class TeamSerializer(serializers.ModelSerializer):
+    display_name = serializers.CharField(source='get_name_display', read_only=True)
+
+    class Meta:
+        model = Team
+        fields = ('id', 'name', 'display_name')
+
+
 class UserSerializer(serializers.ModelSerializer):
+    team = TeamSerializer(read_only=True)
+    team_id = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(), source='team', write_only=True, required=False, allow_null=True
+    )
+
     class Meta:
         model = User
         fields = (
@@ -18,6 +32,8 @@ class UserSerializer(serializers.ModelSerializer):
             'email_notifications',
             'dark_mode',
             'weekly_goal_hours',
+            'team',
+            'team_id',
         )
 
 
@@ -96,6 +112,9 @@ class WorkLogSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    team_id = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(), source='team', required=False, allow_null=True
+    )
 
     class Meta:
         model = User
@@ -108,6 +127,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'role',
             'specialization',
             'weekly_goal_hours',
+            'team_id',
         )
 
     def validate_email(self, value):
@@ -118,6 +138,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             )
         return value
     def create(self, validated_data):
+        team = validated_data.pop('team', None)
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -127,6 +148,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             role=validated_data.get('role', 'staff'),
             specialization=validated_data.get('specialization', 'frontend'),
             weekly_goal_hours=validated_data.get('weekly_goal_hours', 0),
+            team=team,
         )
         return user
 

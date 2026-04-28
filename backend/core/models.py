@@ -1,6 +1,20 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+
+class Team(models.Model):
+    TEAM_CHOICES = (
+        ('team_a', 'Team A'),
+        ('team_b', 'Team B'),
+        ('team_c', 'Team C'),
+        ('team_d', 'Team D'),
+    )
+    name = models.CharField(max_length=10, choices=TEAM_CHOICES, unique=True)
+
+    def __str__(self):
+        return self.get_name_display()
+
+
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -68,6 +82,13 @@ class User(AbstractUser):
     email_notifications = models.BooleanField(default=True)
     dark_mode = models.BooleanField(default=False)
     weekly_goal_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    team = models.ForeignKey(
+        'Team',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='members',
+    )
 
     def __str__(self):
         return f"{self.username} ({self.role})"

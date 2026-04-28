@@ -108,12 +108,15 @@ export default function Settings() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [specialization, setSpecialization] = useState('frontend');
+  const [team, setTeam] = useState(null);
+  const [teams, setTeams] = useState([]);
 
   // drafts
   const [nameDraft, setNameDraft] = useState({ first: '', last: '' });
   const [usernameDraft, setUsernameDraft] = useState('');
   const [emailDraft, setEmailDraft] = useState('');
   const [specDraft, setSpecDraft] = useState('frontend');
+  const [teamDraft, setTeamDraft] = useState('');
 
   // open editors
   const [openEditor, setOpenEditor] = useState(null); // 'name'|'username'|'email'|'spec'|'password'
@@ -141,20 +144,24 @@ export default function Settings() {
   }
 
   useEffect(() => {
-    API.get('settings/')
-      .then((res) => {
+    Promise.all([API.get('settings/'), API.get('teams/')])
+      .then(([settingsRes, teamsRes]) => {
+        const res = settingsRes;
         setFirstName(res.data.first_name || '');
         setLastName(res.data.last_name || '');
         setUsername(res.data.username || '');
         setEmail(res.data.email || '');
         setSpecialization(res.data.specialization || 'frontend');
+        setTeam(res.data.team || null);
         setNameDraft({ first: res.data.first_name || '', last: res.data.last_name || '' });
         setUsernameDraft(res.data.username || '');
         setEmailDraft(res.data.email || '');
         setSpecDraft(res.data.specialization || 'frontend');
+        setTeamDraft(res.data.team ? String(res.data.team.id) : '');
         setNotifications(!!res.data.email_notifications);
         setDarkMode(!!res.data.dark_mode);
         applyTheme(!!res.data.dark_mode);
+        setTeams(teamsRes.data || []);
       })
       .catch(() => setError('Could not load settings.'))
       .finally(() => setLoading(false));
@@ -170,10 +177,12 @@ export default function Settings() {
       setUsername(res.data.username || '');
       setEmail(res.data.email || '');
       setSpecialization(res.data.specialization || 'frontend');
+      setTeam(res.data.team || null);
       setNameDraft({ first: res.data.first_name || '', last: res.data.last_name || '' });
       setUsernameDraft(res.data.username || '');
       setEmailDraft(res.data.email || '');
       setSpecDraft(res.data.specialization || 'frontend');
+      setTeamDraft(res.data.team ? String(res.data.team.id) : '');
       localStorage.setItem('user', JSON.stringify(res.data));
       window.dispatchEvent(new Event('user:updated'));
       showToast(successMsg);
@@ -356,6 +365,36 @@ export default function Settings() {
                     <select className="stInput stSelect" value={specDraft} onChange={(e) => setSpecDraft(e.target.value)}>
                       {SPECIALIZATIONS.map(([val, lbl]) => (
                         <option key={val} value={val}>{lbl}</option>
+                      ))}
+                    </select>
+                    <button className="btn btnPrimary stSaveBtn" type="submit" disabled={savingProfile}>
+                      {savingProfile ? 'Saving…' : 'Save'}
+                    </button>
+                  </form>
+                </FieldRow>
+
+                <FieldRow
+                  label="Team"
+                  value={team ? team.display_name : 'Not set'}
+                  open={openEditor === 'team'}
+                  onToggle={() => toggleEditor('team')}
+                  saving={savingProfile}
+                >
+                  <form
+                    className="stForm"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      saveProfile(
+                        { team_id: teamDraft ? Number(teamDraft) : null },
+                        'Team updated.',
+                        () => setOpenEditor(null)
+                      );
+                    }}
+                  >
+                    <select className="stInput stSelect" value={teamDraft} onChange={(e) => setTeamDraft(e.target.value)}>
+                      <option value="">No team</option>
+                      {teams.map((t) => (
+                        <option key={t.id} value={String(t.id)}>{t.display_name}</option>
                       ))}
                     </select>
                     <button className="btn btnPrimary stSaveBtn" type="submit" disabled={savingProfile}>

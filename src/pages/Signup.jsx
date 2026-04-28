@@ -10,6 +10,8 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [specialization, setSpecialization] = useState('frontend');
+  const [team, setTeam] = useState('');
+  const [teams, setTeams] = useState([]);
   const [error, setError] = useState('');
   const [signingUp, setSigningUp] = useState(false);
 
@@ -18,6 +20,11 @@ export default function Signup() {
     localStorage.removeItem('user');
     localStorage.removeItem('refresh');
     delete API.defaults.headers.common.Authorization;
+    // fetch teams without auth
+    API.get('teams/').then((res) => {
+      setTeams(res.data || []);
+      if (res.data?.length) setTeam(String(res.data[0].id));
+    }).catch(() => {});
   }, []);
 
   const allowedDomain = '@thefifthlab.com';
@@ -42,6 +49,7 @@ export default function Signup() {
         last_name: lastName,
         role: 'staff',
         specialization,
+        team_id: team ? Number(team) : null,
       });
 
       navigate('/login');
@@ -146,6 +154,14 @@ export default function Signup() {
             <option value="product_manager">Product Manager</option>
             <option value="gis">GIS Specialist</option>
           </select>
+
+          {teams.length > 0 && (
+            <select value={team} onChange={(e) => setTeam(e.target.value)} required>
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>{t.display_name}</option>
+              ))}
+            </select>
+          )}
 
           <button className="btn btnPrimary" type="submit" disabled={signingUp}>
             {signingUp ? 'Creating account...' : 'Sign Up'}

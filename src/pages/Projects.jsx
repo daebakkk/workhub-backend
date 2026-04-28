@@ -34,6 +34,8 @@ function Projects() {
   const [createTab, setCreateTab] = useState('self'); // 'self' or 'others'
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState(isAdmin ? 'my-projects' : 'all');
+  const [teamProjects, setTeamProjects] = useState([]);
+  const [teamProjectsLoading, setTeamProjectsLoading] = useState(false);
 
   useEffect(() => {
     async function fetchProjects() {
@@ -75,6 +77,21 @@ function Projects() {
 
     fetchProjects();
   }, [isAdmin]);
+
+  useEffect(() => {
+    async function fetchTeamProjects() {
+      setTeamProjectsLoading(true);
+      try {
+        const res = await API.get('projects/team/');
+        setTeamProjects(res.data || []);
+      } catch {
+        // silently fail — user may not have a team
+      } finally {
+        setTeamProjectsLoading(false);
+      }
+    }
+    fetchTeamProjects();
+  }, []);
 
   useEffect(() => {
     if (!projects.length) return undefined;
@@ -362,6 +379,7 @@ function Projects() {
     { key: 'in-progress', label: 'In progress' },
     { key: 'completed', label: 'Completed' },
     ...(isAdmin ? [{ key: 'staff-projects', label: 'Staff projects' }] : []),
+    { key: 'team-projects', label: 'Team projects' },
   ];
 
   return (
@@ -602,7 +620,7 @@ function Projects() {
           <section className="projectBoard">
             {loading && <p className="inlineStatus">Loading projects...</p>}
             {error && <p className="inlineError">{error}</p>}
-            {!loading && !error && projects.length === 0 && (
+            {!loading && !error && projects.length === 0 && activeTab !== 'team-projects' && (
               <div className="emptyState">
                 <p className="emptyTitle">No projects yet</p>
                 <p className="emptySubtitle">
@@ -610,7 +628,64 @@ function Projects() {
                 </p>
               </div>
             )}
-            {!loading && !error && projects
+            {/* Team Projects tab */}
+            {activeTab === 'team-projects' && (
+              <>
+                {teamProjectsLoading && <p className="inlineStatus">Loading team projects...</p>}
+                {!teamProjectsLoading && teamProjects.length === 0 && (
+                  <div className="emptyState">
+                    <p className="emptyTitle">No team projects</p>
+                    <p className="emptySubtitle">
+                      {user?.team ? 'No projects have been worked on by your team yet.' : 'You are not assigned to a team. Update your team in Settings.'}
+                    </p>
+                  </div>
+                )}
+                {!teamProjectsLoading && teamProjects
+                  .filter((project) => {
+                    const term = searchTerm.trim().toLowerCase();
+                    if (!term) return true;
+                    return (project.name?.toLowerCase() || '').includes(term) ||
+                      (project.description?.toLowerCase() || '').includes(term);
+                  })
+                  .map((project) => {
+                    const tasks = tasksByProject[project.id] || [];
+                    const hasTasksLoaded = Object.prototype.hasOwnProperty.call(tasksByProject, project.id);
+                    const totalTasks = project.total_tasks || 0;
+                    const completedTasks = project.completed_tasks || 0;
+                    const derivedTotal = tasks.length;
+                    const derivedCompleted = tasks.filter((t) => t.progress === 100).length;
+                    const displayTotal = hasTasksLoaded ? derivedTotal : totalTasks;
+                    const displayCompleted = hasTasksLoaded ? derivedCompleted : completedTasks;
+                    const percent = displayTotal > 0 ? Math.round((displayCompleted / displayTotal) * 100) : (project.completion_percent || 0);
+                    const status = getStatus(percent, displayTotal);
+                    const badgeClass = status.toLowerCase().replace(' ', '-');
+                    return (
+                      <div className="projectTile" key={project.id}>
+                        <div className="projectTileHeader">
+                          <div>
+                            <p className="projectTileName">{project.name}</p>
+                            <p className="projectTileMeta">({project.description || 'No description yet'})</p>
+                            {project.staff && project.staff.length > 0 && (
+                              <p className="projectTileMeta">
+                                {formatNames(project.staff.map((m) => m.first_name || m.username || 'Staff'))}
+                              </p>
+                            )}
+                          </div>
+                          <span className={`projectBadge ${badgeClass}`}>{status}</span>
+                        </div>
+                        <div className="projectProgress">
+                          <div className="projectProgressFill" style={{ width: `${percent}%` }} />
+                        </div>
+                        <p className="projectProgressText">
+                          {percent}% complete - {displayCompleted}/{displayTotal} tasks
+                        </p>
+                      </div>
+                    );
+                  })}
+              </>
+            )}
+            {/* Regular project list */}
+            {activeTab !== 'team-projects' && !loading && !error && projects
               .filter((project) => {
                 const term = searchTerm.trim().toLowerCase();
                 if (!term) return true;

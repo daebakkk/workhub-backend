@@ -47,30 +47,34 @@ export default function Leaderboard() {
   const user = storedUser ? JSON.parse(storedUser) : null;
   const isAdmin = user?.role === 'admin';
 
+  const [tab, setTab] = useState('individual'); // 'individual' | 'teams'
   const [range, setRange] = useState('this_week');
   const [data, setData] = useState([]);
+  const [teamData, setTeamData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    async function fetch() {
+    async function fetchData() {
       setLoading(true);
       setError('');
       try {
-        const res = await API.get(`leaderboard/?range=${range}`);
-        setData(res.data || []);
+        const [indRes, teamRes] = await Promise.all([
+          API.get(`leaderboard/?range=${range}`),
+          API.get(`leaderboard/teams/?range=${range}`),
+        ]);
+        setData(indRes.data || []);
+        setTeamData(teamRes.data || []);
       } catch {
         setError('Could not load leaderboard.');
       } finally {
         setLoading(false);
       }
     }
-    fetch();
+    fetchData();
   }, [range]);
 
-  const top = data[0];
-  const overworked = data.filter((e) => e.status === 'overworked');
-  const underworked = data.filter((e) => e.status === 'underworked');
+  const userTeam = user?.team;
 
   function displayName(entry) {
     const full = `${entry.first_name || ''} ${entry.last_name || ''}`.trim();
@@ -116,85 +120,169 @@ export default function Leaderboard() {
             </select>
           </div>
 
+          <div className="lbTabs">
+            <button
+              className={`lbTab ${tab === 'individual' ? 'lbTabActive' : ''}`}
+              onClick={() => setTab('individual')}
+            >
+              Individual
+            </button>
+            <button
+              className={`lbTab ${tab === 'teams' ? 'lbTabActive' : ''}`}
+              onClick={() => setTab('teams')}
+            >
+              Teams
+            </button>
+          </div>
+
           {loading && <p className="inlineStatus">Loading...</p>}
           {error && <p className="inlineError">{error}</p>}
 
-          {!loading && !error && data.length === 0 && (
-            <div className="emptyState">
-              <p className="emptyTitle">No data yet</p>
-              <p className="emptySubtitle">No logs have been submitted for this period.</p>
-            </div>
+          {/* Individual tab */}
+          {!loading && !error && tab === 'individual' && (
+            <>
+              {data.length === 0 ? (
+                <div className="emptyState">
+                  <p className="emptyTitle">No data yet</p>
+                  <p className="emptySubtitle">No logs have been submitted for this period.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="lbSummary">
+                    <div className="lbSummaryCard">
+                      <p className="lbSummaryLabel">Top performer</p>
+                      <p className="lbSummaryValue">{displayName(data[0])}</p>
+                      <p className="lbSummaryMeta">{data[0].total_hours}h logged</p>
+                    </div>
+                    <div className="lbSummaryCard">
+                      <p className="lbSummaryLabel">Overworked</p>
+                      <p className="lbSummaryValue">{data.filter((e) => e.status === 'overworked').length}</p>
+                      <p className="lbSummaryMeta">≥45h this period</p>
+                    </div>
+                    <div className="lbSummaryCard">
+                      <p className="lbSummaryLabel">Underworked</p>
+                      <p className="lbSummaryValue">{data.filter((e) => e.status === 'underworked').length}</p>
+                      <p className="lbSummaryMeta">&lt;25h this period</p>
+                    </div>
+                  </div>
+
+                  <div className="lbTable">
+                    <div className="lbTableHeader">
+                      <span>#</span>
+                      <span>Employee</span>
+                      <span>Hours</span>
+                      <span>Logs</span>
+                      <span>vs Goal</span>
+                      <span>Status</span>
+                    </div>
+                    {data.map((entry, i) => {
+                      const goal = entry.weekly_goal_hours;
+                      const pct = goal > 0 ? Math.min(Math.round((entry.total_hours / goal) * 100), 200) : null;
+                      const medal = getMedal(i);
+                      const isMe = entry.id === user?.id;
+                      return (
+                        <div className={`lbRow ${isMe ? 'lbRowMe' : ''}`} key={entry.id}>
+                          <span className="lbRank">
+                            {medal ? <span>{medal}</span> : <span className="lbRankNum">{i + 1}</span>}
+                          </span>
+                          <span className="lbName">
+                            <span className="lbNameText">{displayName(entry)}{isMe && <span className="lbYou"> you</span>}</span>
+                            {entry.specialization && (
+                              <span className="lbSpec">{getSpecLabel(entry.specialization)}</span>
+                            )}
+                          </span>
+                          <span className="lbHours">{entry.total_hours}h</span>
+                          <span className="lbLogs">{entry.log_count}</span>
+                          <span className="lbGoalWrap">
+                            {pct !== null ? (
+                              <>
+                                <div className="lbGoalBar">
+                                  <div
+                                    className={`lbGoalFill ${entry.status === 'overworked' ? 'lbGoalOver' : entry.status === 'underworked' ? 'lbGoalUnder' : 'lbGoalOk'}`}
+                                    style={{ width: `${Math.min(pct, 100)}%` }}
+                                  />
+                                </div>
+                                <span className="lbGoalPct">{pct}%</span>
+                              </>
+                            ) : (
+                              <span className="lbGoalNone">—</span>
+                            )}
+                          </span>
+                          <span><StatusPill status={entry.status} /></span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </>
           )}
 
-          {!loading && !error && data.length > 0 && (
+          {/* Teams tab */}
+          {!loading && !error && tab === 'teams' && (
             <>
-              {/* summary pills */}
-              <div className="lbSummary">
-                <div className="lbSummaryCard">
-                  <p className="lbSummaryLabel">Top performer</p>
-                  <p className="lbSummaryValue">{displayName(top)}</p>
-                  <p className="lbSummaryMeta">{top.total_hours}h logged</p>
+              {teamData.length === 0 ? (
+                <div className="emptyState">
+                  <p className="emptyTitle">No team data yet</p>
+                  <p className="emptySubtitle">No logs have been submitted for this period.</p>
                 </div>
-                <div className="lbSummaryCard">
-                  <p className="lbSummaryLabel">Overworked</p>
-                  <p className="lbSummaryValue">{overworked.length}</p>
-                  <p className="lbSummaryMeta">≥45h this period</p>
-                </div>
-                <div className="lbSummaryCard">
-                  <p className="lbSummaryLabel">Underworked</p>
-                  <p className="lbSummaryValue">{underworked.length}</p>
-                  <p className="lbSummaryMeta">&lt;25h this period</p>
-                </div>
-              </div>
-
-              {/* main table */}
-              <div className="lbTable">
-                <div className="lbTableHeader">
-                  <span>#</span>
-                  <span>Employee</span>
-                  <span>Hours</span>
-                  <span>Logs</span>
-                  <span>vs Goal</span>
-                  <span>Status</span>
-                </div>
-                {data.map((entry, i) => {
-                  const goal = entry.weekly_goal_hours;
-                  const pct = goal > 0 ? Math.min(Math.round((entry.total_hours / goal) * 100), 200) : null;
-                  const medal = getMedal(i);
-                  const isMe = entry.id === user?.id;
-                  return (
-                    <div className={`lbRow ${isMe ? 'lbRowMe' : ''}`} key={entry.id}>
-                      <span className="lbRank">
-                        {medal ? <span>{medal}</span> : <span className="lbRankNum">{i + 1}</span>}
-                      </span>
-                      <span className="lbName">
-                        <span className="lbNameText">{displayName(entry)}{isMe && <span className="lbYou"> you</span>}</span>
-                        {entry.specialization && (
-                          <span className="lbSpec">{getSpecLabel(entry.specialization)}</span>
-                        )}
-                      </span>
-                      <span className="lbHours">{entry.total_hours}h</span>
-                      <span className="lbLogs">{entry.log_count}</span>
-                      <span className="lbGoalWrap">
-                        {pct !== null ? (
-                          <>
-                            <div className="lbGoalBar">
-                              <div
-                                className={`lbGoalFill ${entry.status === 'overworked' ? 'lbGoalOver' : entry.status === 'underworked' ? 'lbGoalUnder' : 'lbGoalOk'}`}
-                                style={{ width: `${Math.min(pct, 100)}%` }}
-                              />
-                            </div>
-                            <span className="lbGoalPct">{pct}%</span>
-                          </>
-                        ) : (
-                          <span className="lbGoalNone">—</span>
-                        )}
-                      </span>
-                      <span><StatusPill status={entry.status} /></span>
+              ) : (
+                <>
+                  <div className="lbSummary">
+                    <div className="lbSummaryCard">
+                      <p className="lbSummaryLabel">Top team</p>
+                      <p className="lbSummaryValue">{teamData[0]?.display_name}</p>
+                      <p className="lbSummaryMeta">{teamData[0]?.total_hours}h logged</p>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="lbSummaryCard">
+                      <p className="lbSummaryLabel">Total teams</p>
+                      <p className="lbSummaryValue">{teamData.length}</p>
+                      <p className="lbSummaryMeta">active this period</p>
+                    </div>
+                    <div className="lbSummaryCard">
+                      <p className="lbSummaryLabel">Most members</p>
+                      <p className="lbSummaryValue">
+                        {[...teamData].sort((a, b) => b.member_count - a.member_count)[0]?.display_name}
+                      </p>
+                      <p className="lbSummaryMeta">
+                        {[...teamData].sort((a, b) => b.member_count - a.member_count)[0]?.member_count} members
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="lbTable">
+                    <div className="lbTableHeader">
+                      <span>#</span>
+                      <span>Team</span>
+                      <span>Members</span>
+                      <span>Total Hours</span>
+                      <span>Avg / Member</span>
+                      <span>Logs</span>
+                    </div>
+                    {teamData.map((team, i) => {
+                      const isMyTeam = userTeam?.id === team.id;
+                      const medal = getMedal(i);
+                      return (
+                        <div className={`lbRow ${isMyTeam ? 'lbRowMe' : ''}`} key={team.id}>
+                          <span className="lbRank">
+                            {medal ? <span>{medal}</span> : <span className="lbRankNum">{i + 1}</span>}
+                          </span>
+                          <span className="lbName">
+                            <span className="lbNameText">
+                              {team.display_name}
+                              {isMyTeam && <span className="lbYou"> your team</span>}
+                            </span>
+                          </span>
+                          <span className="lbLogs">{team.member_count}</span>
+                          <span className="lbHours">{team.total_hours}h</span>
+                          <span className="lbHours">{team.avg_hours}h</span>
+                          <span className="lbLogs">{team.log_count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </>
           )}
         </main>

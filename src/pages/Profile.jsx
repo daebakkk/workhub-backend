@@ -172,6 +172,10 @@ function Profile() {
                   <p className="profileInfoValue">{user?.email || '—'}</p>
                 </div>
                 <div className="profileInfoCard">
+                  <p className="profileInfoLabel">Team</p>
+                  <p className="profileInfoValue">{user?.team?.display_name || '—'}</p>
+                </div>
+                <div className="profileInfoCard">
                   <p className="profileInfoLabel">Weekly goal</p>
                   <p className="profileInfoValue">{user?.weekly_goal_hours || 0}h</p>
                 </div>

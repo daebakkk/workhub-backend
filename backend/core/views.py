@@ -10,8 +10,8 @@ from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, UserSerializer, NotificationSerializer
 
 
-from .models import Project, WorkLog, User, Report, Task, Notification
-from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer, TaskSerializer
+from .models import Project, WorkLog, User, Report, Task, Notification, Team
+from .serializers import ProjectSerializer, WorkLogSerializer, ReportSerializer, TaskSerializer, TeamSerializer
 from django.db.models import Count, F, Q, Sum
 from django.db.utils import OperationalError, ProgrammingError
 from django.db import DatabaseError
@@ -339,6 +339,16 @@ def user_settings(request):
             request.user.weekly_goal_hours = float(weekly_goal_hours)
         except (TypeError, ValueError):
             pass
+
+    team_id = data.get('team_id')
+    if 'team_id' in data:
+        if team_id is None:
+            request.user.team = None
+        else:
+            try:
+                request.user.team = Team.objects.get(id=team_id)
+            except Team.DoesNotExist:
+                return Response({'detail': 'Invalid team.'}, status=400)
 
     request.user.save()
     return Response(UserSerializer(request.user).data)
@@ -1022,3 +1032,71 @@ def delete_task(request, task_id):
         return Response({'detail': 'Only the assignee can delete this task.'}, status=403)
     task.delete()
     return Response({'message': 'Task deleted'})
+
+
+@api_view(['GET'])
+def teams_list(request):
+    """Return all available teams (public endpoint for signup)."""
+    teams = Team.objects.all().order_by('name')
+    return Response(TeamSerializer(teams, many=True).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def team_leaderboard(request):
+    """Leaderboard aggregated by team for a given time range."""
+    range_filter = request.query_params.get('range', 'this_week')
+    today = timezone.now().date()
+
+    if range_filter == 'last_week':
+        end = today - timedelta(days=today.weekday() + 1)
+        start = end - timedelta(days=6)
+    elif range_filter == 'last_30_days':
+        start = today - timedelta(days=30)
+        end = today
+    else:
+        start = today - timedelta(days=today.weekday())
+        end = today
+
+    teams = Team.objects.all().order_by('name')
+    results = []
+    for team in teams:
+        members = team.members.all()
+        member_ids = list(members.values_list('id', flat=True))
+        logs = WorkLog.objects.filter(staff_id__in=member_ids, date__gte=start, date__lte=end)
+        total_hours = float(logs.aggregate(total=Sum('hours'))['total'] or 0)
+        log_count = logs.count()
+        member_count = len(member_ids)
+        avg_hours = round(total_hours / member_count, 2) if member_count else 0
+        results.append({
+            'id': team.id,
+            'name': team.name,
+            'display_name': team.get_name_display(),
+            'member_count': member_count,
+            'total_hours': total_hours,
+            'avg_hours': avg_hours,
+            'log_count': log_count,
+        })
+
+    results.sort(key=lambda x: x['total_hours'], reverse=True)
+    return Response(results)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def team_projects(request):
+    """Return all projects that have at least one member from the current user's team."""
+    user_team = request.user.team
+    if not user_team:
+        return Response([])
+
+    team_member_ids = list(user_team.members.values_list('id', flat=True))
+    projects = (
+        Project.objects.filter(staff__id__in=team_member_ids)
+        .distinct()
+        .prefetch_related('staff')
+        .annotate(total_tasks=Count('tasks'))
+        .order_by('name')
+    )
+    serializer = ProjectSerializer(projects, many=True)
+    return Response(serializer.data)
