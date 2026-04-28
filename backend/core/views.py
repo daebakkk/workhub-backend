@@ -40,38 +40,8 @@ def submit_log(request):
             log.save()
             _sync_task_progress(log)
 
-        # Weekly goal notification (once per week)
-        goal = float(request.user.weekly_goal_hours or 0)
-        if goal > 0 and request.user.email_notifications:
-            today = timezone.now().date()
-            # Only notify on Saturday (weekday 5)
-            if today.weekday() == 5:
-                week_start = today - timedelta(days=today.weekday())
-                week_end = week_start + timedelta(days=6)
-                total_hours = (
-                    WorkLog.objects.filter(
-                        staff=request.user,
-                        date__gte=week_start,
-                        date__lte=week_end,
-                    )
-                    .aggregate(total=Sum('hours'))['total']
-                    or 0
-                )
-                if float(total_hours) >= goal:
-                    week_key = week_start.isoformat()
-                    already_notified = Notification.objects.filter(
-                        user=request.user,
-                        notification_type='weekly_goal_reached',
-                        data__contains={'week_start': week_key},
-                    ).exists()
-                    if not already_notified:
-                        Notification.objects.create(
-                            user=request.user,
-                            title='Weekly goal reached',
-                            message='You hit your weekly hours goal. Great work!',
-                            notification_type='weekly_goal_reached',
-                            data={'week_start': week_key, 'hours': float(total_hours)},
-                        )
+        # Weekly goal notification — fires on Saturday once per week
+        _check_weekly_goal(request.user)
 
         serializer = WorkLogSerializer(log)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -121,7 +91,47 @@ def pending_logs(request):
         return Response([])
 
 
-def _sync_task_progress(log):
+def _check_weekly_goal(user):
+    """Fire a weekly-goal notification on Saturday if the user has hit their goal.
+    Counts all submitted logs (any status) for the current Mon–Sat window.
+    Deduped per week so it only fires once.
+    """
+    goal = float(user.weekly_goal_hours or 0)
+    if goal <= 0 or not user.email_notifications:
+        return
+    today = timezone.now().date()
+    if today.weekday() != 5:  # Saturday only
+        return
+    week_start = today - timedelta(days=5)  # Monday
+    week_end = today                        # Saturday
+    total_hours = (
+        WorkLog.objects.filter(
+            staff=user,
+            date__gte=week_start,
+            date__lte=week_end,
+        )
+        .aggregate(total=Sum('hours'))['total']
+        or 0
+    )
+    if float(total_hours) < goal:
+        return
+    week_key = week_start.isoformat()
+    already_notified = Notification.objects.filter(
+        user=user,
+        notification_type='weekly_goal_reached',
+        data__contains={'week_start': week_key},
+    ).exists()
+    if not already_notified:
+        Notification.objects.create(
+            user=user,
+            title='Weekly goal reached',
+            message='You hit your weekly hours goal. Great work!',
+            notification_type='weekly_goal_reached',
+            data={'week_start': week_key, 'hours': float(total_hours)},
+        )
+
+
+
     """Recompute and persist task progress after a log is approved.
     Uses max(hours-based %, manual progress) so hours drive it forward
     automatically but manual overrides are preserved.
@@ -172,6 +182,9 @@ def approve_log(request, log_id):
             data={'log_id': log.id},
         )
 
+    # Weekly goal check for the staff member whose log was just approved
+    _check_weekly_goal(log.staff)
+
     return Response({'message': 'Log approved'})
 
 
@@ -213,6 +226,7 @@ def approve_all_logs(request):
                 notification_type='log_approved',
                 data={'log_id': log.id},
             )
+        _check_weekly_goal(log.staff)
     return Response({'message': f'Approved {len(updated)} logs'})
 
 
