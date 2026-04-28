@@ -36,4 +36,5 @@ urlpatterns = [
     path('teams/', views.teams_list),
     path('leaderboard/teams/', views.team_leaderboard),
     path('projects/team/', views.team_projects),
+    path('reports/team/<int:team_id>/summary/', views.team_report_summary),
 ]

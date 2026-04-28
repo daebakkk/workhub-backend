@@ -1100,3 +1100,95 @@ def team_projects(request):
     )
     serializer = ProjectSerializer(projects, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def team_report_summary(request, team_id):
+    """Aggregated report for a specific team over a time range."""
+    team = get_object_or_404(Team, id=team_id)
+    range_filter = request.query_params.get('range', 'this_week')
+    today = timezone.now().date()
+
+    if range_filter == 'last_week':
+        end = today - timedelta(days=today.weekday() + 1)
+        start = end - timedelta(days=6)
+    elif range_filter == 'last_30_days':
+        start = today - timedelta(days=30)
+        end = today
+    elif range_filter == 'last_6_months':
+        start = today - timedelta(days=180)
+        end = today
+    elif range_filter == 'last_year':
+        start = today - timedelta(days=365)
+        end = today
+    elif range_filter == 'all':
+        start = None
+        end = None
+    else:  # this_week
+        start = today - timedelta(days=today.weekday())
+        end = today
+
+    member_ids = list(team.members.values_list('id', flat=True))
+    logs = WorkLog.objects.filter(staff_id__in=member_ids).select_related('project', 'staff')
+    if start and end:
+        logs = logs.filter(date__gte=start, date__lte=end)
+
+    total_logs = logs.count()
+    total_hours = float(logs.aggregate(total=Sum('hours'))['total'] or 0)
+    status_counts = list(logs.values('status').annotate(count=Count('id')).order_by('status'))
+    by_project = list(
+        logs.values('project__name')
+        .annotate(hours=Sum('hours'), count=Count('id'))
+        .order_by('-hours')
+    )
+    for row in by_project:
+        row['hours'] = float(row['hours'] or 0)
+
+    by_member = list(
+        logs.values('staff__id', 'staff__first_name', 'staff__last_name', 'staff__username')
+        .annotate(hours=Sum('hours'), count=Count('id'))
+        .order_by('-hours')
+    )
+    for row in by_member:
+        row['hours'] = float(row['hours'] or 0)
+
+    if range_filter == 'last_30_days':
+        period_unit = 'week'
+        by_period = list(
+            logs.annotate(period=TruncWeek('date'))
+            .values('period')
+            .annotate(hours=Sum('hours'))
+            .order_by('-period')
+        )
+    elif range_filter in ('last_6_months', 'last_year', 'all'):
+        period_unit = 'month'
+        by_period = list(
+            logs.annotate(period=TruncMonth('date'))
+            .values('period')
+            .annotate(hours=Sum('hours'))
+            .order_by('-period')
+        )
+    else:
+        period_unit = 'day'
+        by_period = list(
+            logs.values(period=F('date'))
+            .annotate(hours=Sum('hours'))
+            .order_by('-period')
+        )
+
+    for row in by_period:
+        row['hours'] = float(row['hours'] or 0)
+
+    return Response({
+        'team': TeamSerializer(team).data,
+        'range': range_filter,
+        'member_count': len(member_ids),
+        'total_logs': total_logs,
+        'total_hours': total_hours,
+        'status_counts': status_counts,
+        'by_project': by_project,
+        'by_member': by_member,
+        'period_unit': period_unit,
+        'by_period': by_period,
+    })
