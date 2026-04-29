@@ -131,7 +131,7 @@ def _check_weekly_goal(user):
         )
 
 
-
+def _sync_task_progress(log):
     """Recompute and persist task progress after a log is approved.
     Uses max(hours-based %, manual progress) so hours drive it forward
     automatically but manual overrides are preserved.
