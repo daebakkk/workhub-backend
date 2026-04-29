@@ -920,6 +920,12 @@ a {
   padding-right: 6px;
 }
 
+.pendingLogList {
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .landingPage {
   background: radial-gradient(circle at top left, #ffe4f4 0%, transparent 45%),
     radial-gradient(circle at top right, #e8f1ff 0%, transparent 40%),

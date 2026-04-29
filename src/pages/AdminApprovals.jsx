@@ -211,8 +211,9 @@ function AdminApprovals() {
           )}
 
           {!loading && !error && logs.length > 0 && (
-            <div className="logList">
-              {logs.map((log) => (
+            <div className="pendingLogList">
+              <div className="logList">
+                {logs.map((log) => (
                 <div className="logItem" key={log.id}>
                   <div>
                     <p className="logTitle">{log.title}</p>
@@ -242,6 +243,7 @@ function AdminApprovals() {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           )}
         </main>
