@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
-/*
-ok so, for tasks in projects, i think checkbox is a bit too tedious, so id like each task to have a like required number of hours kind of that will be input by the user, and now tasks will be completed based on a progress system, like using work logs, as you get closer to the required hours, progress increases, but the user can also edit the prpogress a bit, also now work logs will be attached to project and task not just project can you do this
-*/
 
 :root {
   --bg: #f8fafc;

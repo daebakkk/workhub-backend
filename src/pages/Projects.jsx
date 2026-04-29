@@ -27,11 +27,10 @@ function Projects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
-  const [creatingMode, setCreatingMode] = useState('default');
   const [addingCreateTask, setAddingCreateTask] = useState(false);
   const [addingTaskByProject, setAddingTaskByProject] = useState({});
   const [showCreate, setShowCreate] = useState(false);
-  const [createTab, setCreateTab] = useState('self'); // 'self' or 'others'
+  const [createTab, setCreateTab] = useState('self'); // 'self' | 'with-others'
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState(isAdmin ? 'my-projects' : 'all');
   const [teamProjects, setTeamProjects] = useState([]);
@@ -143,19 +142,17 @@ function Projects() {
     setCreateTasks((prev) => prev.filter((item) => item.title !== taskTitle));
   }
 
-  async function createProject(e, assignSelfOverride = null) {
+  async function createProject(e) {
     e.preventDefault();
     if (!newName.trim()) {
       setError('Project name is required.');
       return;
     }
-    const shouldAssignSelf = assignSelfOverride === true;
-    const memberIds = isAdmin
-      ? Array.from(new Set([...(shouldAssignSelf && userId ? [userId] : []), ...createAssignees]))
-      : Array.from(new Set([userId, ...createAssignees].filter(Boolean)));
+    const withOthers = createTab === 'with-others';
+    const memberIds = Array.from(new Set([userId, ...(withOthers ? createAssignees : [])].filter(Boolean)));
     const needsAssignment = memberIds.length > 1;
     if (needsAssignment && createTasks.some((task) => !task.assigned_to)) {
-      setError('Please assign each task to a team member.');
+      setError('Please assign each task to a project member.');
       return;
     }
     if (needsAssignment && createTasks.some((task) => !memberIds.includes(task.assigned_to))) {
@@ -163,14 +160,13 @@ function Projects() {
       return;
     }
     setCreating(true);
-    setCreatingMode(assignSelfOverride === true ? 'self' : 'default');
     setError('');
     try {
       const res = await API.post('admin/projects/create/', {
         name: newName.trim(),
         description: newDescription.trim(),
-        assign_self: isAdmin ? shouldAssignSelf : true,
-        user_ids: createAssignees,
+        assign_self: true,
+        user_ids: withOthers ? createAssignees : [],
         tasks: createTasks.map((task) => ({
           title: task.title,
           assigned_to: task.assigned_to || null,
@@ -179,28 +175,18 @@ function Projects() {
       });
       const created = res.data;
       setProjects((prev) => [created, ...prev]);
-      const staffIds = (created.staff || []).map((staff) => staff.id);
-      const fallbackIds = isAdmin
-        ? Array.from(new Set([
-            ...(shouldAssignSelf && userId ? [userId] : []),
-            ...createAssignees,
-          ]))
-        : [];
-      setSelected((prev) => ({
-        ...prev,
-        [created.id]: staffIds.length ? staffIds : fallbackIds,
-      }));
+      const staffIds = (created.staff || []).map((s) => s.id);
+      setSelected((prev) => ({ ...prev, [created.id]: staffIds }));
       setNewName('');
       setNewDescription('');
       setCreateAssignees([]);
       setCreateTasks([]);
       setCreateTaskInput('');
       setShowCreate(false);
-    } catch (err) {
+    } catch {
       setError('Failed to create project.');
     } finally {
       setCreating(false);
-      setCreatingMode('default');
     }
   }
 
@@ -316,14 +302,11 @@ function Projects() {
   }
 
   const staffUsers = users.filter((item) => item.role === 'staff');
-  const staffOptions = staffUsers.filter((item) => item.id !== userId);
-  const createMemberIds = isAdmin
-    ? createAssignees
-    : Array.from(new Set([userId, ...createAssignees].filter(Boolean)));
+  const createMemberIds = Array.from(new Set([userId, ...(createTab === 'with-others' ? createAssignees : [])].filter(Boolean)));
   const createMembers = createMemberIds
     .map((id) => users.find((member) => member.id === id) || (userId === id ? user : null))
     .filter(Boolean);
-  const needsCreateAssignment = isAdmin ? createAssignees.length > 0 : createMembers.length > 1;
+  const needsCreateAssignment = createMembers.length > 1;
   const specializationGroups = [
     { key: 'frontend', label: 'Frontend Developer' },
     { key: 'backend', label: 'Backend Developer' },
@@ -455,22 +438,20 @@ function Projects() {
                   <button
                     type="button"
                     className={`projectCreateTab ${createTab === 'self' ? 'isActive' : ''}`}
-                    onClick={() => setCreateTab('self')}
+                    onClick={() => { setCreateTab('self'); setCreateAssignees([]); setCreateTasks([]); }}
                   >
                     For myself
                   </button>
-                  {isAdmin && (
-                    <button
-                      type="button"
-                      className={`projectCreateTab ${createTab === 'others' ? 'isActive' : ''}`}
-                      onClick={() => setCreateTab('others')}
-                    >
-                      For others
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className={`projectCreateTab ${createTab === 'with-others' ? 'isActive' : ''}`}
+                    onClick={() => { setCreateTab('with-others'); setCreateTasks([]); }}
+                  >
+                    With others
+                  </button>
                 </div>
 
-                <form className="projectCreateForm" onSubmit={(e) => createProject(e, createTab === 'self')}>
+                <form className="projectCreateForm" onSubmit={createProject}>
                   <div className="projectCreateSection">
                     <p className="projectCreateSectionTitle">Project details</p>
                     <input
@@ -500,10 +481,7 @@ function Projects() {
                         value={createTaskInput}
                         onChange={(e) => setCreateTaskInput(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addCreateTask();
-                          }
+                          if (e.key === 'Enter') { e.preventDefault(); addCreateTask(); }
                         }}
                       />
                       <input
@@ -540,9 +518,7 @@ function Projects() {
                                 onChange={(e) => {
                                   const val = e.target.value ? Number(e.target.value) : '';
                                   setCreateTasks((prev) =>
-                                    prev.map((t) =>
-                                      t.title === task.title ? { ...t, assigned_to: val } : t
-                                    )
+                                    prev.map((t) => t.title === task.title ? { ...t, assigned_to: val } : t)
                                   );
                                 }}
                               >
@@ -565,12 +541,12 @@ function Projects() {
                     )}
                   </div>
 
-                  {createTab === 'others' && isAdmin && (
+                  {createTab === 'with-others' && (
                     <div className="projectCreateSection">
-                      <p className="projectCreateSectionTitle">Assign to</p>
+                      <p className="projectCreateSectionTitle">Add members</p>
                       <div className="projectCreateAssignees">
                         {specializationGroups.map((group) => {
-                          const members = staffUsers.filter((s) => s.specialization === group.key);
+                          const members = staffUsers.filter((s) => s.specialization === group.key && s.id !== userId);
                           if (members.length === 0) return null;
                           return (
                             <div className="projectCreateGroup" key={group.key}>
