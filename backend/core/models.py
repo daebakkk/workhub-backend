@@ -4,10 +4,9 @@ from django.db import models
 
 class Team(models.Model):
     TEAM_CHOICES = (
-        ('team_a', 'Team A'),
-        ('team_b', 'Team B'),
-        ('team_c', 'Team C'),
-        ('team_d', 'Team D'),
+        ('p_team', 'Product Team'),
+        ('d_team', 'Developers Team'),
+        ('s_team', 'Support Team'),
     )
     name = models.CharField(max_length=10, choices=TEAM_CHOICES, unique=True)
 

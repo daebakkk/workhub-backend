@@ -20,7 +20,6 @@ export default function Signup() {
     localStorage.removeItem('user');
     localStorage.removeItem('refresh');
     delete API.defaults.headers.common.Authorization;
-    // fetch teams without auth
     API.get('teams/').then((res) => {
       setTeams(res.data || []);
       if (res.data?.length) setTeam(String(res.data[0].id));
