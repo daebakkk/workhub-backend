@@ -24,6 +24,9 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [teamStats, setTeamStats] = useState([]);
+  const [teamStatsLoading, setTeamStatsLoading] = useState(true);
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -58,6 +61,13 @@ function Dashboard() {
       window.removeEventListener('worklogs:updated', fetchData);
     };
   }, [isAdmin]);
+
+  useEffect(() => {
+    API.get('leaderboard/teams/?range=this_week')
+      .then((res) => setTeamStats(res.data || []))
+      .catch(() => {})
+      .finally(() => setTeamStatsLoading(false));
+  }, []);
 
   const stats = useMemo(
     () => ({
@@ -289,9 +299,63 @@ function Dashboard() {
               </div>
             )}
           </section>
+
+          <section className="card">
+            <div className="cardHeader">
+              <h2 className="cardTitle">Teams this week</h2>
+              <Link to="/leaderboard" className="btn btnSecondary">Full leaderboard</Link>
+            </div>
+            {teamStatsLoading && <p className="inlineStatus">Loading…</p>}
+            {!teamStatsLoading && teamStats.length === 0 && (
+              <div className="emptyState">
+                <p className="emptyTitle">No team data yet</p>
+                <p className="emptySubtitle">Team activity will appear here once logs are submitted.</p>
+              </div>
+            )}
+            {!teamStatsLoading && teamStats.length > 0 && (
+              <div className="teamKpiGrid">
+                {teamStats.map((team, i) => {
+                  const isMyTeam = user?.team?.id === team.id || user?.team?.name === team.name;
+                  const topHours = teamStats[0]?.total_hours || 1;
+                  const barPct = Math.round((team.total_hours / topHours) * 100);
+                  return (
+                    <div key={team.id} className={`teamKpiCard ${isMyTeam ? 'teamKpiCardMe' : ''}`}>
+                      <div className="teamKpiTop">
+                        <div className="teamKpiRank">{i + 1}</div>
+                        <div className="teamKpiName">
+                          {team.display_name}
+                          {isMyTeam && <span className="teamKpiYou">your team</span>}
+                        </div>
+                      </div>
+                      <div className="teamKpiStats">
+                        <div className="teamKpiStat">
+                          <span className="teamKpiStatVal">{team.total_hours}h</span>
+                          <span className="teamKpiStatLabel">total</span>
+                        </div>
+                        <div className="teamKpiStat">
+                          <span className="teamKpiStatVal">{team.avg_hours}h</span>
+                          <span className="teamKpiStatLabel">avg / member</span>
+                        </div>
+                        <div className="teamKpiStat">
+                          <span className="teamKpiStatVal">{team.member_count}</span>
+                          <span className="teamKpiStatLabel">members</span>
+                        </div>
+                        <div className="teamKpiStat">
+                          <span className="teamKpiStatVal">{team.log_count}</span>
+                          <span className="teamKpiStatLabel">logs</span>
+                        </div>
+                      </div>
+                      <div className="teamKpiBar">
+                        <div className="teamKpiBarFill" style={{ width: `${barPct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </main>
       </div>
-
     </div>
   );
 }

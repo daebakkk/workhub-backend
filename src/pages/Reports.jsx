@@ -1,5 +1,5 @@
 import Navbar from '../components/Navbar';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import API from '../api/api';
 
@@ -27,8 +27,13 @@ function formatPeriodLabel(period, periodUnit) {
   return date.toLocaleDateString();
 }
 
+function formatStaffName(person) {
+  if (!person) return 'Staff';
+  const full = `${person.first_name || ''} ${person.last_name || ''}`.trim();
+  return full || person.username || 'Staff';
+}
+
 export default function Reports() {
-  const navigate = useNavigate();
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const isAdmin = user?.role === 'admin';
@@ -36,13 +41,18 @@ export default function Reports() {
   // 'general' | 'staff:<id>' | 'team:<id>'
   const [reportMode, setReportMode] = useState('general');
   const [teamRange, setTeamRange] = useState('this_week');
+  const [staffRange, setStaffRange] = useState('this_week');
 
-  // general report state
+  // general report
   const [generalReport, setGeneralReport] = useState(null);
   const [generalLoading, setGeneralLoading] = useState(false);
   const [savedReports, setSavedReports] = useState([]);
 
-  // team report state
+  // staff report
+  const [staffReport, setStaffReport] = useState(null);
+  const [staffReportLoading, setStaffReportLoading] = useState(false);
+
+  // team report
   const [teamReport, setTeamReport] = useState(null);
   const [teamReportLoading, setTeamReportLoading] = useState(false);
 
@@ -50,29 +60,33 @@ export default function Reports() {
   const [teams, setTeams] = useState([]);
   const [error, setError] = useState('');
 
-  const sortedStaff = useMemo(() => {
-    return [...staff].sort((a, b) => {
-      const aName = `${a.first_name || ''} ${a.last_name || ''} ${a.username || ''}`.trim().toLowerCase();
-      const bName = `${b.first_name || ''} ${b.last_name || ''} ${b.username || ''}`.trim().toLowerCase();
-      return aName.localeCompare(bName);
-    });
-  }, [staff]);
+  const sortedStaff = useMemo(() => [...staff].sort((a, b) => {
+    const aName = `${a.first_name || ''} ${a.last_name || ''} ${a.username || ''}`.trim().toLowerCase();
+    const bName = `${b.first_name || ''} ${b.last_name || ''} ${b.username || ''}`.trim().toLowerCase();
+    return aName.localeCompare(bName);
+  }), [staff]);
 
-  // Auto-generate general report on mount and whenever mode switches to general
+  // Load staff + teams once
+  useEffect(() => {
+    if (isAdmin) {
+      API.get('users/staff/').then((r) => setStaff(r.data || [])).catch(() => {});
+    }
+    API.get('teams/').then((r) => setTeams(r.data || [])).catch(() => {});
+  }, [isAdmin]);
+
+  // General report — auto-load on mount or when switching to general
   useEffect(() => {
     if (reportMode !== 'general') return;
-    async function fetchGeneral() {
+    async function load() {
       setGeneralLoading(true);
       setError('');
       try {
-        // Try to load saved reports first
         const savedRes = await API.get('reports/');
         const list = savedRes.data || [];
         setSavedReports(list);
         if (list.length > 0) {
           setGeneralReport(list[0]);
         } else {
-          // No saved reports — auto-generate one
           const res = await API.post('reports/create/');
           setSavedReports([res.data]);
           setGeneralReport(res.data);
@@ -83,14 +97,35 @@ export default function Reports() {
         setGeneralLoading(false);
       }
     }
-    fetchGeneral();
+    load();
   }, [reportMode]);
 
-  // Fetch team report whenever mode or range changes
+  // Staff report — load when mode or range changes
+  useEffect(() => {
+    if (!reportMode.startsWith('staff:')) return;
+    const staffId = reportMode.split(':')[1];
+    async function load() {
+      setStaffReportLoading(true);
+      setError('');
+      try {
+        const res = await API.get(`reports/staff/${staffId}/summary/`, {
+          params: { range: staffRange },
+        });
+        setStaffReport(res.data || null);
+      } catch {
+        setError('Could not load staff report.');
+      } finally {
+        setStaffReportLoading(false);
+      }
+    }
+    load();
+  }, [reportMode, staffRange]);
+
+  // Team report — load when mode or range changes
   useEffect(() => {
     if (!reportMode.startsWith('team:')) return;
     const teamId = reportMode.split(':')[1];
-    async function fetchTeamReport() {
+    async function load() {
       setTeamReportLoading(true);
       setError('');
       try {
@@ -102,16 +137,8 @@ export default function Reports() {
         setTeamReportLoading(false);
       }
     }
-    fetchTeamReport();
+    load();
   }, [reportMode, teamRange]);
-
-  // Load staff + teams once
-  useEffect(() => {
-    if (isAdmin) {
-      API.get('users/staff/').then((r) => setStaff(r.data || [])).catch(() => {});
-    }
-    API.get('teams/').then((r) => setTeams(r.data || [])).catch(() => {});
-  }, [isAdmin]);
 
   async function refreshGeneralReport() {
     setGeneralLoading(true);
@@ -127,101 +154,48 @@ export default function Reports() {
     }
   }
 
-  async function downloadPdf() {
+  async function downloadGeneralPdf() {
     if (!generalReport) return;
-    const [{ jsPDF }, { default: autoTable }] = await Promise.all([
-      import('jspdf'),
-      import('jspdf-autotable'),
-    ]);
+    const [{ jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const approvedCount = generalReport.status_counts?.find((s) => s.status === 'approved')?.count ?? 0;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
     doc.text('WorkHub General Report', 40, 50);
-    autoTable(doc, {
-      startY: 70,
-      head: [['Metric', 'Value']],
-      body: [
-        ['Total logs', String(generalReport.total_logs ?? 0)],
-        ['Total hours', String(generalReport.total_hours ?? 0)],
-        ['Approved', String(approvedCount)],
-      ],
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 18,
-      head: [['Status', 'Count']],
-      body: (generalReport.status_counts || []).map((row) => [String(row.status ?? ''), String(row.count ?? 0)]),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 18,
-      head: [['Project', 'Hours', 'Logs']],
-      body: (generalReport.by_project || []).map((row) => [String(row.project__name || 'Unassigned'), String(row.hours ?? 0), String(row.count ?? 0)]),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 18,
-      head: [['Date', 'Hours']],
-      body: (generalReport.by_date || []).map((row) => [String(row.date ?? ''), String(row.hours ?? 0)]),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
+    autoTable(doc, { startY: 70, head: [['Metric', 'Value']], body: [['Total logs', String(generalReport.total_logs ?? 0)], ['Total hours', String(generalReport.total_hours ?? 0)], ['Approved', String(approvedCount)]], styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
+    autoTable(doc, { startY: doc.lastAutoTable.finalY + 18, head: [['Project', 'Hours', 'Logs']], body: (generalReport.by_project || []).map((r) => [String(r.project__name || 'Unassigned'), String(r.hours ?? 0), String(r.count ?? 0)]), styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
+    autoTable(doc, { startY: doc.lastAutoTable.finalY + 18, head: [['Date', 'Hours']], body: (generalReport.by_date || []).map((r) => [String(r.date ?? ''), String(r.hours ?? 0)]), styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
     doc.save(`workhub-general-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
+
+  async function downloadStaffPdf() {
+    if (!staffReport) return;
+    const [{ jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const rangeLabel = TIME_RANGES.find((r) => r.value === staffRange)?.label || staffRange;
+    const name = formatStaffName(staffReport.staff);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
+    doc.text(`${name} Report`, 40, 50);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
+    doc.text(`Timeframe: ${rangeLabel}`, 40, 70);
+    autoTable(doc, { startY: 88, head: [['Metric', 'Value']], body: [['Total logs', String(staffReport.total_logs ?? 0)], ['Total hours', String(staffReport.total_hours ?? 0)]], styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
+    autoTable(doc, { startY: doc.lastAutoTable.finalY + 16, head: [['Project', 'Hours', 'Logs']], body: (staffReport.by_project || []).map((r) => [String(r.project__name || 'Unassigned'), String(r.hours ?? 0), String(r.count ?? 0)]), styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
+    autoTable(doc, { startY: doc.lastAutoTable.finalY + 16, head: [[getPeriodTitle(staffReport.period_unit).replace('Hours per ', ''), 'Hours']], body: (staffReport.by_period || []).map((r) => [formatPeriodLabel(r.period, staffReport.period_unit), String(r.hours ?? 0)]), styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
+    doc.save(`staff-report-${name.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   async function downloadTeamPdf() {
     if (!teamReport) return;
-    const [{ jsPDF }, { default: autoTable }] = await Promise.all([
-      import('jspdf'),
-      import('jspdf-autotable'),
-    ]);
+    const [{ jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const rangeLabel = TIME_RANGES.find((r) => r.value === teamRange)?.label || teamRange;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
     doc.text(`${teamReport.team.display_name} Report`, 40, 50);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
     doc.text(`Timeframe: ${rangeLabel}`, 40, 70);
-    autoTable(doc, {
-      startY: 88,
-      head: [['Metric', 'Value']],
-      body: [
-        ['Members', String(teamReport.member_count ?? 0)],
-        ['Total logs', String(teamReport.total_logs ?? 0)],
-        ['Total hours', String(teamReport.total_hours ?? 0)],
-      ],
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 16,
-      head: [['Member', 'Hours', 'Logs']],
-      body: (teamReport.by_member || []).map((row) => {
-        const name = `${row.staff__first_name || ''} ${row.staff__last_name || ''}`.trim() || row.staff__username || '—';
-        return [name, String(row.hours ?? 0), String(row.count ?? 0)];
-      }),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 16,
-      head: [['Project', 'Hours', 'Logs']],
-      body: (teamReport.by_project || []).map((row) => [String(row.project__name || 'Unassigned'), String(row.hours ?? 0), String(row.count ?? 0)]),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 16,
-      head: [[getPeriodTitle(teamReport.period_unit).replace('Hours per ', ''), 'Hours']],
-      body: (teamReport.by_period || []).map((row) => [formatPeriodLabel(row.period, teamReport.period_unit), String(row.hours ?? 0)]),
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [17, 24, 39] },
-    });
+    autoTable(doc, { startY: 88, head: [['Metric', 'Value']], body: [['Members', String(teamReport.member_count ?? 0)], ['Total logs', String(teamReport.total_logs ?? 0)], ['Total hours', String(teamReport.total_hours ?? 0)]], styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
+    autoTable(doc, { startY: doc.lastAutoTable.finalY + 16, head: [['Member', 'Hours', 'Logs']], body: (teamReport.by_member || []).map((r) => { const n = `${r.staff__first_name || ''} ${r.staff__last_name || ''}`.trim() || r.staff__username || '—'; return [n, String(r.hours ?? 0), String(r.count ?? 0)]; }), styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
+    autoTable(doc, { startY: doc.lastAutoTable.finalY + 16, head: [['Project', 'Hours', 'Logs']], body: (teamReport.by_project || []).map((r) => [String(r.project__name || 'Unassigned'), String(r.hours ?? 0), String(r.count ?? 0)]), styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
+    autoTable(doc, { startY: doc.lastAutoTable.finalY + 16, head: [[getPeriodTitle(teamReport.period_unit).replace('Hours per ', ''), 'Hours']], body: (teamReport.by_period || []).map((r) => [formatPeriodLabel(r.period, teamReport.period_unit), String(r.hours ?? 0)]), styles: { font: 'helvetica', fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } });
     doc.save(`team-report-${teamReport.team.name}-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
@@ -253,17 +227,12 @@ export default function Reports() {
           <p className="dashSubtitle">Overview of work activity</p>
           {error && <p className="inlineError">{error}</p>}
 
+          {/* ── Dropdown row ── */}
           <div className="reportTopControls">
             <select
               className="reportSelect"
               value={reportMode}
-              onChange={(e) => {
-                const val = e.target.value;
-                setReportMode(val);
-                if (val.startsWith('staff:')) {
-                  navigate(`/reports/staff/${val.split(':')[1]}`);
-                }
-              }}
+              onChange={(e) => setReportMode(e.target.value)}
             >
               <option value="general">General report</option>
               {user?.id && (
@@ -287,15 +256,15 @@ export default function Reports() {
               )}
             </select>
 
+            {isStaffMode && (
+              <select className="reportSelect" value={staffRange} onChange={(e) => setStaffRange(e.target.value)}>
+                {TIME_RANGES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            )}
+
             {isTeamMode && (
-              <select
-                className="reportSelect"
-                value={teamRange}
-                onChange={(e) => setTeamRange(e.target.value)}
-              >
-                {TIME_RANGES.map((r) => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
+              <select className="reportSelect" value={teamRange} onChange={(e) => setTeamRange(e.target.value)}>
+                {TIME_RANGES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             )}
           </div>
@@ -304,7 +273,6 @@ export default function Reports() {
           {!isTeamMode && !isStaffMode && (
             <>
               {generalLoading && <p className="inlineStatus">Loading report...</p>}
-
               {!generalLoading && generalReport && (
                 <>
                   {savedReports.length > 1 && (
@@ -324,16 +292,11 @@ export default function Reports() {
                       </div>
                     </div>
                   )}
-
                   <div className="reportGrid">
                     <div className="reportCard"><p className="reportLabel">Total logs</p><p className="reportValue">{generalReport.total_logs}</p></div>
                     <div className="reportCard"><p className="reportLabel">Total hours</p><p className="reportValue">{generalReport.total_hours}</p></div>
-                    <div className="reportCard">
-                      <p className="reportLabel">Approved</p>
-                      <p className="reportValue">{generalReport.status_counts?.find((s) => s.status === 'approved')?.count || 0}</p>
-                    </div>
+                    <div className="reportCard"><p className="reportLabel">Approved</p><p className="reportValue">{generalReport.status_counts?.find((s) => s.status === 'approved')?.count || 0}</p></div>
                   </div>
-
                   <div className="reportTables">
                     <div className="reportTable">
                       <p className="reportTableTitle">Hours by project</p>
@@ -355,11 +318,8 @@ export default function Reports() {
                       ))}
                     </div>
                   </div>
-
                   <div className="reportActions">
-                    <button className="btn btnSecondary" type="button" onClick={downloadPdf}>
-                      Download PDF
-                    </button>
+                    <button className="btn btnSecondary" type="button" onClick={downloadGeneralPdf}>Download PDF</button>
                     <button className="btn btnPrimary" type="button" onClick={refreshGeneralReport} disabled={generalLoading}>
                       {generalLoading ? 'Refreshing…' : 'Refresh report'}
                     </button>
@@ -369,37 +329,69 @@ export default function Reports() {
             </>
           )}
 
+          {/* ── Staff / My report ── */}
+          {isStaffMode && (
+            <>
+              {staffReportLoading && <p className="inlineStatus">Loading report...</p>}
+              {!staffReportLoading && staffReport && (
+                <>
+                  <div className="reportGrid">
+                    <div className="reportCard"><p className="reportLabel">Name</p><p className="reportValue reportValueSmall">{formatStaffName(staffReport.staff)}</p></div>
+                    <div className="reportCard"><p className="reportLabel">Total logs</p><p className="reportValue">{staffReport.total_logs}</p></div>
+                    <div className="reportCard"><p className="reportLabel">Total hours</p><p className="reportValue">{staffReport.total_hours}</p></div>
+                  </div>
+                  <div className="reportTables">
+                    <div className="reportTable">
+                      <p className="reportTableTitle">Hours by project</p>
+                      {(staffReport.by_project || []).length === 0 && <p className="reportRowEmpty">No data</p>}
+                      {(staffReport.by_project || []).map((row) => (
+                        <div className="reportRow" key={row.project__name || 'none'}>
+                          <span>{row.project__name || 'Unassigned'}</span>
+                          <span>{row.hours || 0} hrs</span>
+                          <span>{row.count} logs</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="reportTable">
+                      <p className="reportTableTitle">{getPeriodTitle(staffReport.period_unit)}</p>
+                      {(staffReport.by_period || []).length === 0 && <p className="reportRowEmpty">No data</p>}
+                      {(staffReport.by_period || []).map((row) => (
+                        <div className="reportRow reportRowTwo" key={row.period}>
+                          <span>{formatPeriodLabel(row.period, staffReport.period_unit)}</span>
+                          <span>{row.hours || 0} hrs</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="reportActions">
+                    <button className="btn btnSecondary" type="button" onClick={downloadStaffPdf}>Download PDF</button>
+                  </div>
+                </>
+              )}
+              {!staffReportLoading && !staffReport && !error && (
+                <div className="emptyState">
+                  <p className="emptyTitle">No data</p>
+                  <p className="emptySubtitle">No logs found for this period.</p>
+                </div>
+              )}
+            </>
+          )}
+
           {/* ── Team report ── */}
           {isTeamMode && (
             <>
               {teamReportLoading && <p className="inlineStatus">Loading team report...</p>}
-
               {!teamReportLoading && teamReport && (
                 <>
                   <div className="teamReportHeader">
                     <h2 className="teamReportName">{teamReport.team.display_name}</h2>
                     <span className="teamReportMeta">{teamReport.member_count} member{teamReport.member_count !== 1 ? 's' : ''}</span>
                   </div>
-
                   <div className="teamReportStats">
-                    <div className="reportCard">
-                      <p className="reportLabel">Total hours</p>
-                      <p className="reportValue">{teamReport.total_hours}</p>
-                    </div>
-                    <div className="reportCard">
-                      <p className="reportLabel">Total logs</p>
-                      <p className="reportValue">{teamReport.total_logs}</p>
-                    </div>
-                    <div className="reportCard">
-                      <p className="reportLabel">Avg hrs / member</p>
-                      <p className="reportValue">
-                        {teamReport.member_count > 0
-                          ? (teamReport.total_hours / teamReport.member_count).toFixed(1)
-                          : 0}
-                      </p>
-                    </div>
+                    <div className="reportCard"><p className="reportLabel">Total hours</p><p className="reportValue">{teamReport.total_hours}</p></div>
+                    <div className="reportCard"><p className="reportLabel">Total logs</p><p className="reportValue">{teamReport.total_logs}</p></div>
+                    <div className="reportCard"><p className="reportLabel">Avg hrs / member</p><p className="reportValue">{teamReport.member_count > 0 ? (teamReport.total_hours / teamReport.member_count).toFixed(1) : 0}</p></div>
                   </div>
-
                   <div className="teamReportTables">
                     <div className="reportTable">
                       <p className="reportTableTitle">Hours by member</p>
@@ -408,9 +400,7 @@ export default function Reports() {
                         const name = `${row.staff__first_name || ''} ${row.staff__last_name || ''}`.trim() || row.staff__username || '—';
                         return (
                           <div className="reportRow" key={row.staff__id}>
-                            <span>{name}</span>
-                            <span>{row.hours} hrs</span>
-                            <span>{row.count} logs</span>
+                            <span>{name}</span><span>{row.hours} hrs</span><span>{row.count} logs</span>
                           </div>
                         );
                       })}
@@ -420,9 +410,7 @@ export default function Reports() {
                       {(teamReport.by_project || []).length === 0 && <p className="reportRowEmpty">No data</p>}
                       {(teamReport.by_project || []).map((row) => (
                         <div className="reportRow" key={row.project__name || 'none'}>
-                          <span>{row.project__name || 'Unassigned'}</span>
-                          <span>{row.hours} hrs</span>
-                          <span>{row.count} logs</span>
+                          <span>{row.project__name || 'Unassigned'}</span><span>{row.hours} hrs</span><span>{row.count} logs</span>
                         </div>
                       ))}
                     </div>
@@ -431,21 +419,16 @@ export default function Reports() {
                       {(teamReport.by_period || []).length === 0 && <p className="reportRowEmpty">No data</p>}
                       {(teamReport.by_period || []).map((row) => (
                         <div className="reportRow reportRowTwo" key={row.period}>
-                          <span>{formatPeriodLabel(row.period, teamReport.period_unit)}</span>
-                          <span>{row.hours} hrs</span>
+                          <span>{formatPeriodLabel(row.period, teamReport.period_unit)}</span><span>{row.hours} hrs</span>
                         </div>
                       ))}
                     </div>
                   </div>
-
                   <div className="reportActions">
-                    <button className="btn btnSecondary" type="button" onClick={downloadTeamPdf}>
-                      Download PDF
-                    </button>
+                    <button className="btn btnSecondary" type="button" onClick={downloadTeamPdf}>Download PDF</button>
                   </div>
                 </>
               )}
-
               {!teamReportLoading && !teamReport && !error && (
                 <div className="emptyState">
                   <p className="emptyTitle">No data</p>

@@ -503,6 +503,113 @@ a {
   gap: 10px;
 }
 
+/* ── Team KPI section ── */
+.teamKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.teamKpiCard {
+  background: var(--surface-muted, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+
+.teamKpiCard:hover {
+  border-color: rgba(225, 29, 139, 0.3);
+}
+
+.teamKpiCardMe {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.teamKpiTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.teamKpiRank {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.teamKpiCardMe .teamKpiRank {
+  background: var(--accent);
+  color: #fff;
+}
+
+.teamKpiName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teamKpiYou {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.teamKpiStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.teamKpiStat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.teamKpiStatVal {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.teamKpiStatLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.teamKpiBar {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.teamKpiBarFill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
 .projectItem {
   display: flex;
   align-items: center;
@@ -808,8 +915,11 @@ a {
 .reportHistoryList {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
   margin-top: 8px;
+  scrollbar-width: thin;
 }
 
 .reportHistoryItem {
@@ -821,6 +931,8 @@ a {
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
