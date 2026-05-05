@@ -411,9 +411,6 @@ def delete_project(request, project_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def reports_summary(request):
-    if request.user.role != 'admin':
-        return Response({'detail': 'Not allowed'}, status=403)
-
     today = timezone.now().date()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
@@ -448,8 +445,6 @@ def reports_summary(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_report(request):
-    if request.user.role != 'admin':
-        return Response({'detail': 'Not allowed'}, status=403)
 
     today = timezone.now().date()
     week_start = today - timedelta(days=today.weekday())
