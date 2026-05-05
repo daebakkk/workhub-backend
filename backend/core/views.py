@@ -312,7 +312,8 @@ def refresh_token(request):
 @permission_classes([IsAuthenticated])
 def user_settings(request):
     if request.method == 'GET':
-        return Response(UserSerializer(request.user).data)
+        fresh = User.objects.select_related('team').get(pk=request.user.pk)
+        return Response(UserSerializer(fresh).data)
 
     data = request.data or {}
     username = data.get('username')
@@ -357,15 +358,18 @@ def user_settings(request):
     team_id = data.get('team_id')
     if 'team_id' in data:
         if team_id is None:
-            request.user.team = None
+            User.objects.filter(pk=request.user.pk).update(team=None)
         else:
             try:
-                request.user.team = Team.objects.get(id=team_id)
+                team_obj = Team.objects.get(id=team_id)
+                User.objects.filter(pk=request.user.pk).update(team=team_obj)
             except Team.DoesNotExist:
                 return Response({'detail': 'Invalid team.'}, status=400)
 
     request.user.save()
-    return Response(UserSerializer(request.user).data)
+    # Re-fetch to get latest state including team relation
+    updated_user = User.objects.select_related('team').get(pk=request.user.pk)
+    return Response(UserSerializer(updated_user).data)
 
 
 @api_view(['POST'])
