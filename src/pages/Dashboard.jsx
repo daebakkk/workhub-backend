@@ -68,7 +68,14 @@ function Dashboard() {
     if (dashView !== 'teams') return;
     setTeamDashLoading(true);
     API.get('dashboard/team/')
-      .then((res) => setTeamDash(res.data?.detail === 'no_team' ? 'no_team' : res.data))
+      .then((res) => {
+        const data = res.data;
+        if (!data || data.detail === 'no_team') {
+          setTeamDash('no_team');
+        } else {
+          setTeamDash(data);
+        }
+      })
       .catch(() => setTeamDash('no_team'))
       .finally(() => setTeamDashLoading(false));
   }, [dashView]);
@@ -138,7 +145,7 @@ function Dashboard() {
             className={`dashViewTab ${dashView === 'teams' ? 'isActive' : ''}`}
             onClick={() => setDashView('teams')}
           >
-            Teams
+            Team
           </button>
         </div>
         <Navbar />

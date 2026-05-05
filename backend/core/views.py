@@ -1095,7 +1095,12 @@ def team_leaderboard(request):
 @permission_classes([IsAuthenticated])
 def my_team_dashboard(request):
     """Dashboard data for the current user's own team."""
-    team = request.user.team
+    # Re-fetch user with team relation to avoid cached None from JWT auth
+    try:
+        fresh_user = User.objects.select_related('team').get(pk=request.user.pk)
+    except User.DoesNotExist:
+        return Response({'detail': 'no_team'}, status=200)
+    team = fresh_user.team
     if not team:
         return Response({'detail': 'no_team'}, status=200)
 
