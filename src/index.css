@@ -1941,7 +1941,7 @@ body.dark .ctaSection .ctaPanel {
   gap: 12px;
 }
 
-.taskTitle {
+.taskHeader .taskTitle {
   margin: 0;
   font-size: 13px;
   font-weight: 700;
