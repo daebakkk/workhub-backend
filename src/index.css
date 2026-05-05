@@ -610,6 +610,123 @@ a {
   transition: width 0.4s ease;
 }
 
+/* ── Dashboard view tabs ── */
+.dashViewTabs {
+  display: flex;
+  gap: 6px;
+  background: var(--surface-muted, var(--border));
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.dashViewTab {
+  padding: 6px 18px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dashViewTab.isActive {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ── Team dashboard ── */
+.teamDashHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.teamDashSelect {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  cursor: pointer;
+}
+
+.teamDashSelect:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.teamKpiCardBtn {
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.teamDashDetail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .teamDashDetail {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teamMemberRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.teamMemberRow:last-child {
+  border-bottom: none;
+}
+
+.teamMemberName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.teamMemberBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.teamMemberBarFill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.teamMemberHours {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 40px;
+  text-align: right;
+}
+
 .projectItem {
   display: flex;
   align-items: center;
@@ -919,7 +1036,11 @@ a {
   overflow-x: auto;
   padding-bottom: 4px;
   margin-top: 8px;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+
+.reportHistoryList::-webkit-scrollbar {
+  display: none;
 }
 
 .reportHistoryItem {
@@ -1137,6 +1258,9 @@ a {
 
 .landingTopBar {
   padding: 24px 40px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .landingLogo {

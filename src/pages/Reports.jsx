@@ -321,7 +321,7 @@ export default function Reports() {
                   <div className="reportActions">
                     <button className="btn btnSecondary" type="button" onClick={downloadGeneralPdf}>Download PDF</button>
                     <button className="btn btnPrimary" type="button" onClick={refreshGeneralReport} disabled={generalLoading}>
-                      {generalLoading ? 'Refreshing…' : 'Refresh report'}
+                      {generalLoading ? 'Refreshing…' : 'New report'}
                     </button>
                   </div>
                 </>

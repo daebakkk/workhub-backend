@@ -24,8 +24,14 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // team dashboard
+  const [dashView, setDashView] = useState('personal'); // 'personal' | 'teams'
+  const [teams, setTeams] = useState([]);
+  const [selectedTeamId, setSelectedTeamId] = useState('');
   const [teamStats, setTeamStats] = useState([]);
-  const [teamStatsLoading, setTeamStatsLoading] = useState(true);
+  const [teamStatsLoading, setTeamStatsLoading] = useState(false);
+  const [teamDetail, setTeamDetail] = useState(null);
+  const [teamDetailLoading, setTeamDetailLoading] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -63,12 +69,36 @@ function Dashboard() {
   }, [isAdmin]);
 
   useEffect(() => {
+    // Load teams list for the selector
+    API.get('teams/').then((res) => {
+      const list = res.data || [];
+      setTeams(list);
+      // Pre-select user's own team if they have one
+      const myTeam = list.find((t) => t.id === user?.team?.id || t.name === user?.team?.name);
+      if (myTeam) setSelectedTeamId(String(myTeam.id));
+      else if (list.length) setSelectedTeamId(String(list[0].id));
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load all-teams leaderboard when switching to teams view
+  useEffect(() => {
+    if (dashView !== 'teams') return;
+    setTeamStatsLoading(true);
     API.get('leaderboard/teams/?range=this_week')
       .then((res) => setTeamStats(res.data || []))
       .catch(() => {})
       .finally(() => setTeamStatsLoading(false));
-  }, []);
+  }, [dashView]);
 
+  // Load selected team detail report
+  useEffect(() => {
+    if (dashView !== 'teams' || !selectedTeamId) return;
+    setTeamDetailLoading(true);
+    API.get(`reports/team/${selectedTeamId}/summary/?range=this_week`)
+      .then((res) => setTeamDetail(res.data || null))
+      .catch(() => {})
+      .finally(() => setTeamDetailLoading(false));
+  }, [dashView, selectedTeamId]);
   const stats = useMemo(
     () => ({
       hoursThisWeek: Number(summary.hours_this_week || 0).toFixed(1),
@@ -122,6 +152,22 @@ function Dashboard() {
           <h1 className="dashTitle">Dashboard</h1>
           <p className="dashWelcome">Welcome, {displayName}</p>
         </div>
+        <div className="dashViewTabs">
+          <button
+            type="button"
+            className={`dashViewTab ${dashView === 'personal' ? 'isActive' : ''}`}
+            onClick={() => setDashView('personal')}
+          >
+            Personal
+          </button>
+          <button
+            type="button"
+            className={`dashViewTab ${dashView === 'teams' ? 'isActive' : ''}`}
+            onClick={() => setDashView('teams')}
+          >
+            Teams
+          </button>
+        </div>
         <Navbar />
       </header>
       <div className="dashLayout">
@@ -162,198 +208,220 @@ function Dashboard() {
         </aside>
 
         <main className="dashMain dashContent">
-          <p className="dashSubtitle">
-            Log your work and track your progress
-          </p>
+          {dashView === 'personal' && (
+            <>
+              <p className="dashSubtitle">Log your work and track your progress</p>
 
-          <section className="statGrid">
-            <div className="statCard">
-              <p className="statLabel">Hours logged</p>
-              <p className="statValue">{stats.hoursThisWeek}</p>
-              <p className="statMeta">This week</p>
-            </div>
-            <div className="statCard">
-              <p className="statLabel">Active projects</p>
-              <p className="statValue">{stats.activeProjects}</p>
-              <p className="statMeta">In progress</p>
-            </div>
-            {isAdmin ? (
-              <div className="statCard">
-                <p className="statLabel">Logs to review</p>
-                <p className="statValue">{summary.pending_logs}</p>
-                <p className="statMeta">Awaiting review</p>
-              </div>
-            ) : (
-              <div className="statCard">
-                <p className="statLabel">Approval rate</p>
-                <p className="statValue">{stats.approvalRate}%</p>
-                <p className="statMeta">Last 30 days</p>
-              </div>
-            )}
-          </section>
+              <section className="statGrid">
+                <div className="statCard">
+                  <p className="statLabel">Hours logged</p>
+                  <p className="statValue">{stats.hoursThisWeek}</p>
+                  <p className="statMeta">This week</p>
+                </div>
+                <div className="statCard">
+                  <p className="statLabel">Active projects</p>
+                  <p className="statValue">{stats.activeProjects}</p>
+                  <p className="statMeta">In progress</p>
+                </div>
+                {isAdmin ? (
+                  <div className="statCard">
+                    <p className="statLabel">Logs to review</p>
+                    <p className="statValue">{summary.pending_logs}</p>
+                    <p className="statMeta">Awaiting review</p>
+                  </div>
+                ) : (
+                  <div className="statCard">
+                    <p className="statLabel">Approval rate</p>
+                    <p className="statValue">{stats.approvalRate}%</p>
+                    <p className="statMeta">Last 30 days</p>
+                  </div>
+                )}
+              </section>
 
-          <section className="card">
-            <div className="cardHeader">
-              <div>
-                <h2 className="cardTitle">Weekly goal</h2>
-                <p className="cardSubtitle">{stats.hoursThisWeek} of {weeklyGoal || '—'} hours</p>
-              </div>
-              {!editingGoal && (
-                <button
-                  className="btn btnSecondary"
-                  type="button"
-                  onClick={() => setEditingGoal(true)}
-                >
-                  Change
-                </button>
-              )}
-            </div>
-            {editingGoal && (
-              <div className="dashGoalEdit">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  className="dashGoalInput"
-                  placeholder="Target hours"
-                  value={goalDraft}
-                  onChange={(e) => setGoalDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      saveWeeklyGoal();
-                    }
-                  }}
-                />
-                <button
-                  className="btn btnPrimary"
-                  type="button"
-                  onClick={saveWeeklyGoal}
-                  disabled={savingGoal}
-                >
-                  {savingGoal ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            )}
-            <div className="dashGoalProgress">
-              <div className="progressBar">
-                <div
-                  className="progressFill"
-                  style={{ width: `${goalProgress}%` }}
-                />
-              </div>
-              <p className="dashGoalPercent">{goalProgress}% complete</p>
-            </div>
-            {goalMessage && <p className="inlineStatus">{goalMessage}</p>}
-          </section>
+              <section className="card">
+                <div className="cardHeader">
+                  <div>
+                    <h2 className="cardTitle">Weekly goal</h2>
+                    <p className="cardSubtitle">{stats.hoursThisWeek} of {weeklyGoal || '—'} hours</p>
+                  </div>
+                  {!editingGoal && (
+                    <button className="btn btnSecondary" type="button" onClick={() => setEditingGoal(true)}>
+                      Change
+                    </button>
+                  )}
+                </div>
+                {editingGoal && (
+                  <div className="dashGoalEdit">
+                    <input
+                      type="number" min="0" step="0.5"
+                      className="dashGoalInput"
+                      placeholder="Target hours"
+                      value={goalDraft}
+                      onChange={(e) => setGoalDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); saveWeeklyGoal(); } }}
+                    />
+                    <button className="btn btnPrimary" type="button" onClick={saveWeeklyGoal} disabled={savingGoal}>
+                      {savingGoal ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                )}
+                <div className="dashGoalProgress">
+                  <div className="progressBar">
+                    <div className="progressFill" style={{ width: `${goalProgress}%` }} />
+                  </div>
+                  <p className="dashGoalPercent">{goalProgress}% complete</p>
+                </div>
+                {goalMessage && <p className="inlineStatus">{goalMessage}</p>}
+              </section>
 
-          <section className="card">
-            <div className="cardHeader">
-              <h2 className="cardTitle">Recent Projects</h2>
-              <Link to="/projects" className="btn btnSecondary">
-                View all
-              </Link>
-            </div>
-            {loading && <p className="inlineStatus">Loading projects…</p>}
-            {error && <p className="inlineError">{error}</p>}
-            {!loading && !error && summary.recent_projects.length === 0 && (
-              <div className="emptyState">
-                <p className="emptyTitle">No projects yet</p>
-                <p className="emptySubtitle">
-                  Projects assigned to you will appear here.
-                </p>
-              </div>
-            )}
-            {!loading && !error && summary.recent_projects.length > 0 && (
-              <div className="projectList">
-                {summary.recent_projects.map((project) => {
-                  const percent = project.completion_percent || 0;
-                  const totalTasks = project.total_tasks || 0;
-                  const status = getStatus(percent, totalTasks);
-                  const badgeClass = status.toLowerCase().replace(' ', '-');
-                  return (
-                    <Link to="/projects" className="projectItem" key={project.id}>
-                      <div className="projectItemContent">
-                        <p className="projectTitle">{project.name}</p>
-                        <p className="projectMeta">
-                          {project.description || 'No description yet'}
-                        </p>
-                      </div>
-                      <div className="projectItemRight">
-                        <div className="projectItemProgress">
-                          <div className="projectItemProgressBar">
-                            <div
-                              className="projectItemProgressFill"
-                              style={{ width: `${percent}%` }}
-                            />
+              <section className="card">
+                <div className="cardHeader">
+                  <h2 className="cardTitle">Recent Projects</h2>
+                  <Link to="/projects" className="btn btnSecondary">View all</Link>
+                </div>
+                {loading && <p className="inlineStatus">Loading projects…</p>}
+                {error && <p className="inlineError">{error}</p>}
+                {!loading && !error && summary.recent_projects.length === 0 && (
+                  <div className="emptyState">
+                    <p className="emptyTitle">No projects yet</p>
+                    <p className="emptySubtitle">Projects assigned to you will appear here.</p>
+                  </div>
+                )}
+                {!loading && !error && summary.recent_projects.length > 0 && (
+                  <div className="projectList">
+                    {summary.recent_projects.map((project) => {
+                      const percent = project.completion_percent || 0;
+                      const totalTasks = project.total_tasks || 0;
+                      const status = getStatus(percent, totalTasks);
+                      const badgeClass = status.toLowerCase().replace(' ', '-');
+                      return (
+                        <Link to="/projects" className="projectItem" key={project.id}>
+                          <div className="projectItemContent">
+                            <p className="projectTitle">{project.name}</p>
+                            <p className="projectMeta">{project.description || 'No description yet'}</p>
                           </div>
-                          <span className="projectItemProgressText">{percent}%</span>
-                        </div>
-                        <span className={`projectStatus ${badgeClass}`}>
-                          {status}
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+                          <div className="projectItemRight">
+                            <div className="projectItemProgress">
+                              <div className="projectItemProgressBar">
+                                <div className="projectItemProgressFill" style={{ width: `${percent}%` }} />
+                              </div>
+                              <span className="projectItemProgressText">{percent}%</span>
+                            </div>
+                            <span className={`projectStatus ${badgeClass}`}>{status}</span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
 
-          <section className="card">
-            <div className="cardHeader">
-              <h2 className="cardTitle">Teams this week</h2>
-              <Link to="/leaderboard" className="btn btnSecondary">Full leaderboard</Link>
-            </div>
-            {teamStatsLoading && <p className="inlineStatus">Loading…</p>}
-            {!teamStatsLoading && teamStats.length === 0 && (
-              <div className="emptyState">
-                <p className="emptyTitle">No team data yet</p>
-                <p className="emptySubtitle">Team activity will appear here once logs are submitted.</p>
+          {dashView === 'teams' && (
+            <>
+              <div className="teamDashHeader">
+                <p className="dashSubtitle">Team performance this week</p>
+                <select
+                  className="teamDashSelect"
+                  value={selectedTeamId}
+                  onChange={(e) => setSelectedTeamId(e.target.value)}
+                >
+                  {teams.map((t) => (
+                    <option key={t.id} value={String(t.id)}>{t.display_name}</option>
+                  ))}
+                </select>
               </div>
-            )}
-            {!teamStatsLoading && teamStats.length > 0 && (
-              <div className="teamKpiGrid">
-                {teamStats.map((team, i) => {
-                  const isMyTeam = user?.team?.id === team.id || user?.team?.name === team.name;
-                  const topHours = teamStats[0]?.total_hours || 1;
-                  const barPct = Math.round((team.total_hours / topHours) * 100);
-                  return (
-                    <div key={team.id} className={`teamKpiCard ${isMyTeam ? 'teamKpiCardMe' : ''}`}>
-                      <div className="teamKpiTop">
-                        <div className="teamKpiRank">{i + 1}</div>
-                        <div className="teamKpiName">
-                          {team.display_name}
-                          {isMyTeam && <span className="teamKpiYou">your team</span>}
+
+              {/* All-teams ranking strip */}
+              {teamStatsLoading && <p className="inlineStatus">Loading…</p>}
+              {!teamStatsLoading && teamStats.length > 0 && (
+                <div className="teamKpiGrid">
+                  {teamStats.map((team, i) => {
+                    const isSelected = String(team.id) === selectedTeamId;
+                    const topHours = teamStats[0]?.total_hours || 1;
+                    const barPct = Math.round((team.total_hours / topHours) * 100);
+                    return (
+                      <button
+                        key={team.id}
+                        type="button"
+                        className={`teamKpiCard teamKpiCardBtn ${isSelected ? 'teamKpiCardMe' : ''}`}
+                        onClick={() => setSelectedTeamId(String(team.id))}
+                      >
+                        <div className="teamKpiTop">
+                          <div className="teamKpiRank">{i + 1}</div>
+                          <div className="teamKpiName">{team.display_name}</div>
                         </div>
-                      </div>
-                      <div className="teamKpiStats">
-                        <div className="teamKpiStat">
-                          <span className="teamKpiStatVal">{team.total_hours}h</span>
-                          <span className="teamKpiStatLabel">total</span>
+                        <div className="teamKpiStats">
+                          <div className="teamKpiStat">
+                            <span className="teamKpiStatVal">{team.total_hours}h</span>
+                            <span className="teamKpiStatLabel">total</span>
+                          </div>
+                          <div className="teamKpiStat">
+                            <span className="teamKpiStatVal">{team.avg_hours}h</span>
+                            <span className="teamKpiStatLabel">avg</span>
+                          </div>
+                          <div className="teamKpiStat">
+                            <span className="teamKpiStatVal">{team.member_count}</span>
+                            <span className="teamKpiStatLabel">members</span>
+                          </div>
+                          <div className="teamKpiStat">
+                            <span className="teamKpiStatVal">{team.log_count}</span>
+                            <span className="teamKpiStatLabel">logs</span>
+                          </div>
                         </div>
-                        <div className="teamKpiStat">
-                          <span className="teamKpiStatVal">{team.avg_hours}h</span>
-                          <span className="teamKpiStatLabel">avg / member</span>
+                        <div className="teamKpiBar">
+                          <div className="teamKpiBarFill" style={{ width: `${barPct}%` }} />
                         </div>
-                        <div className="teamKpiStat">
-                          <span className="teamKpiStatVal">{team.member_count}</span>
-                          <span className="teamKpiStatLabel">members</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Selected team detail */}
+              {teamDetailLoading && <p className="inlineStatus">Loading team details…</p>}
+              {!teamDetailLoading && teamDetail && (
+                <>
+                  <div className="teamDashDetail">
+                    <section className="card">
+                      <p className="cardTitle">Hours by member</p>
+                      {(teamDetail.by_member || []).length === 0 && (
+                        <p className="inlineStatus">No logs this week.</p>
+                      )}
+                      {(teamDetail.by_member || []).map((row) => {
+                        const name = `${row.staff__first_name || ''} ${row.staff__last_name || ''}`.trim() || row.staff__username || '—';
+                        const topMemberHours = Math.max(...(teamDetail.by_member || []).map((r) => r.hours), 1);
+                        const pct = Math.round((row.hours / topMemberHours) * 100);
+                        return (
+                          <div className="teamMemberRow" key={row.staff__id}>
+                            <span className="teamMemberName">{name}</span>
+                            <div className="teamMemberBar">
+                              <div className="teamMemberBarFill" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="teamMemberHours">{row.hours}h</span>
+                          </div>
+                        );
+                      })}
+                    </section>
+
+                    <section className="card">
+                      <p className="cardTitle">Hours by project</p>
+                      {(teamDetail.by_project || []).length === 0 && (
+                        <p className="inlineStatus">No project logs this week.</p>
+                      )}
+                      {(teamDetail.by_project || []).map((row) => (
+                        <div className="teamMemberRow" key={row.project__name || 'none'}>
+                          <span className="teamMemberName">{row.project__name || 'Unassigned'}</span>
+                          <span className="teamMemberHours">{row.hours}h · {row.count} logs</span>
                         </div>
-                        <div className="teamKpiStat">
-                          <span className="teamKpiStatVal">{team.log_count}</span>
-                          <span className="teamKpiStatLabel">logs</span>
-                        </div>
-                      </div>
-                      <div className="teamKpiBar">
-                        <div className="teamKpiBarFill" style={{ width: `${barPct}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+                      ))}
+                    </section>
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </main>
       </div>
     </div>
