@@ -727,6 +727,90 @@ a {
   text-align: right;
 }
 
+/* ── Team dashboard banner + project rows ── */
+.teamDashBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(225, 29, 139, 0.2);
+  border-radius: 18px;
+}
+
+.teamDashBannerName {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.teamDashBannerMeta {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.teamProjectRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.teamProjectRow:last-child {
+  border-bottom: none;
+}
+
+.teamProjectInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.teamProjectName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teamProjectMembers {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.teamProjectProgress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 140px;
+}
+
+.teamProjectProgress .progressBar {
+  flex: 1;
+}
+
+.teamProjectPct {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+.teamProjectTasks {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .projectItem {
   display: flex;
   align-items: center;

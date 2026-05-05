@@ -26,12 +26,8 @@ function Dashboard() {
 
   // team dashboard
   const [dashView, setDashView] = useState('personal'); // 'personal' | 'teams'
-  const [teams, setTeams] = useState([]);
-  const [selectedTeamId, setSelectedTeamId] = useState('');
-  const [teamStats, setTeamStats] = useState([]);
-  const [teamStatsLoading, setTeamStatsLoading] = useState(false);
-  const [teamDetail, setTeamDetail] = useState(null);
-  const [teamDetailLoading, setTeamDetailLoading] = useState(false);
+  const [teamDash, setTeamDash] = useState(null);       // null | 'no_team' | data object
+  const [teamDashLoading, setTeamDashLoading] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -69,36 +65,13 @@ function Dashboard() {
   }, [isAdmin]);
 
   useEffect(() => {
-    // Load teams list for the selector
-    API.get('teams/').then((res) => {
-      const list = res.data || [];
-      setTeams(list);
-      // Pre-select user's own team if they have one
-      const myTeam = list.find((t) => t.id === user?.team?.id || t.name === user?.team?.name);
-      if (myTeam) setSelectedTeamId(String(myTeam.id));
-      else if (list.length) setSelectedTeamId(String(list[0].id));
-    }).catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Load all-teams leaderboard when switching to teams view
-  useEffect(() => {
     if (dashView !== 'teams') return;
-    setTeamStatsLoading(true);
-    API.get('leaderboard/teams/?range=this_week')
-      .then((res) => setTeamStats(res.data || []))
-      .catch(() => {})
-      .finally(() => setTeamStatsLoading(false));
+    setTeamDashLoading(true);
+    API.get('dashboard/team/')
+      .then((res) => setTeamDash(res.data?.detail === 'no_team' ? 'no_team' : res.data))
+      .catch(() => setTeamDash('no_team'))
+      .finally(() => setTeamDashLoading(false));
   }, [dashView]);
-
-  // Load selected team detail report
-  useEffect(() => {
-    if (dashView !== 'teams' || !selectedTeamId) return;
-    setTeamDetailLoading(true);
-    API.get(`reports/team/${selectedTeamId}/summary/?range=this_week`)
-      .then((res) => setTeamDetail(res.data || null))
-      .catch(() => {})
-      .finally(() => setTeamDetailLoading(false));
-  }, [dashView, selectedTeamId]);
   const stats = useMemo(
     () => ({
       hoursThisWeek: Number(summary.hours_this_week || 0).toFixed(1),
@@ -320,79 +293,54 @@ function Dashboard() {
 
           {dashView === 'teams' && (
             <>
-              <div className="teamDashHeader">
-                <p className="dashSubtitle">Team performance this week</p>
-                <select
-                  className="teamDashSelect"
-                  value={selectedTeamId}
-                  onChange={(e) => setSelectedTeamId(e.target.value)}
-                >
-                  {teams.map((t) => (
-                    <option key={t.id} value={String(t.id)}>{t.display_name}</option>
-                  ))}
-                </select>
-              </div>
+              {teamDashLoading && <p className="inlineStatus">Loading team dashboard…</p>}
 
-              {/* All-teams ranking strip */}
-              {teamStatsLoading && <p className="inlineStatus">Loading…</p>}
-              {!teamStatsLoading && teamStats.length > 0 && (
-                <div className="teamKpiGrid">
-                  {teamStats.map((team, i) => {
-                    const isSelected = String(team.id) === selectedTeamId;
-                    const topHours = teamStats[0]?.total_hours || 1;
-                    const barPct = Math.round((team.total_hours / topHours) * 100);
-                    return (
-                      <button
-                        key={team.id}
-                        type="button"
-                        className={`teamKpiCard teamKpiCardBtn ${isSelected ? 'teamKpiCardMe' : ''}`}
-                        onClick={() => setSelectedTeamId(String(team.id))}
-                      >
-                        <div className="teamKpiTop">
-                          <div className="teamKpiRank">{i + 1}</div>
-                          <div className="teamKpiName">{team.display_name}</div>
-                        </div>
-                        <div className="teamKpiStats">
-                          <div className="teamKpiStat">
-                            <span className="teamKpiStatVal">{team.total_hours}h</span>
-                            <span className="teamKpiStatLabel">total</span>
-                          </div>
-                          <div className="teamKpiStat">
-                            <span className="teamKpiStatVal">{team.avg_hours}h</span>
-                            <span className="teamKpiStatLabel">avg</span>
-                          </div>
-                          <div className="teamKpiStat">
-                            <span className="teamKpiStatVal">{team.member_count}</span>
-                            <span className="teamKpiStatLabel">members</span>
-                          </div>
-                          <div className="teamKpiStat">
-                            <span className="teamKpiStatVal">{team.log_count}</span>
-                            <span className="teamKpiStatLabel">logs</span>
-                          </div>
-                        </div>
-                        <div className="teamKpiBar">
-                          <div className="teamKpiBarFill" style={{ width: `${barPct}%` }} />
-                        </div>
-                      </button>
-                    );
-                  })}
+              {!teamDashLoading && teamDash === 'no_team' && (
+                <div className="emptyState">
+                  <p className="emptyTitle">You're not part of a team</p>
+                  <p className="emptySubtitle">Ask your admin to assign you to a team, or update it in <Link to="/settings">Settings</Link>.</p>
                 </div>
               )}
 
-              {/* Selected team detail */}
-              {teamDetailLoading && <p className="inlineStatus">Loading team details…</p>}
-              {!teamDetailLoading && teamDetail && (
+              {!teamDashLoading && teamDash && teamDash !== 'no_team' && (
                 <>
+                  {/* Team header */}
+                  <div className="teamDashBanner">
+                    <div>
+                      <h2 className="teamDashBannerName">{teamDash.team.display_name}</h2>
+                      <p className="teamDashBannerMeta">{teamDash.member_count} member{teamDash.member_count !== 1 ? 's' : ''}</p>
+                    </div>
+                    <Link to="/reports" className="btn btnSecondary">Full report</Link>
+                  </div>
+
+                  {/* KPI strip */}
+                  <section className="statGrid">
+                    <div className="statCard">
+                      <p className="statLabel">Total hours</p>
+                      <p className="statValue">{teamDash.total_hours}</p>
+                      <p className="statMeta">All time</p>
+                    </div>
+                    <div className="statCard">
+                      <p className="statLabel">This week</p>
+                      <p className="statValue">{teamDash.week_hours}</p>
+                      <p className="statMeta">Hours logged</p>
+                    </div>
+                    <div className="statCard">
+                      <p className="statLabel">Total logs</p>
+                      <p className="statValue">{teamDash.total_logs}</p>
+                      <p className="statMeta">All time</p>
+                    </div>
+                  </section>
+
+                  {/* Member hours + project hours side by side */}
                   <div className="teamDashDetail">
                     <section className="card">
-                      <p className="cardTitle">Hours by member</p>
-                      {(teamDetail.by_member || []).length === 0 && (
-                        <p className="inlineStatus">No logs this week.</p>
-                      )}
-                      {(teamDetail.by_member || []).map((row) => {
+                      <h2 className="cardTitle">Hours by member</h2>
+                      {teamDash.by_member.length === 0 && <p className="inlineStatus">No logs yet.</p>}
+                      {teamDash.by_member.map((row) => {
                         const name = `${row.staff__first_name || ''} ${row.staff__last_name || ''}`.trim() || row.staff__username || '—';
-                        const topMemberHours = Math.max(...(teamDetail.by_member || []).map((r) => r.hours), 1);
-                        const pct = Math.round((row.hours / topMemberHours) * 100);
+                        const topH = Math.max(...teamDash.by_member.map((r) => r.hours), 1);
+                        const pct = Math.round((row.hours / topH) * 100);
                         return (
                           <div className="teamMemberRow" key={row.staff__id}>
                             <span className="teamMemberName">{name}</span>
@@ -406,18 +354,54 @@ function Dashboard() {
                     </section>
 
                     <section className="card">
-                      <p className="cardTitle">Hours by project</p>
-                      {(teamDetail.by_project || []).length === 0 && (
-                        <p className="inlineStatus">No project logs this week.</p>
-                      )}
-                      {(teamDetail.by_project || []).map((row) => (
-                        <div className="teamMemberRow" key={row.project__name || 'none'}>
-                          <span className="teamMemberName">{row.project__name || 'Unassigned'}</span>
-                          <span className="teamMemberHours">{row.hours}h · {row.count} logs</span>
-                        </div>
-                      ))}
+                      <h2 className="cardTitle">Hours by project</h2>
+                      {teamDash.by_project.length === 0 && <p className="inlineStatus">No project logs yet.</p>}
+                      {teamDash.by_project.map((row) => {
+                        const topH = Math.max(...teamDash.by_project.map((r) => r.hours), 1);
+                        const pct = Math.round((row.hours / topH) * 100);
+                        return (
+                          <div className="teamMemberRow" key={row.project__name || 'none'}>
+                            <span className="teamMemberName">{row.project__name || 'Unassigned'}</span>
+                            <div className="teamMemberBar">
+                              <div className="teamMemberBarFill" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="teamMemberHours">{row.hours}h</span>
+                          </div>
+                        );
+                      })}
                     </section>
                   </div>
+
+                  {/* Project progress */}
+                  <section className="card">
+                    <div className="cardHeader">
+                      <h2 className="cardTitle">Team projects</h2>
+                      <Link to="/projects" className="btn btnSecondary">View all</Link>
+                    </div>
+                    {teamDash.projects.length === 0 && (
+                      <div className="emptyState">
+                        <p className="emptyTitle">No projects yet</p>
+                        <p className="emptySubtitle">Projects your team is working on will appear here.</p>
+                      </div>
+                    )}
+                    {teamDash.projects.map((p) => (
+                      <div className="teamProjectRow" key={p.id}>
+                        <div className="teamProjectInfo">
+                          <span className="teamProjectName">{p.name}</span>
+                          <span className="teamProjectMembers">
+                            {p.members.map((m) => m.name).join(', ')}
+                          </span>
+                        </div>
+                        <div className="teamProjectProgress">
+                          <div className="progressBar">
+                            <div className="progressFill" style={{ width: `${p.completion_percent}%` }} />
+                          </div>
+                          <span className="teamProjectPct">{p.completion_percent}%</span>
+                        </div>
+                        <span className="teamProjectTasks">{p.completed_tasks}/{p.total_tasks} tasks</span>
+                      </div>
+                    ))}
+                  </section>
                 </>
               )}
             </>

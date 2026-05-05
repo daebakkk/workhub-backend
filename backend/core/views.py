@@ -1093,7 +1093,89 @@ def team_leaderboard(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def team_projects(request):
+def my_team_dashboard(request):
+    """Dashboard data for the current user's own team."""
+    team = request.user.team
+    if not team:
+        return Response({'detail': 'no_team'}, status=200)
+
+    today = timezone.now().date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = today
+
+    member_ids = list(team.members.values_list('id', flat=True))
+    members = list(User.objects.filter(id__in=member_ids).order_by('first_name', 'last_name', 'username'))
+
+    # All-time logs for the team
+    all_logs = WorkLog.objects.filter(staff_id__in=member_ids)
+    # This-week logs
+    week_logs = all_logs.filter(date__gte=week_start, date__lte=week_end)
+
+    total_hours = float(all_logs.aggregate(t=Sum('hours'))['t'] or 0)
+    week_hours = float(week_logs.aggregate(t=Sum('hours'))['t'] or 0)
+    total_logs_count = all_logs.count()
+
+    # Hours per member (all time)
+    by_member = list(
+        all_logs.values('staff__id', 'staff__first_name', 'staff__last_name', 'staff__username')
+        .annotate(hours=Sum('hours'), log_count=Count('id'))
+        .order_by('-hours')
+    )
+    for row in by_member:
+        row['hours'] = float(row['hours'] or 0)
+
+    # Hours per project (all time)
+    by_project = list(
+        all_logs.values('project__id', 'project__name')
+        .annotate(hours=Sum('hours'), log_count=Count('id'))
+        .order_by('-hours')
+    )
+    for row in by_project:
+        row['hours'] = float(row['hours'] or 0)
+
+    # Project progress — projects that have at least one team member assigned
+    team_projects = (
+        Project.objects.filter(staff__id__in=member_ids)
+        .distinct()
+        .prefetch_related('staff')
+        .annotate(
+            total_tasks=Count('tasks', distinct=True),
+            completed_tasks=Count('tasks', filter=Q(tasks__progress__gte=100), distinct=True),
+        )
+    )
+    projects_data = []
+    for p in team_projects:
+        total = p.total_tasks or 0
+        completed = p.completed_tasks or 0
+        pct = round((completed / total) * 100) if total > 0 else 0
+        projects_data.append({
+            'id': p.id,
+            'name': p.name,
+            'total_tasks': total,
+            'completed_tasks': completed,
+            'completion_percent': pct,
+            'members': [
+                {
+                    'id': m.id,
+                    'name': f"{m.first_name} {m.last_name}".strip() or m.username,
+                }
+                for m in p.staff.all() if m.id in member_ids
+            ],
+        })
+
+    return Response({
+        'team': TeamSerializer(team).data,
+        'member_count': len(member_ids),
+        'total_hours': total_hours,
+        'week_hours': week_hours,
+        'total_logs': total_logs_count,
+        'by_member': by_member,
+        'by_project': by_project,
+        'projects': projects_data,
+    })
+
+
+
     """Return all projects that have at least one member from the current user's team."""
     user_team = request.user.team
     if not user_team:
