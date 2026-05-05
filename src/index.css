@@ -705,6 +705,38 @@ a {
 }
 
 /* ── Team report layout ── */
+.teamReportHeader {
+  width: 100%;
+  max-width: 860px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--accent);
+  margin-bottom: 4px;
+}
+
+.teamReportName {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.teamReportMeta {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.teamReportStats {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
 .teamReportTables {
   width: 100%;
   max-width: 860px;
@@ -717,7 +749,16 @@ a {
   grid-column: 1 / -1;
 }
 
+.reportRowEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
 @media (max-width: 600px) {
+  .teamReportStats {
+    grid-template-columns: 1fr 1fr;
+  }
   .teamReportTables {
     grid-template-columns: 1fr;
   }

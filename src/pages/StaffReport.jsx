@@ -208,28 +208,39 @@ export default function StaffReport() {
                 </option>
               ))}
             </select>
-            <select
-              className="reportSelect"
-              value={staffId || ''}
-              onChange={(e) => {
-                const next = e.target.value;
-                if (!next) {
-                  navigate('/reports');
-                  return;
-                }
-                navigate(`/reports/staff/${next}`);
-              }}
-            >
-              <option value="">General report</option>
-              {isAdmin && user?.id && (
-                <option value={String(user.id)}>My report</option>
-              )}
-              {sortedStaff.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {formatStaffName(person)}
-                </option>
-              ))}
-            </select>
+            {isAdmin && (
+              <select
+                className="reportSelect"
+                value={staffId || ''}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (!next) {
+                    navigate('/reports');
+                    return;
+                  }
+                  navigate(`/reports/staff/${next}`);
+                }}
+              >
+                <option value="">General report</option>
+                {user?.id && (
+                  <option value={String(user.id)}>My report</option>
+                )}
+                {sortedStaff.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {formatStaffName(person)}
+                  </option>
+                ))}
+              </select>
+            )}
+            {!isAdmin && (
+              <button
+                type="button"
+                className="btn btnSecondary"
+                onClick={() => navigate('/reports')}
+              >
+                ← Back
+              </button>
+            )}
           </div>
 
           {loading && <p className="inlineStatus">Loading report...</p>}

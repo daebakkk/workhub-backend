@@ -34,7 +34,7 @@ export default function Reports() {
   const isAdmin = user?.role === 'admin';
 
   // 'general' | 'staff:<id>' | 'team:<id>'
-  const [reportMode, setReportMode] = useState('general');
+  const [reportMode, setReportMode] = useState(isAdmin ? 'general' : (user?.id ? `staff:${user.id}` : 'general'));
   const [teamRange, setTeamRange] = useState('this_week');
 
   const [report, setReport] = useState(null);
@@ -260,11 +260,11 @@ export default function Reports() {
                 }
               }}
             >
-              <option value="general">General report</option>
-              {isAdmin && user?.id && (
+              {isAdmin && <option value="general">General report</option>}
+              {user?.id && (
                 <option value={`staff:${user.id}`}>My report</option>
               )}
-              {sortedStaff.map((person) => (
+              {isAdmin && sortedStaff.map((person) => (
                 <option key={person.id} value={`staff:${person.id}`}>
                   {`${person.first_name || ''} ${person.last_name || ''}`.trim() || person.username}
                 </option>
@@ -376,16 +376,36 @@ export default function Reports() {
 
               {!teamReportLoading && teamReport && (
                 <>
-                  <div className="reportGrid">
-                    <div className="reportCard"><p className="reportLabel">Team</p><p className="reportValue reportValueSmall">{teamReport.team.display_name}</p></div>
-                    <div className="reportCard"><p className="reportLabel">Members</p><p className="reportValue">{teamReport.member_count}</p></div>
-                    <div className="reportCard"><p className="reportLabel">Total hours</p><p className="reportValue">{teamReport.total_hours}</p></div>
-                    <div className="reportCard"><p className="reportLabel">Total logs</p><p className="reportValue">{teamReport.total_logs}</p></div>
+                  <div className="teamReportHeader">
+                    <h2 className="teamReportName">{teamReport.team.display_name}</h2>
+                    <span className="teamReportMeta">{teamReport.member_count} member{teamReport.member_count !== 1 ? 's' : ''}</span>
+                  </div>
+
+                  <div className="teamReportStats">
+                    <div className="reportCard">
+                      <p className="reportLabel">Total hours</p>
+                      <p className="reportValue">{teamReport.total_hours}</p>
+                    </div>
+                    <div className="reportCard">
+                      <p className="reportLabel">Total logs</p>
+                      <p className="reportValue">{teamReport.total_logs}</p>
+                    </div>
+                    <div className="reportCard">
+                      <p className="reportLabel">Avg hrs / member</p>
+                      <p className="reportValue">
+                        {teamReport.member_count > 0
+                          ? (teamReport.total_hours / teamReport.member_count).toFixed(1)
+                          : 0}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="teamReportTables">
                     <div className="reportTable">
                       <p className="reportTableTitle">Hours by member</p>
+                      {(teamReport.by_member || []).length === 0 && (
+                        <p className="reportRowEmpty">No data</p>
+                      )}
                       {(teamReport.by_member || []).map((row) => {
                         const name = `${row.staff__first_name || ''} ${row.staff__last_name || ''}`.trim() || row.staff__username || '—';
                         return (
@@ -399,6 +419,9 @@ export default function Reports() {
                     </div>
                     <div className="reportTable">
                       <p className="reportTableTitle">Hours by project</p>
+                      {(teamReport.by_project || []).length === 0 && (
+                        <p className="reportRowEmpty">No data</p>
+                      )}
                       {(teamReport.by_project || []).map((row) => (
                         <div className="reportRow" key={row.project__name || 'none'}>
                           <span>{row.project__name || 'Unassigned'}</span>
@@ -409,6 +432,9 @@ export default function Reports() {
                     </div>
                     <div className="reportTable teamReportPeriod">
                       <p className="reportTableTitle">{getPeriodTitle(teamReport.period_unit)}</p>
+                      {(teamReport.by_period || []).length === 0 && (
+                        <p className="reportRowEmpty">No data</p>
+                      )}
                       {(teamReport.by_period || []).map((row) => (
                         <div className="reportRow reportRowTwo" key={row.period}>
                           <span>{formatPeriodLabel(row.period, teamReport.period_unit)}</span>
