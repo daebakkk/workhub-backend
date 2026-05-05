@@ -704,6 +704,28 @@ a {
   flex-wrap: wrap;
 }
 
+/* ── Team report layout ── */
+.teamReportTables {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.teamReportPeriod {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 600px) {
+  .teamReportTables {
+    grid-template-columns: 1fr;
+  }
+  .teamReportPeriod {
+    grid-column: 1;
+  }
+}
+
 .reportTopControls {
   width: 100%;
   max-width: 860px;

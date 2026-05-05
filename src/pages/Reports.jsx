@@ -383,7 +383,7 @@ export default function Reports() {
                     <div className="reportCard"><p className="reportLabel">Total logs</p><p className="reportValue">{teamReport.total_logs}</p></div>
                   </div>
 
-                  <div className="reportTables">
+                  <div className="teamReportTables">
                     <div className="reportTable">
                       <p className="reportTableTitle">Hours by member</p>
                       {(teamReport.by_member || []).map((row) => {
@@ -407,16 +407,15 @@ export default function Reports() {
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="reportTable" style={{ marginTop: '16px' }}>
-                    <p className="reportTableTitle">{getPeriodTitle(teamReport.period_unit)}</p>
-                    {(teamReport.by_period || []).map((row) => (
-                      <div className="reportRow reportRowTwo" key={row.period}>
-                        <span>{formatPeriodLabel(row.period, teamReport.period_unit)}</span>
-                        <span>{row.hours} hrs</span>
-                      </div>
-                    ))}
+                    <div className="reportTable teamReportPeriod">
+                      <p className="reportTableTitle">{getPeriodTitle(teamReport.period_unit)}</p>
+                      {(teamReport.by_period || []).map((row) => (
+                        <div className="reportRow reportRowTwo" key={row.period}>
+                          <span>{formatPeriodLabel(row.period, teamReport.period_unit)}</span>
+                          <span>{row.hours} hrs</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="reportActions">
