@@ -1113,7 +1113,6 @@ def my_team_dashboard(request):
     week_end = today
 
     member_ids = list(team.members.values_list('id', flat=True))
-    members = list(User.objects.filter(id__in=member_ids).order_by('first_name', 'last_name', 'username'))
 
     # All-time logs for the team
     all_logs = WorkLog.objects.filter(staff_id__in=member_ids)
@@ -1184,7 +1183,9 @@ def my_team_dashboard(request):
     })
 
 
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def team_projects(request):
     """Return all projects that have at least one member from the current user's team."""
     user_team = request.user.team
     if not user_team:
