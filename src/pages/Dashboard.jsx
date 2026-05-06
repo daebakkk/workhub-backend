@@ -323,19 +323,19 @@ function Dashboard() {
                   {/* KPI strip */}
                   <section className="statGrid">
                     <div className="statCard">
-                      <p className="statLabel">Total hours</p>
-                      <p className="statValue">{teamDash.total_hours}</p>
-                      <p className="statMeta">All time</p>
-                    </div>
-                    <div className="statCard">
-                      <p className="statLabel">This week</p>
+                      <p className="statLabel">Hours this week</p>
                       <p className="statValue">{teamDash.week_hours}</p>
-                      <p className="statMeta">Hours logged</p>
+                      <p className="statMeta">Team total</p>
                     </div>
                     <div className="statCard">
-                      <p className="statLabel">Total logs</p>
-                      <p className="statValue">{teamDash.total_logs}</p>
-                      <p className="statMeta">All time</p>
+                      <p className="statLabel">Avg per member</p>
+                      <p className="statValue">{teamDash.avg_hours_per_member}h</p>
+                      <p className="statMeta">This week</p>
+                    </div>
+                    <div className="statCard">
+                      <p className="statLabel">Logs this week</p>
+                      <p className="statValue">{teamDash.week_logs}</p>
+                      <p className="statMeta">Submitted</p>
                     </div>
                   </section>
 

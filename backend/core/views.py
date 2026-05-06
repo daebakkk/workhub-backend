@@ -1121,7 +1121,8 @@ def my_team_dashboard(request):
 
     total_hours = float(all_logs.aggregate(t=Sum('hours'))['t'] or 0)
     week_hours = float(week_logs.aggregate(t=Sum('hours'))['t'] or 0)
-    total_logs_count = all_logs.count()
+    week_logs_count = week_logs.count()
+    avg_hours_per_member = round(week_hours / len(member_ids), 1) if member_ids else 0
 
     # Hours per member (all time)
     by_member = list(
@@ -1174,9 +1175,9 @@ def my_team_dashboard(request):
     return Response({
         'team': TeamSerializer(team).data,
         'member_count': len(member_ids),
-        'total_hours': total_hours,
         'week_hours': week_hours,
-        'total_logs': total_logs_count,
+        'week_logs': week_logs_count,
+        'avg_hours_per_member': avg_hours_per_member,
         'by_member': by_member,
         'by_project': by_project,
         'projects': projects_data,
