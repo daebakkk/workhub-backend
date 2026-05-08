@@ -317,7 +317,7 @@ function Dashboard() {
                       <h2 className="teamDashBannerName">{teamDash.team.display_name}</h2>
                       <p className="teamDashBannerMeta">{teamDash.member_count} member{teamDash.member_count !== 1 ? 's' : ''}</p>
                     </div>
-                    <Link to="/reports" className="btn btnSecondary">Full report</Link>
+                    <Link to={`/reports?mode=team:${teamDash.team.id}`} className="btn btnSecondary">Full report</Link>
                   </div>
 
                   {/* KPI strip */}

@@ -1,5 +1,5 @@
 import Navbar from '../components/Navbar';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import API from '../api/api';
 
@@ -34,12 +34,19 @@ function formatStaffName(person) {
 }
 
 export default function Reports() {
+  const location = useLocation();
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const isAdmin = user?.role === 'admin';
 
+  // Read initial mode from ?mode=team:3 query param
+  const initialMode = (() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('mode') || 'general';
+  })();
+
   // 'general' | 'staff:<id>' | 'team:<id>'
-  const [reportMode, setReportMode] = useState('general');
+  const [reportMode, setReportMode] = useState(initialMode);
   const [teamRange, setTeamRange] = useState('this_week');
   const [staffRange, setStaffRange] = useState('this_week');
 
