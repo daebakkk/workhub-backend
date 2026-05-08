@@ -1064,6 +1064,271 @@ a {
   margin: 4px 0 0;
 }
 
+/* ── Team report redesign ── */
+.trHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 860px;
+}
+
+.trHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trTeamName {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.trMeta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.trKpiRow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 860px;
+}
+
+.trKpiCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trKpiCardAccent {
+  border-color: rgba(225, 29, 139, 0.25);
+  background: var(--accent-soft);
+}
+
+.trKpiLabel {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.trKpiValue {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.trKpiValueName {
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.trKpiSub {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.trApprovalBar {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.trApprovalFill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.trSection {
+  width: 100%;
+  max-width: 860px;
+}
+
+.trSectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.trMemberGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.trMemberCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow);
+}
+
+.trMemberTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trMemberAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.trMemberInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trMemberName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trMemberBadge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.trMemberStats {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.trMemberHours {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.trMemberLogs {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.trBar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.trBarNarrow {
+  height: 4px;
+  flex: 1;
+}
+
+.trBarFill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.trProjectRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.trProjectRow:last-child {
+  border-bottom: none;
+}
+
+.trProjectInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.trProjectName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trProjectMeta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.trProjectRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  width: 130px;
+}
+
+.trProjectHours {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 36px;
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .trKpiRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .trKpiCard:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 600px) {
   .teamReportStats {
     grid-template-columns: 1fr 1fr;

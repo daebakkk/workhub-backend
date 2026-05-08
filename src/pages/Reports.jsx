@@ -388,54 +388,135 @@ export default function Reports() {
           {isTeamMode && (
             <>
               {teamReportLoading && <p className="inlineStatus">Loading team report...</p>}
-              {!teamReportLoading && teamReport && (
-                <>
-                  <div className="teamReportHeader">
-                    <h2 className="teamReportName">{teamReport.team.display_name}</h2>
-                    <span className="teamReportMeta">{teamReport.member_count} member{teamReport.member_count !== 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="teamReportStats">
-                    <div className="reportCard"><p className="reportLabel">Total hours</p><p className="reportValue">{teamReport.total_hours}</p></div>
-                    <div className="reportCard"><p className="reportLabel">Total logs</p><p className="reportValue">{teamReport.total_logs}</p></div>
-                    <div className="reportCard"><p className="reportLabel">Avg hrs / member</p><p className="reportValue">{teamReport.member_count > 0 ? (teamReport.total_hours / teamReport.member_count).toFixed(1) : 0}</p></div>
-                  </div>
-                  <div className="teamReportTables">
-                    <div className="reportTable">
-                      <p className="reportTableTitle">Hours by member</p>
-                      {(teamReport.by_member || []).length === 0 && <p className="reportRowEmpty">No data</p>}
-                      {(teamReport.by_member || []).map((row) => {
-                        const name = `${row.staff__first_name || ''} ${row.staff__last_name || ''}`.trim() || row.staff__username || '—';
-                        return (
-                          <div className="reportRow" key={row.staff__id}>
-                            <span>{name}</span><span>{row.hours} hrs</span><span>{row.count} logs</span>
-                          </div>
-                        );
-                      })}
+              {!teamReportLoading && teamReport && (() => {
+                const topMember = teamReport.by_member?.[0];
+                const topMemberName = topMember
+                  ? (`${topMember.staff__first_name || ''} ${topMember.staff__last_name || ''}`.trim() || topMember.staff__username || '—')
+                  : '—';
+                const topProjectHours = Math.max(...(teamReport.by_project || []).map((r) => r.hours), 1);
+                const topMemberHours = Math.max(...(teamReport.by_member || []).map((r) => r.hours), 1);
+                const rangeLabel = TIME_RANGES.find((r) => r.value === teamRange)?.label || teamRange;
+                return (
+                  <>
+                    {/* Header */}
+                    <div className="trHeader">
+                      <div className="trHeaderLeft">
+                        <h2 className="trTeamName">{teamReport.team.display_name}</h2>
+                        <span className="trMeta">{teamReport.member_count} member{teamReport.member_count !== 1 ? 's' : ''} · {rangeLabel}</span>
+                      </div>
+                      <button className="btn btnSecondary" type="button" onClick={downloadTeamPdf}>Download PDF</button>
                     </div>
-                    <div className="reportTable">
-                      <p className="reportTableTitle">Hours by project</p>
-                      {(teamReport.by_project || []).length === 0 && <p className="reportRowEmpty">No data</p>}
-                      {(teamReport.by_project || []).map((row) => (
-                        <div className="reportRow" key={row.project__name || 'none'}>
-                          <span>{row.project__name || 'Unassigned'}</span><span>{row.hours} hrs</span><span>{row.count} logs</span>
+
+                    {/* KPI cards */}
+                    <div className="trKpiRow">
+                      <div className="trKpiCard">
+                        <p className="trKpiLabel">Total hours</p>
+                        <p className="trKpiValue">{teamReport.total_hours}</p>
+                        <p className="trKpiSub">logged this period</p>
+                      </div>
+                      <div className="trKpiCard">
+                        <p className="trKpiLabel">Avg per member</p>
+                        <p className="trKpiValue">{teamReport.avg_hours}h</p>
+                        <p className="trKpiSub">across {teamReport.member_count} members</p>
+                      </div>
+                      <div className="trKpiCard">
+                        <p className="trKpiLabel">Total logs</p>
+                        <p className="trKpiValue">{teamReport.total_logs}</p>
+                        <p className="trKpiSub">submitted</p>
+                      </div>
+                      <div className="trKpiCard">
+                        <p className="trKpiLabel">Approval rate</p>
+                        <p className="trKpiValue">{teamReport.approval_rate}%</p>
+                        <div className="trApprovalBar">
+                          <div className="trApprovalFill" style={{ width: `${teamReport.approval_rate}%` }} />
                         </div>
-                      ))}
+                      </div>
+                      <div className="trKpiCard trKpiCardAccent">
+                        <p className="trKpiLabel">Top contributor</p>
+                        <p className="trKpiValue trKpiValueName">{topMemberName}</p>
+                        <p className="trKpiSub">{topMember?.hours ?? 0}h · {topMember?.count ?? 0} logs</p>
+                      </div>
                     </div>
-                    <div className="reportTable teamReportPeriod">
-                      <p className="reportTableTitle">{getPeriodTitle(teamReport.period_unit)}</p>
-                      {(teamReport.by_period || []).length === 0 && <p className="reportRowEmpty">No data</p>}
-                      {(teamReport.by_period || []).map((row) => (
-                        <div className="reportRow reportRowTwo" key={row.period}>
-                          <span>{formatPeriodLabel(row.period, teamReport.period_unit)}</span><span>{row.hours} hrs</span>
-                        </div>
-                      ))}
+
+                    {/* Member breakdown */}
+                    <div className="trSection">
+                      <p className="trSectionTitle">Member breakdown</p>
+                      <div className="trMemberGrid">
+                        {(teamReport.by_member || []).length === 0 && <p className="reportRowEmpty">No data for this period.</p>}
+                        {(teamReport.by_member || []).map((row, i) => {
+                          const name = `${row.staff__first_name || ''} ${row.staff__last_name || ''}`.trim() || row.staff__username || '—';
+                          const pct = Math.round((row.hours / topMemberHours) * 100);
+                          const initial = name.charAt(0).toUpperCase();
+                          return (
+                            <div className="trMemberCard" key={row.staff__id}>
+                              <div className="trMemberTop">
+                                <div className="trMemberAvatar">{initial}</div>
+                                <div className="trMemberInfo">
+                                  <span className="trMemberName">{name}</span>
+                                  {i === 0 && <span className="trMemberBadge">Top</span>}
+                                </div>
+                              </div>
+                              <div className="trMemberStats">
+                                <span className="trMemberHours">{row.hours}h</span>
+                                <span className="trMemberLogs">{row.count} logs</span>
+                              </div>
+                              <div className="trBar">
+                                <div className="trBarFill" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                  <div className="reportActions">
-                    <button className="btn btnSecondary" type="button" onClick={downloadTeamPdf}>Download PDF</button>
-                  </div>
-                </>
-              )}
+
+                    {/* Project + period side by side */}
+                    <div className="teamReportTables">
+                      <div className="reportTable">
+                        <p className="reportTableTitle">Hours by project</p>
+                        {(teamReport.by_project || []).length === 0 && <p className="reportRowEmpty">No project logs.</p>}
+                        {(teamReport.by_project || []).map((row) => {
+                          const pct = Math.round((row.hours / topProjectHours) * 100);
+                          return (
+                            <div className="trProjectRow" key={row.project__name || 'none'}>
+                              <div className="trProjectInfo">
+                                <span className="trProjectName">{row.project__name || 'Unassigned'}</span>
+                                <span className="trProjectMeta">{row.count} logs</span>
+                              </div>
+                              <div className="trProjectRight">
+                                <div className="trBar trBarNarrow">
+                                  <div className="trBarFill" style={{ width: `${pct}%` }} />
+                                </div>
+                                <span className="trProjectHours">{row.hours}h</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="reportTable teamReportPeriod">
+                        <p className="reportTableTitle">{getPeriodTitle(teamReport.period_unit)}</p>
+                        {(teamReport.by_period || []).length === 0 && <p className="reportRowEmpty">No data.</p>}
+                        {(teamReport.by_period || []).map((row) => {
+                          const maxH = Math.max(...(teamReport.by_period || []).map((r) => r.hours), 1);
+                          const pct = Math.round((row.hours / maxH) * 100);
+                          return (
+                            <div className="trProjectRow" key={row.period}>
+                              <span className="trProjectName">{formatPeriodLabel(row.period, teamReport.period_unit)}</span>
+                              <div className="trProjectRight">
+                                <div className="trBar trBarNarrow">
+                                  <div className="trBarFill" style={{ width: `${pct}%` }} />
+                                </div>
+                                <span className="trProjectHours">{row.hours}h</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+
               {!teamReportLoading && !teamReport && !error && (
                 <div className="emptyState">
                   <p className="emptyTitle">No data</p>

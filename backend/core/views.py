@@ -1238,6 +1238,9 @@ def team_report_summary(request, team_id):
 
     total_logs = logs.count()
     total_hours = float(logs.aggregate(total=Sum('hours'))['total'] or 0)
+    approved_hours = float(logs.filter(status='approved').aggregate(total=Sum('hours'))['total'] or 0)
+    approval_rate = round((approved_hours / total_hours) * 100) if total_hours > 0 else 0
+    avg_hours = round(total_hours / len(member_ids), 1) if member_ids else 0
     status_counts = list(logs.values('status').annotate(count=Count('id')).order_by('status'))
     by_project = list(
         logs.values('project__name')
@@ -1288,6 +1291,9 @@ def team_report_summary(request, team_id):
         'member_count': len(member_ids),
         'total_logs': total_logs,
         'total_hours': total_hours,
+        'approved_hours': approved_hours,
+        'approval_rate': approval_rate,
+        'avg_hours': avg_hours,
         'status_counts': status_counts,
         'by_project': by_project,
         'by_member': by_member,
