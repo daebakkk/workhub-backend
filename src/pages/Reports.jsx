@@ -416,8 +416,8 @@ export default function Reports() {
                       </div>
                       <div className="trKpiCard">
                         <p className="trKpiLabel">Avg per member</p>
-                        <p className="trKpiValue">{teamReport.avg_hours}h</p>
-                        <p className="trKpiSub">across {teamReport.member_count} members</p>
+                        <p className="trKpiValue">{teamReport.avg_hours}</p>
+                        <p className="trKpiSub">hours · {teamReport.member_count} members</p>
                       </div>
                       <div className="trKpiCard">
                         <p className="trKpiLabel">Total logs</p>
@@ -438,30 +438,25 @@ export default function Reports() {
                       </div>
                     </div>
 
-                    {/* Member breakdown */}
+                    {/* Hours per member */}
                     <div className="trSection">
-                      <p className="trSectionTitle">Member breakdown</p>
-                      <div className="trMemberGrid">
+                      <p className="trSectionTitle">Hours per member</p>
+                      <div className="reportTable" style={{ width: '100%', maxWidth: '860px' }}>
                         {(teamReport.by_member || []).length === 0 && <p className="reportRowEmpty">No data for this period.</p>}
-                        {(teamReport.by_member || []).map((row, i) => {
+                        {(teamReport.by_member || []).map((row) => {
                           const name = `${row.staff__first_name || ''} ${row.staff__last_name || ''}`.trim() || row.staff__username || '—';
                           const pct = Math.round((row.hours / topMemberHours) * 100);
-                          const initial = name.charAt(0).toUpperCase();
                           return (
-                            <div className="trMemberCard" key={row.staff__id}>
-                              <div className="trMemberTop">
-                                <div className="trMemberAvatar">{initial}</div>
-                                <div className="trMemberInfo">
-                                  <span className="trMemberName">{name}</span>
-                                  {i === 0 && <span className="trMemberBadge">Top</span>}
+                            <div className="trProjectRow" key={row.staff__id}>
+                              <div className="trProjectInfo">
+                                <span className="trProjectName">{name}</span>
+                                <span className="trProjectMeta">{row.count} logs</span>
+                              </div>
+                              <div className="trProjectRight">
+                                <div className="trBar trBarNarrow">
+                                  <div className="trBarFill" style={{ width: `${pct}%` }} />
                                 </div>
-                              </div>
-                              <div className="trMemberStats">
-                                <span className="trMemberHours">{row.hours}h</span>
-                                <span className="trMemberLogs">{row.count} logs</span>
-                              </div>
-                              <div className="trBar">
-                                <div className="trBarFill" style={{ width: `${pct}%` }} />
+                                <span className="trProjectHours">{row.hours}h</span>
                               </div>
                             </div>
                           );
