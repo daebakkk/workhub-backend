@@ -617,6 +617,7 @@ a {
   background: var(--surface-muted, var(--border));
   border-radius: 12px;
   padding: 4px;
+  flex-shrink: 0;
 }
 
 .dashViewTab {
@@ -4067,5 +4068,383 @@ body.dark .ctaSection .ctaPanel {
   }
   .projectCreateAssignees {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — comprehensive pass
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── topBar: keep header text + tabs + navbar in one row ── */
+@media (max-width: 640px) {
+  .topBar {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 12px 14px;
+    align-items: center;
+  }
+
+  .dashHeaderText {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dashTitle {
+    font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dashWelcome {
+    display: none;
+  }
+
+  /* Personal / Team tabs in header */
+  .dashViewTabs {
+    flex-shrink: 0;
+  }
+
+  .dashViewTab {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
+
+/* ── Dashboard main content padding ── */
+@media (max-width: 640px) {
+  .dashContent {
+    padding: 16px 14px 60px;
+    gap: 14px;
+  }
+
+  .dashSubtitle {
+    font-size: 13px;
+  }
+}
+
+/* ── Stat grid: 2 cols on small, 1 col on very small ── */
+@media (max-width: 400px) {
+  .statGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Report top controls: stack on mobile ── */
+@media (max-width: 640px) {
+  .reportTopControls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reportSelect {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* ── Report grid: 1 col on mobile ── */
+@media (max-width: 640px) {
+  .reportGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .reportTables {
+    grid-template-columns: 1fr;
+  }
+
+  .teamReportTables {
+    grid-template-columns: 1fr;
+  }
+
+  .teamReportPeriod {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 400px) {
+  .reportGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Team report KPI row ── */
+@media (max-width: 640px) {
+  .trKpiRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .trKpiCard:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .trHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .trTeamName {
+    font-size: 20px;
+  }
+
+  .trMemberGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 400px) {
+  .trKpiRow {
+    grid-template-columns: 1fr;
+  }
+
+  .trMemberGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Team dashboard banner ── */
+@media (max-width: 640px) {
+  .teamDashBanner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .teamDashDetail {
+    grid-template-columns: 1fr;
+  }
+
+  .teamKpiGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Project tabs: horizontal scroll ── */
+@media (max-width: 640px) {
+  .projectCreateBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .projectTabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    flex-wrap: nowrap;
+  }
+
+  .projectTabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .projectTab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .projectSearch input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* ── Project tile ── */
+@media (max-width: 640px) {
+  .projectBoard {
+    grid-template-columns: 1fr;
+  }
+
+  .projectTileHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .taskCreate {
+    flex-wrap: wrap;
+  }
+
+  .taskCreate input,
+  .taskCreate select {
+    flex: 1 1 100%;
+  }
+
+  .taskItem {
+    grid-template-columns: 1fr;
+  }
+
+  .taskItemRight {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── Leaderboard ── */
+@media (max-width: 640px) {
+  .lbSummary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .lbControls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lbControls .reportSelect {
+    width: 100%;
+  }
+
+  .lbTabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .lbTabs::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ── Work logs ── */
+@media (max-width: 640px) {
+  .wlActions {
+    flex-direction: column;
+  }
+
+  .logItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .logActions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .logActions .btn {
+    flex: 1;
+  }
+}
+
+/* ── Admin approvals ── */
+@media (max-width: 640px) {
+  .approvalsActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .approvalsActions .btn {
+    width: 100%;
+  }
+
+  .approvalsActions .btnPrimary {
+    margin-left: 0;
+  }
+}
+
+/* ── Settings ── */
+@media (max-width: 640px) {
+  .stLayout {
+    gap: 16px;
+  }
+
+  .stFieldRow {
+    padding: 12px 14px;
+  }
+
+  .stFormRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Profile ── */
+@media (max-width: 640px) {
+  .profileGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .profileHeroContent {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ── Auth pages ── */
+@media (max-width: 480px) {
+  .authCard {
+    padding: 24px 16px 20px;
+    border-radius: 18px;
+  }
+
+  .authForm input,
+  .authForm select {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .authPasswordWrap input {
+    font-size: 14px;
+  }
+}
+
+/* ── Landing page ── */
+@media (max-width: 640px) {
+  .landingTopBar {
+    padding: 16px 18px 12px;
+  }
+
+  .landingHero {
+    padding: 40px 18px 30px;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.6rem, 7vw, 2.4rem);
+  }
+
+  .heroSub {
+    font-size: 14px;
+  }
+
+  .heroButtons {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .heroButtons .btn {
+    text-align: center;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .stepsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Prevent horizontal overflow globally ── */
+@media (max-width: 640px) {
+  .dashPage,
+  .dashMain,
+  .dashContent {
+    overflow-x: hidden;
+  }
+
+  .card {
+    padding: 16px 14px;
+  }
+
+  .reportCard {
+    padding: 14px 14px;
+  }
+
+  .reportTable {
+    padding: 14px 14px;
   }
 }

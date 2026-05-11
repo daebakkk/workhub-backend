@@ -856,7 +856,9 @@ function Projects() {
                                   const hoursPct = task.required_hours > 0
                                     ? Math.min(100, Math.round(((task.current_hours || 0) / task.required_hours) * 100))
                                     : 0;
-                                  const effectiveProgress = Math.max(hoursPct, task.progress || 0);
+                                  const effectiveProgress = task.progress || 0;
+                                  const sliderMin = Math.max(0, effectiveProgress - 20);
+                                  const sliderMax = Math.min(100, effectiveProgress + 20);
                                   return (
                                     <>
                                       <div className="taskProgressWrap">
@@ -885,8 +887,8 @@ function Projects() {
                                         <div className="taskProgressEdit" style={{ width: '100%' }}>
                                           <input
                                             type="range"
-                                            min={hoursPct}
-                                            max="100"
+                                            min={sliderMin}
+                                            max={sliderMax}
                                             value={effectiveProgress}
                                             onChange={(e) =>
                                               updateTaskProgress(task.id, project.id, parseInt(e.target.value))

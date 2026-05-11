@@ -950,12 +950,6 @@ def update_task(request, task_id):
         ):
             return Response({'detail': 'Only the assignee can update this task.'}, status=403)
         if isinstance(progress, int) and 0 <= progress <= 100:
-            # Enforce floor: can't set below what hours have already earned
-            if task.required_hours and float(task.required_hours) > 0:
-                from django.db.models import Sum as _Sum
-                total = task.logs.filter(status='approved').aggregate(t=_Sum('hours'))['t'] or 0
-                hours_pct = min(100, int((float(total) / float(task.required_hours)) * 100))
-                progress = max(progress, hours_pct)
             task.progress = progress
         else:
             return Response({'detail': 'Progress must be between 0 and 100'}, status=400)
